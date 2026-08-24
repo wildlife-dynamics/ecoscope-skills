@@ -33,7 +33,7 @@ Upstream docs are reliable for concepts but not syntax — see [upstream-docs.md
 
 ## `metadata:` (compiler ≥0.9.0)
 
-Optional and **undocumented upstream**: `name`, `description`, `maintainers` (list, must be
+Optional: `name`, `description`, `maintainers` (list, must be
 non-empty if present), `license`, optional `repository` / `documentation` / `readme` / `keywords`.
 Extra keys allowed. Excluded from `Spec.sha256`, so adding it doesn't change an existing
 workflow's hash.
@@ -51,9 +51,6 @@ workflow's hash.
 | `map` / `mapvalues` | at most one of the two |
 | `skipif` | overrides `task-instance-defaults.skipif` **entirely** when present |
 
-There is **no task-instance `rjsf-overrides` key** — overrides live only at the spec top level
-with flat dotted paths ([rjsf.md](rjsf.md)); the upstream form-customization tutorial showing a
-nested per-task shape is a hard validation error ([upstream-docs.md](upstream-docs.md)).
 
 ## Task groups
 
@@ -82,9 +79,6 @@ requirements:
   - {name: pydeck, version: 0.9.2, channel: conda-forge}
 ```
 
-- **Channels are no longer an allowlist** (compiler ≥0.8.2): known shortcuts resolve to
-  preconfigured channels, any URL-schemed channel passes through, and only a bare *unknown name*
-  still errors. Docs claiming a restricted set are stale.
 - **Never put an explicit channel-less `python` requirement in a publish spec.** It resolves to
   conda-forge and hoists that channel to top strict priority in the compiler's discovery env,
   shadowing ecoscope-channel-only packages and breaking the solve. (A `python` pin is legitimate
@@ -200,15 +194,17 @@ helpers: `any_dependency_is_none`, `any_dependency_is_empty_string`, `invert_boo
 ## Authoring idiom from real fleet specs
 
 - **`partial:` is the primary form-control lever**: bound parameters are fixed; unbound parameters
-  become form fields. Pin no-op params via `partial` to drop them from the config form (fleet
-  commits say so verbatim: "pin fan_out via partial to drop the no-op checkbox"). A partialized
+  become form fields. Pin no-op params via `partial` to drop them from the config form. A partialized
   param must also be removed from `test-cases.yaml` — it becomes `extra_forbidden`.
 - **Invisible glue tasks** carry no card: `set_string_var`, `default_if_string_is_empty`,
   `concat_string_vars` declared outside any group.
-- **Card order = task order**, and field order inside a card = task order in the group. To render
-  field A above field B when B's task consumes A's return, split A into its own tiny task declared
-  first (specs comment this explicitly).
-- **Prefer bare task names**; fully qualify only on genuine collisions (13 names collide between
-  ecoscope-platform and ext-custom — [task-discovery.md](task-discovery.md)). Bare names are
-  immune to internal module moves in editable checkouts.
+- **Card order = task order; field order inside a card = task order in the group.** The two levels
+  answer to rjsf overrides differently:
+  - **Within a card, `ui:order` is a no-op.** The custom template iterates schema property entries
+    and ignores it. The only way to render field A above field B when B's task consumes A's return
+    is to split A into its own tiny task declared first (specs comment this explicitly).
+  - **Across cards, `ui:order` does work** — but it must name **every** task in the group, so it
+    goes stale the moment a task is added or removed. Reordering tasks in the spec is the durable
+    fix; see [rjsf.md](rjsf.md), which recommends against hand-writing it at all.
+- **Prefer bare task names**; fully qualify only on genuine collisions.
 - The recurring pipeline skeleton and per-widget chains live in [patterns.md](patterns.md).
