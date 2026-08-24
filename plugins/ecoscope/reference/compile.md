@@ -182,21 +182,21 @@ template ([repo-layout.md](repo-layout.md)).
 
 ## Fingerprints (drift checking)
 
-The generated `README.md` carries a fingerprint block:
-`artifacts_sha256_basic`, `artifacts_sha256_strict`, `params_sha256`, `spec_sha256`, and
-`installed_requirements` (name/version/channel per requirement). Facts that matter:
+The generated `README.md` carries a fingerprint block. Pick the field by the question you're
+asking — they are not interchangeable:
 
-- `spec_sha256` is a hash of the parsed spec alone (`Spec.sha256`), computable in milliseconds
-  **without compiling** — an input-side check that proves staleness conclusively but never proves
-  freshness. Note it **excludes `requirements` and `metadata`**, so also diff the spec's
-  `requirements:` against the recorded `installed_requirements` — a pin bump doesn't move the hash.
-- The artifact hashes are computed *from* the artifacts, so a fresh one requires compiling. When
-  comparing after a recompile, use **`artifacts_sha256_strict`** (excludes only spec_relpath,
-  pydot_graph, readme_md — aligned with CI's exclusions). `basic` additionally drops `dockerfile`
-  and `pixi_toml`, so **basic cannot see a variant mismatch** (the variant only changes pixi.toml).
-- **Never use `params_sha256` for drift.** It strips functionally-irrelevant keys first — it
-  answers "must users reconfigure saved workflows?" (it drives the MAJ-vs-MIN bump), not "did the
-  output change?". Titles and defaults are invisible to it, and those are the most-iterated
-  surface in the fleet.
-- The **compiler version is not in the fingerprint**, so codegen drift at a different compiler
-  version is invisible to every cheap check — only a real CI-matching recompile finds it.
+| Field | Answers | Cost | Trap |
+|---|---|---|---|
+| `spec_sha256` | "is the generated tree stale?" | no compile — `Spec.sha256`, milliseconds | excludes `requirements` and `metadata`, so a pin bump doesn't move it |
+| `installed_requirements` | "did the pins change?" — name/version/channel per requirement | free | covers exactly `spec_sha256`'s blind spot; diff it against the spec's `requirements:` |
+| `artifacts_sha256_strict` | "did the output change?" — **the drift check** | requires a real compile | excludes only spec_relpath, pydot_graph, readme_md, matching CI |
+| `artifacts_sha256_basic` | same, but looser | requires a real compile | also drops `dockerfile` and `pixi_toml`, so it **cannot see a variant mismatch** — the variant only changes pixi.toml |
+| `params_sha256` | "must users reconfigure saved workflows?" — drives the MAJ-vs-MIN bump | free | **never use it for drift**; it strips functionally-irrelevant keys, so titles and defaults — the most-iterated surface in the fleet — are invisible |
+
+Two asymmetries worth internalizing:
+
+- **`spec_sha256` proves staleness, never freshness.** A changed hash means the tree is stale; an
+  unchanged one proves nothing, because the spec is only one of the compile's inputs.
+- **The compiler version is not in the fingerprint at all.** Codegen drift from compiling at a
+  different compiler version is invisible to every cheap check here — only a real CI-matching
+  recompile finds it.
