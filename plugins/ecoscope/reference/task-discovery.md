@@ -73,17 +73,33 @@ Checklist, in order of likelihood:
 
 ## Name collisions
 
-**13 names collide** between `ecoscope-platform` and `ecoscope-workflows-ext-custom`; a spec that
-lists both libraries must fully qualify these (bare reference = hard compile error):
+A number of names collide between `ecoscope-platform` and `ecoscope-workflows-ext-custom` — mostly
+`tasks.config` entries. A spec that lists both libraries must fully qualify a colliding name; a
+bare reference is a hard compile error.
 
-`drop_null_geometry`, `generate_etd_raster`, `get_bounding_box`, `get_filter_point_coords`,
-`get_gps_point_filename_prefix`, `get_gps_point_filetypes`, `get_segment_filter`,
-`get_skip_relocation_persist`, `get_track_filename_prefix`, `get_track_filetypes`,
-`invert_bool`, `set_download_params`, `set_traj_filters`.
 
-(Re-verify with `wt-registry` when pins move — the list grows as config tasks get upstreamed;
-e.g. platform 2.17 upstreamed several ext-custom config tasks, which is what created most of
-these.)
+```
+Multiple tasks named '<name>' found. Duplicate tasks must be fully qualified with their module
+path. Available modules: ['ecoscope.platform.tasks.config', 'ecoscope_workflows_ext_custom.tasks.config']
+```
+
+`Available modules` is the answer — pick the one you meant and prepend it to the function name.
+
+**To list every collision up front**, dump the registry from an env with both libraries installed
+(the compiled workflow's inner env qualifies) and group by function name:
+
+```bash
+pixi run --manifest-path <inner>/pixi.toml --frozen -e default wt-registry --format json \
+  | python3 -c 'import json,sys,collections
+d=collections.defaultdict(set)
+for e in json.load(sys.stdin)["entries"].values():
+    d[e["function_name"]].add(e["public_module_path"])
+for n,m in sorted(d.items()):
+    if len(m) > 1: print(n, sorted(m))'
+```
+
+To check one name instead of all of them: `wt-registry --format pretty --function <name>` — more
+than one row means it needs qualifying.
 
 Qualified references use the **public re-export path**, e.g.
 `ecoscope.platform.tasks.config.set_traj_filters` or
