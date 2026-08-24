@@ -198,13 +198,6 @@ helpers: `any_dependency_is_none`, `any_dependency_is_empty_string`, `invert_boo
   param must also be removed from `test-cases.yaml` — it becomes `extra_forbidden`.
 - **Invisible glue tasks** carry no card: `set_string_var`, `default_if_string_is_empty`,
   `concat_string_vars` declared outside any group.
-- **Card order = task order; field order inside a card = task order in the group.** The two levels
-  answer to rjsf overrides differently:
-  - **Within a card, `ui:order` is a no-op.** The custom template iterates schema property entries
-    and ignores it. The only way to render field A above field B when B's task consumes A's return
-    is to split A into its own tiny task declared first (specs comment this explicitly).
-  - **Across cards, `ui:order` does work** — but it must name **every** task in the group, so it
-    goes stale the moment a task is added or removed. Reordering tasks in the spec is the durable
-    fix; see [rjsf.md](rjsf.md), which recommends against hand-writing it at all.
+- **Card order = task order; field order inside a card = task order in the group/param order in the task signature.**
 - **Prefer bare task names**; fully qualify only on genuine collisions.
 - The recurring pipeline skeleton and per-widget chains live in [patterns.md](patterns.md).
