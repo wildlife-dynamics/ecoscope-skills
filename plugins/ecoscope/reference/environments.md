@@ -53,8 +53,8 @@ Two supported styles — know which one a machine uses, because the graphviz sto
 
 2. **Editable path (developing the compiler itself):** a `uv tool install --editable` build
    pointing at the local wt monorepo checkout. This style does NOT get the automatic `dot -c`,
-   which is why the graphviz plugin-cache failure (below) keeps recurring on editable setups.
-   
+   which is why the graphviz plugin-cache failure keeps recurring on editable setups — see
+   the `dot -c` rule in [compile.md](compile.md).
 
 ## Standing rules (each with its mechanism)
 
@@ -63,16 +63,6 @@ Two supported styles — know which one a machine uses, because the graphviz sto
   code). This has produced two separate silent failures: a graphviz error *after* `--clobber` had
   already emptied the output dir, and a dead entry-point shebang after a directory rename — both
   masked as apparent success.
-- **`--clobber` is destructive on failure.** A compile that dies mid-way leaves the generated dir
-  gutted, and `--update` then refuses to run because `pixi.lock` / `VERSION.yaml` / `README.md`
-  are missing. Know the restore path before running it — see [compile.md](compile.md).
-- **After any outer-env re-solve, run `pixi run --manifest-path pixi.toml dot -c` before
-  compiling.** conda's graphviz ships an unregistered plugin cache; without this the compile dies
-  at the graph.png step with `Format: "png" not recognized` — after `--clobber` already emptied
-  the dir.
-- **Use `--frozen`, not `--locked`, when git-tag deps are present.** pixi resolves a git-tag dep
-  to a SHA in the lockfile but compares it symbolically, so `--locked` reports the lock stale
-  forever, even immediately after `pixi lock`.
 - **`yq` must be go-yq (mikefarah), not the Python `yq` (kislyuk).** `dev/run-test-cases.sh`
   depends on the go syntax; the two CLIs are incompatible.
 - **A renamed workflow-repo directory breaks both pixi envs while they still look installed.**
@@ -80,12 +70,9 @@ Two supported styles — know which one a machine uses, because the graphviz sto
   relinking; compiled binaries (`dot`) still work but Python entry points die with
   `Error launching 'wt-compiler': No such file or directory (os error 2)`. Fix:
   `pixi clean --manifest-path pixi.toml && pixi install` on outer **and** inner, then `dot -c`.
-- **Editable ecoscope requires the post-compile patch script after every compile**
-  (`./dev/postcompile-editable.sh`), and pins must revert to released versions before publish —
-  CI rejects `path:`/`editable:`. See [spec.md](spec.md) for the full editable pin stack.
 
 ## Preflight
-
+#todo: this may be added later
 This plugin ships `scripts/preflight.sh`, which discovers and *reports* (never silently repairs)
 the local setup: whether `wt-compiler` runs and can import `jsonschema` (printing the repair
 command built from the discovered install path), whether graphviz `dot -c` is registered, whether

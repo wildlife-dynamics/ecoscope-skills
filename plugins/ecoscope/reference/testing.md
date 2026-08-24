@@ -134,7 +134,7 @@ parquet; if you're overriding the same task in most cases, improve the packaged 
   zero outputs is the silently-empty-run trap — check the expected outputs, not just the status.
 - **`--local` runs bare `python` with no pixi wrap** → `ModuleNotFoundError: click` unless you are
   already inside the inner env. Default (no `--local`) is correct; use `--frozen` when git-tag
-  deps are present ([environments.md](environments.md)).
+  deps are present ([compile.md](compile.md)).
 - Debugging a run's opaque failure: run
   `pixi run python -c "from <pkg>.dags import run_sequential_mock_io; …"` in the **default** env
   (it has the task libraries; the `test` env does not) to get the real traceback.

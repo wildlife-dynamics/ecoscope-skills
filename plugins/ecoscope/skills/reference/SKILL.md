@@ -11,8 +11,8 @@ with a table of contents.
 
 | Topic | File |
 |---|---|
-| The five environments, standing rules (no `tail`, `dot -c`, `--frozen`, …), preflight | `reference/environments.md` |
-| Compile command, flags, `--variant` rule, restore playbook, error table, fingerprints | `reference/compile.md` |
+| The five environments, installing wt-compiler, standing rules (no `conda activate`, no `tail`, go-yq, renamed-repo breakage), preflight | `reference/environments.md` |
+| Compile command, flags, compile-time rules (`--clobber`, `dot -c`, `--frozen`, editable post-compile), `--variant` rule, restore playbook, error table, fingerprints | `reference/compile.md` |
 | spec.yaml schema, requirements (conda/PyPI/editable pin stacks), map/mapvalues, skipif | `reference/spec.md` |
 | How tasks become visible / silently vanish; collisions; finding tasks | `reference/task-discovery.md` |
 | Task anatomy, annotations, io tag, the tasks every workflow uses | `reference/tasks.md` |

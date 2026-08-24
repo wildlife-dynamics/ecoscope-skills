@@ -1,10 +1,12 @@
 # Compiling a workflow
 
-Single source for the compile command, its flags, and its failure modes. Environment rules live in
-[environments.md](environments.md) — read the standing rules there before compiling.
+Single source for the compile command, its flags, its compile-time standing rules, and its failure
+modes. Which environment to run in — and the standing rules that aren't compile-specific — live in
+[environments.md](environments.md).
 
 ## Contents
 - Canonical commands (dev and publish)
+- Compile-time standing rules
 - Flag reference
 - `--variant=gcp` — deployment target, not convention
 - `--update` semantics and VERSION behavior
@@ -51,6 +53,27 @@ outer lock.
 `--pkg-name-prefix=ecoscope-workflows` and `--results-env-var=ECOSCOPE_WORKFLOWS_RESULTS` are
 fleet-invariant — always pass them, or the generated package defaults to the upstream `wt` /
 `WT_RESULTS` names.
+
+## Compile-time standing rules (each with its mechanism)
+
+- **`--clobber` is destructive on failure.** A compile that dies mid-way leaves the generated dir
+  gutted, and `--update` then refuses to run because `pixi.lock` / `VERSION.yaml` / `README.md`
+  are missing. Know the restore path before running it — see the restore playbook below.
+- **After any outer-env re-solve, run `pixi run --manifest-path pixi.toml dot -c` before
+  compiling.** conda's graphviz ships an unregistered plugin cache; without this the compile dies
+  at the graph.png step with `Format: "png" not recognized` — after `--clobber` already emptied
+  the dir. Declaring `graphviz` in `pixi.toml` is not sufficient: the cache file is generated,
+  not shipped, and the package delegates generating it to a post-link script that pixi skips
+  unless `--run-post-link-scripts` is passed. That is why a re-solve keeps re-breaking it.
+- **Use `--frozen`, not `--locked`, when git-tag deps are present.** pixi resolves a git-tag dep
+  to a SHA in the lockfile but compares it symbolically, so `--locked` reports the lock stale
+  forever, even immediately after `pixi lock`.
+- **Editable ecoscope requires the post-compile patch script after every compile**
+  (`./dev/postcompile-editable.sh`), and pins must revert to released versions before publish —
+  CI rejects `path:`/`editable:`. See [spec.md](spec.md) for the full editable pin stack.
+
+Environment selection and the non-compile standing rules (never `conda activate`, never pipe
+through `tail`, renamed-repo-dir breakage, go-yq) stay in [environments.md](environments.md).
 
 ## Flag reference
 
@@ -129,7 +152,7 @@ just retry, each attempt progresses via the cache; 2–3 attempts usually suffic
 | Task ID conflict | `id:` matches a registered task name; use a different id. |
 | `ruff format exit status 2` | Generated Python has syntax errors (historically: single quotes in inline SQL strings; fixed in current compilers — upgrade if seen). |
 | `--update` rejection | `--update` needs `--clobber` and no `--install`. |
-| `Format: "png" not recognized` | graphviz plugin cache unregistered — run `dot -c` in the compile env ([environments.md](environments.md)). |
+| `Format: "png" not recognized` | graphviz plugin cache unregistered — run `dot -c` in the compile env (see the compile-time standing rules above). |
 | `ModuleNotFoundError: No module named 'jsonschema'` | Broken compiler tool env — repair recipe in [environments.md](environments.md). |
 | `Error launching 'wt-compiler': No such file or directory` | Renamed repo dir; `pixi clean && pixi install` both envs ([environments.md](environments.md)). |
 | Solve failure hoisting python/conda-forge | An explicit channel-less `python` requirement in a publish spec — remove it ([spec.md](spec.md)). |
