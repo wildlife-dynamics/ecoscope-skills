@@ -71,43 +71,6 @@ Checklist, in order of likelihood:
 5. The installed version in the discovery env predates the task — recompile after bumping the pin
    or use an editable path requirement.
 
-## Name collisions
-
-A number of names collide between `ecoscope-platform` and `ecoscope-workflows-ext-custom` — mostly
-`tasks.config` entries. A spec that lists both libraries must fully qualify a colliding name; a
-bare reference is a hard compile error.
-
-
-```
-Multiple tasks named '<name>' found. Duplicate tasks must be fully qualified with their module
-path. Available modules: ['ecoscope.platform.tasks.config', 'ecoscope_workflows_ext_custom.tasks.config']
-```
-
-`Available modules` is the answer — pick the one you meant and prepend it to the function name.
-
-**To list every collision up front**, dump the registry from an env with both libraries installed
-(the compiled workflow's inner env qualifies) and group by function name:
-
-```bash
-pixi run --manifest-path <inner>/pixi.toml --frozen -e default wt-registry --format json \
-  | python3 -c 'import json,sys,collections
-d=collections.defaultdict(set)
-for e in json.load(sys.stdin)["entries"].values():
-    d[e["function_name"]].add(e["public_module_path"])
-for n,m in sorted(d.items()):
-    if len(m) > 1: print(n, sorted(m))'
-```
-
-To check one name instead of all of them: `wt-registry --format pretty --function <name>` — more
-than one row means it needs qualifying.
-
-Qualified references use the **public re-export path**, e.g.
-`ecoscope.platform.tasks.config.set_traj_filters` or
-`ecoscope_workflows_ext_custom.tasks.spatial_ops.calculate_encounter_rate_grid`. Everywhere else,
-prefer the bare name — it's immune to internal module moves (in editable checkouts the registry
-can record a task under its private module after a refactor, breaking dotted references that
-worked yesterday).
-
 ## Finding tasks: ask the tooling, not the filesystem
 
 The inventory is large (roughly 240 tasks in `ecoscope-platform` + 65 in ext-custom — far beyond
@@ -118,13 +81,7 @@ never from a source checkout:
   workflow's inner env qualifies) — the authoritative list, with public paths. Filters:
   `--function NAME` (repeatable), `--package PACKAGE` (repeatable).
 - **The compiled `params.json` / `rjsf.json`** — what this workflow actually exposes.
-- A source-tree grep or helper script is at best an accelerator. Known traps if one is used: an
-  AST scan prints *file-derived* module paths that are **not valid spec references** (the real
-  reference is the `__init__.py` re-export path), cannot see re-exports at all, misses
-  per-workflow ext packages, and shows colliding names side by side without flagging them.
 
-To turn a candidate hit into a reference the compiler will resolve: prefer the bare name; on
-collision, take the `public_module_path` from `wt-registry` output and append the function name.
 
 ## Registered but failing: signature validation
 
