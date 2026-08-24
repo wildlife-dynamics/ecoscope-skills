@@ -55,15 +55,23 @@ Two supported styles — know which one a machine uses, because the graphviz sto
    pointing at the local wt monorepo checkout. This style does NOT get the automatic `dot -c`,
    which is why the graphviz plugin-cache failure (below) keeps recurring on editable setups.
 
-**Repairing a broken editable tool env:** `wt-compiler` imports `jsonschema` but only declares
-`types-jsonschema`, so the uv tool env can end up missing the runtime dep —
-`wt-compiler compile` dies with `ModuleNotFoundError: No module named 'jsonschema'`. Repair by
-reinstalling the editable build with the dep injected, using the source path reported by
-`uv tool list`:
+**Repairing a broken editable tool env:** an editable tool env can end up missing a runtime
+dependency the compiler imports but does not declare directly — `wt-compiler compile` then dies
+with a bare `ModuleNotFoundError` for a package you'd expect to be present. The usual cause is a
+dep that arrives only transitively, so a stale or partial tool env drops it. The known case is
+`jsonschema`: `compiler.py` imports it at module top level but `wt-compiler`'s own
+`[project].dependencies` never list it — it is satisfied via `wt-contracts`, which has declared
+`jsonschema>=4.0.0,<5.0.0` as a runtime dep since May 2026. Current installs are therefore fine;
+older or hand-assembled tool envs may not be. Repair by reinstalling the editable build with the
+missing dep injected, using the source path reported by `uv tool list`:
 
 ```bash
-uv tool install --editable <wt-compiler-source-path> --with jsonschema --reinstall
+uv tool install --editable <wt-compiler-source-path> --with <missing-dep> --reinstall
 ```
+
+If the module is genuinely an undeclared *direct* import of `wt-compiler`, the real fix is adding
+it to `wt-compiler/pyproject.toml` (both `[project].dependencies` and
+`[tool.pixi.package.run-dependencies]`) rather than injecting it at install time.
 
 Use `--editable <path>` — a bare `uv tool install wt-compiler` pulls the published PyPI build
 instead of the local checkout. Confirm with `wt-compiler --help`.
