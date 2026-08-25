@@ -42,20 +42,33 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compile�
 
 ## `create_docx`
 
-Context item types:
+Context item types (`context.items`, each `{item_type, key, value, ...}`). A grouped `value` is a
+list of `(CompositeFilter, value)` tuples, i.e. `split_groups`/`groupbykey` output:
 
 | `item_type` | `value` | Template usage |
 |---|---|---|
-| `timerange` | TimeRange | `{{ key }}` (with `format:`) |
-| `table` | DataFrame | `{{ key.col_labels }}`, `{{ key.tbl_contents }}` |
-| `image` (direct) | single path | `{{ key }}` → InlineImage |
-| `image` (grouped) | list of (filter, path) | `{% for item in key %}{{ item.title }}{{ item.image }}{% endfor %}` |
+| `timerange` | TimeRange | `{{ key }}` (with `format:`; collapses to one value when since/until format identically, e.g. `%b %Y` → `Feb 2026`) |
 | `text` | string | `{{ key }}` |
+| `text` (grouped) | list of (filter, string) | `{% for item in key %}{{ item.title }}{{ item.value }}{% endfor %}` |
+| `image` | path (`.png`/`.jpg`/`.html`) | `{{ key }}` → InlineImage; `width_inches` (default 6, shared), `height_inches`, `screenshot_config` |
+| `image` (grouped) | list of (filter, path) | `{% for item in key %}{{ item.title }}{{ item.image }}{% endfor %}` |
+| `table` | DataFrame | `{{ key.col_labels }}`, `{{ key.tbl_contents }}` (`row.label`, `row.cols`) |
+| `table` (grouped) | list of (filter, DataFrame) | `{% for item in key %}` with `item.title`, `item.col_labels`, `item.tbl_contents`; or `merge_groups: true` → one direct-style table with a `Group` column (omitted for a lone "All" group) |
 
-- Give it `skipif: {conditions: [never]}` like widgets, and guard upstream: if a grouped-image
-  chain skips, the value becomes `[(None, <SkipSentinel>)]` and `create_docx` raises a
-  ValidationError — ensure geometry-valid data reaches the map pipeline.
-- The `.docx` template is user-authored (Jinja2 placeholders matching context keys; HTML images
+- **Grouped items require `groupers`** (pass the same groupers used to split the data). Without
+  them `create_docx` raises `ValueError: Grouped items require groupers` — the param description's
+  "sorted alphabetically" fallback does not exist. A filter index not covered by the groupers
+  raises `No grouper found for index_name`. Groupers also drive `item.title` (grouper
+  `display_name`; column name omitted when there's a single grouper) and sort order (e.g. months
+  in calendar order).
+- Grouped items also expose `item.groups` (`{index_name: value}`, "all" dropped) for nested
+  sections: `{%p for area, maps in patrol_maps|groupby("groups.patrol_area") %}`.
+- Give it `skipif: {conditions: [never]}` like widgets; skip handling is built in (task-library
+  #225, 2026-08-19): SkipSentinel entries inside grouped values are dropped, a skipped direct
+  text/image renders blank (or `missing_text`, e.g. `"(No data)"`), a skipped direct table renders
+  empty so template loops still work. `skip: true` returns `None` without rendering.
+- Output is `[<filename_prefix>_]<7-char context hash>.docx` under `output_dir`.
+- The `.docx` template is user-authored (Jinja2 placeholders matching context keys; `.html` images
   auto-convert to PNG via Playwright), lives under `resources/templates/` in the repo. Local runs
   use an absolute path in test cases; **publishing converts it to a GitHub raw URL** — SHA-pinned
   during PR CI ([testing.md](testing.md)).

@@ -208,9 +208,9 @@ to JSON strings). Groups with an empty df are skipped.
 
 **DOCX:** context items typed `timerange` / `table` / `image` (direct path or grouped
 `(filter, path)` list) / `text`; template is a user-authored `.docx` with Jinja2 placeholders
-matching context keys; HTML images auto-convert to PNG via Playwright. Gotchas (SkipSentinel in
-grouped images, template-path resolution and raw URLs) in [task-pitfalls.md](task-pitfalls.md)
-and [testing.md](testing.md).
+matching context keys; HTML images auto-convert to PNG via Playwright. Gotchas (`groupers`
+required for grouped items, skip handling, template-path resolution and raw URLs) in
+[task-pitfalls.md](task-pitfalls.md) and [testing.md](testing.md).
 
 ## Dashboard assembly and the "Edit Layout" predicate
 
