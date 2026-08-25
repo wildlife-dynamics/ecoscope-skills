@@ -199,9 +199,12 @@ create_plot_widget_single_view → merge_widget_views` — same persist/widget/m
 
 ## Data export and DOCX reports
 
-**Export:** `persist_df_wrapper` with `root_path: ${{ env.ECOSCOPE_WORKFLOWS_RESULTS }}`,
-`filetypes: [csv|geoparquet|gpkg]`, `sanitize: true` if data has nested JSON/lists (serializes
-complex columns to JSON strings — downstream `load_df` then sees strings).
+**Export:** `persist_grouped_dfs_for_results_download` (not `persist_df_wrapper` — the FE needs
+the group-key hash it embeds in each filename to match downloads to dashboard views). Feed it
+`split_groups` output as `grouped_dfs` (works ungrouped too), with
+`root_path: ${{ env.ECOSCOPE_WORKFLOWS_RESULTS }}`, `filetypes: [csv|geoparquet|gpkg]`, optional
+`filename_prefix`, and `sanitize: true` if data has nested JSON/lists (serializes complex columns
+to JSON strings). Groups with an empty df are skipped.
 
 **DOCX:** context items typed `timerange` / `table` / `image` (direct path or grouped
 `(filter, path)` list) / `text`; template is a user-authored `.docx` with Jinja2 placeholders

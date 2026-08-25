@@ -6,7 +6,7 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compile�
 - `apply_sql_query`
 - `normalize_json_column`
 - `create_docx`
-- `persist_df_wrapper`
+- `persist_grouped_dfs_for_results_download`
 - Misc
 
 ## `apply_sql_query`
@@ -60,10 +60,15 @@ Context item types:
   use an absolute path in test cases; **publishing converts it to a GitHub raw URL** — SHA-pinned
   during PR CI ([testing.md](testing.md)).
 
-## `persist_df_wrapper`
+## `persist_grouped_dfs_for_results_download`
 
-`sanitize: true` serializes complex objects (dicts/lists/sets) to JSON strings for
-Arrow/Parquet — downstream `load_df` then sees strings.
+- Use this for results downloads, **not `persist_df_wrapper`**: it wraps `persist_df_wrapper` per
+  group and prefixes each filename with a 7-char hash of the group key, which the FE needs to
+  match files to dashboard views. Input is `split_groups` output (`(filter, df)` tuples).
+- `sanitize: true` serializes complex objects (dicts/lists/sets) to JSON strings for
+  Arrow/Parquet — set it whenever event/observation details are included. Default is `false`.
+- Groups with a `None` key or an empty df are silently skipped — an empty return list is not an
+  error.
 
 ## Misc
 
