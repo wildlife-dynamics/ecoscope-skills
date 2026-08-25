@@ -38,9 +38,32 @@ machine-readable form — `entries` keyed by fully-qualified name, each carrying
   defining module. You don't need to know the collision set in advance: the compiler fails with
   `Multiple tasks named '<name>' found … Available modules: [...]`, and that list is the answer.
 
-A source-tree grep is at best an accelerator. File paths are not valid spec references, re-exports
-are invisible to it, and colliding names appear side by side with nothing marking them as
-ambiguous.
+**Grepping the library** is a fair accelerator when you're hunting by concept rather than exact
+name — but resolve the path from the environment, never from a checkout. Install locations differ
+per machine and per install mode, so any hardcoded `~/...` path is wrong on someone else's box:
+
+```bash
+M=<inner>/pixi.toml
+TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
+  python -c 'import ecoscope.platform.tasks as m; print(m.__path__[0])')
+grep -rn --include='*.py' -A2 '@register(' "$TASKS" | grep 'def .*<concept>'
+```
+
+`__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
+one — either way it's the version this repo's pins actually select, which is the same principle as
+everything else in this section.
+
+Three things grep will not do for you:
+
+- **It only sees the library you resolved.** Repeat the command for every task library in the
+  spec's `requirements:` — swap in `ecoscope_workflows_ext_custom.tasks` and any per-workflow ext
+  package. Resolving one and stopping hides the rest: `generate_etd_raster` lives in ext-custom, so
+  a grep of `ecoscope.platform.tasks` alone reports nothing at all.
+- **It gives you a function name, not a spec reference.** The file path it prints is never a valid
+  reference — the reference is the public re-export path, which only `wt-registry` knows. Confirm
+  the name there before writing it into the spec.
+- **It cannot see re-exports or flag collisions.** A name that grep finds in two libraries looks
+  identical to one found in a single library.
 
 ## A task is missing: triage by symptom
 
