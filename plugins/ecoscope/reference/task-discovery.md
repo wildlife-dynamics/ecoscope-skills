@@ -6,7 +6,7 @@ would force the compiler to install every library's deps — GDAL, plotting stac
 conflicts.) Every "task not found" symptom traces back to one link of that chain.
 
 ## Contents
-- Finding an existing task — the registry, a source grep, the compiled artifacts
+- Finding an existing task — registry, source grep, compiled artifacts; then read the signature
 - A task is missing: triage by symptom
 - The discovery chain (mechanism)
 
@@ -43,8 +43,12 @@ These specs are unpinned, so treat the result as "does such a task exist?" and r
 the inner env once the spec pins versions.
 
 Filters, both repeatable: `--function NAME`, `--package PACKAGE`. `--format json` returns `entries`
-keyed by fully-qualified name, each with `function_name`, `public_module_path`, and a ready-made
-`import_statement`.
+keyed by fully-qualified name, each with `function_name`, `public_module_path`, a ready-made
+`import_statement`, and a `json_schema` — the form-facing parameters with `type`, `default`,
+`description`, and `ecoscope:advanced`. That schema is what `partial:` literals are written
+against, but it is **not the signature**: parameters with `Field(exclude=True)` (the dataframe /
+wire inputs such as `df`) are dropped from `properties` and survive only as a name in `required`,
+and the return type is absent. `--format pretty` shows no parameters at all.
 
 **Cost:** needs an environment — a solve, and a download on first use.
 
@@ -84,6 +88,22 @@ valid); and it cannot see re-exports or flag collisions.
 The generated `params.json` / `rjsf.json` list the tasks this workflow already exposes, with their
 parameters as the form sees them. Narrowest scope of the three, and the quickest way to answer
 "what is this workflow already doing?" or to lift a known-good reference from a sibling workflow.
+
+### Read the signature
+
+Neither the registry nor `params.json` says what a task returns or how its wired inputs are typed,
+and that is what `${{ }}` wiring depends on. `@register` returns the bare function, so the inner
+env answers directly — take the import line from `import_statement`:
+
+```bash
+pixi run --manifest-path <inner>/pixi.toml --frozen -e default python -c '
+import inspect
+from <public_module_path> import <name> as f
+print(inspect.signature(f)); print(f.__doc__)'
+```
+
+The docstring often carries usage patterns the schema can't (template snippets, examples). The
+source is the same information in readable form, with the checkout-vs-pin caveat above.
 
 ### Turn the hit into a spec reference
 
