@@ -22,7 +22,7 @@ with a table of contents.
 | test-cases.yaml, mock-io, overrides, run-test-cases.sh, live cases | `reference/testing.md` |
 | Per-task gotchas (apply_sql_query, normalize_json_column, load_df, create_docx, …) | `reference/task-pitfalls.md` |
 | Data connections, env-var format, CI secrets, GEE key recipe | `reference/connections.md` |
-| Previewing a dashboard in Ecoscope Desktop — run a test case, copy the output into the app data dir | `reference/preview-dashboard.md` |
+| Previewing a dashboard in Ecoscope Desktop — on-disk run contract, from a test-case run or hand-stubbed for layout.json | `reference/preview-dashboard.md` |
 | Desktop Playwright E2E authoring and its footguns | `reference/desktop-e2e.md` |
 | CI gates (recompile diff, version gate), publication signals, tagging, deployment | `reference/publish-ci.md` |
 | Repo anatomy, vendored files, repo-state signals, branch/commit conventions | `reference/repo-layout.md` |
