@@ -10,6 +10,7 @@
 - test-cases gotchas
 - How mock-io works
 - `mock_io_overrides` — per-case fixture overrides
+- Generating mock data
 - `dev/run-test-cases.sh`
 - Template paths and raw URLs
 - Live cases
@@ -76,7 +77,8 @@ Build the mock cases first, in this order; add the live case last.
    of them; give a switch its own case only when it changes a branch another switch also touches.
    Keep these on mock data so the whole set stays fast to run.
 4. **Empty-fixture regression case** wherever skip chains matter — override the rich fixture
-   with an empty one (`mock_io_overrides`) and assert the run completes.
+   with an empty one (`mock_io_overrides`, [Generating mock data](#generating-mock-data)) and
+   assert the run completes.
 5. **One live case** (`mock_io: false`) — add it only once the mock cases are settled and
    passing. Live failures are config drift, data gaps, or network, not workflow logic
    ([Live cases](#live-cases)); mixing them in early muddies the signal.
@@ -139,6 +141,48 @@ shims propagate too).
 Reach for overrides to test multiple data shapes per task or reproduce a bug from a downloaded
 parquet; if you're overriding the same task in most cases, improve the packaged fixture instead
 (as its own deliberate change — it's shared).
+
+## Generating mock data
+
+Build workflow-specific fixtures when the packaged ones can't reach a code path: org-specific
+event-type schemas (title-mapped `event_details` keys), particular patrol types, polygon
+geometries, a grouper key the stock fixture lacks. Existing examples:
+`mt-patrols`, `mt-rhino`, `mt-wildlife`, `wt-download-events` (`dev/fixtures/build_*.py`).
+
+**Layout.** Fixtures live in `dev/fixtures/` next to a checked-in `build_<name>_fixtures.py`
+that writes them; **re-run the script, never hand-edit a parquet**. Run it from the inner
+workflow env (needs geopandas + pyarrow):
+`cd ecoscope-workflows-*-workflow && pixi run python ../dev/fixtures/build_x.py`. Wire the
+outputs in with repo-relative `mock_io_overrides` paths.
+
+**Synthetic only.** Real org data (GPS tracks, ranger names, individual animals) is sensitive
+and never committed. Generate everything: seeded `np.random.default_rng(<seed>)`, `uuid5`-derived
+ids, random-walk/jittered coordinates inside a bounding box, made-up names. Real org *config*
+(patrol-type slugs, event-type names, detail-key titles) is fine — it's already public in
+`spec.yaml`.
+
+**Schema.** Mirror the packaged fixture exactly; inspect it with
+`wt_task.testing.create_func_magicmock(anchor, func_name)()` (or `gpd.read_parquet` on the
+packaged file). Write with `GeoDataFrame.to_parquet(index=False)`, `crs="EPSG:4326"`; the
+loader tries geopandas then falls back to pandas. Nested dicts (`reported_by`,
+`event_details`) survive as struct columns; id-list columns (`patrols`) must be native arrow
+lists or `explode` breaks after the round-trip. Timestamps tz-aware UTC, inside the case's
+`time_range`.
+
+**Chains of io tasks.** Every `tags=["io"]` task in a chain returns its own fixture — a
+downstream io task (`process_events_details`) clobbers whatever upstream produced. Build the
+downstream fixture as *upstream rows + the columns that task adds* (`event_details`,
+`reported_by_name`), sharing ids across fixtures so later joins line up. Two instances of the
+same task share one mock key: put both branches' rows in one fixture and filter on
+`event_type` after.
+
+**Shape for coverage.** Decide what each case must exercise and plant it: ≥2 categories per
+pivot/stacked column, every grouper key the combined grouper case uses, a deliberate missing
+row (the "Unknown" fallback), a nested array left empty (the `COALESCE '[]'` path). Note each
+in the script docstring.
+
+**Empty variants.** `df.iloc[0:0].to_parquet(...)` per fixture keeps the schema with zero rows —
+that's the empty-fixture regression case.
 
 ## `dev/run-test-cases.sh`
 
