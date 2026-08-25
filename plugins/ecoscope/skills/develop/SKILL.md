@@ -27,12 +27,13 @@ exist because each one has silently destroyed work before.
 
 **Environment: any shell, from the directory that contains (or will contain) `spec.yaml`.**
 
-Run the plugin's preflight if it ships: `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. If it is
-absent, do its checks by hand before anything else — `wt-compiler compile --help` (it runs;
-the CLI has no `--version`, so read the global version from `uv tool list` or `pixi global
-list`), `yq --version` (must be mikefarah go-yq), `dot -V`, `pixi --version`, and the outer pin
-`grep wt-compiler pixi.toml` versus that global version. Read the diagnosis; repair before
-compiling. Details: `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
+Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh` (from the repo, or pass its path). It
+discovers and reports — never repairs — the compiler install and whether it imports
+`jsonschema`, global vs pinned compiler version, graphviz plugin cache, go-yq, whether the
+outer/inner envs' entry points still launch, this repo's CI recompile flags, and the state
+signals. Every `FAIL`/`WARN` line carries its repair command, built from what it found. Read the
+diagnosis; run the repairs before compiling. Exit 1 means at least one `FAIL`.
+Details: `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
 
 Then **derive** the phase from the filesystem and git. Never infer it from the words in the
 request — "validate", "fix", "publish" in a sentence prove nothing about the tree. Read, in
