@@ -75,21 +75,22 @@ the spec's `title:` (spaces and capitalization included).
 
 ## The same-title task-group schema clobber
 
-**Sharing a `title:` across two groups is a deliberate trick, not a mistake.** Card order and
-execution order both follow spec order, and for a map/output card those conflict: its user-facing
-params belong early in the form, but its compute tasks must run after `Process Patrols` /
-`Process Events`. So declare an early group with the params and a later same-title group with the
-compute tasks — they merge into one card at the early position (every catalog map card does this).
+**A fully-partialed group renders nothing** — it is absent from `rjsf.json` entirely, no empty
+card (verified: `Process Patrols` / `Process Events` in every catalog map spec). So the standard
+split — an early group holding a card's user-facing params, a later group holding its compute
+tasks that must run after `Process Patrols` / `Process Events` — needs no title trick at all: the
+later group can have any title. Catalog specs reuse the card's title on the compute group purely
+for readability (it marks which card those tasks belong to); it has no rendering effect.
 
-**But the merge does not union the params models — the LAST field-bearing group's schema clobbers
-the earlier one's.** Symptom:
-rjsf-overrides on the clobbered tasks create phantom objects with no `type`; the renderer shows
-"Unsupported field schema … Unknown field type undefined" and raw-id card headers.
+Sharing a title only *matters* when both groups carry fields — and then it breaks: **the merge
+does not union the params models; the LAST field-bearing group's schema clobbers the earlier
+one's.** Symptom: rjsf-overrides on the clobbered tasks create phantom objects with no `type`;
+the renderer shows "Unsupported field schema … Unknown field type undefined" and raw-id card
+headers.
 
-Rule: put ALL field-bearing tasks in the FIRST group with a given title; a later same-title group
-may contain only fully-partialed tasks. Verify by grepping the compiled `rjsf.json` for **real
-`type` keys** on the fields — not mere member presence. (Observed at compiler 0.8.3; re-verify on
-≥0.9.)
+Rule: a title may appear on at most ONE field-bearing group; any other group with that title must
+be fully partialed. Verify by grepping the compiled `rjsf.json` for **real `type` keys** on the
+fields — not mere member presence. (Observed at compiler 0.8.3; re-verify on ≥0.9.)
 
 ## `ecoscope:task_group` and the submit-flatten trap
 
