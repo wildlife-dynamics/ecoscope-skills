@@ -1,61 +1,99 @@
-# Upstream docs — how to use them, and where they are wrong
+# Reference sources — what exists, and which one wins
 
-Two upstream doc trees exist: the **wt framework docs** (in the wt monorepo) and the
-**platform-sdk docs** (in the ecoscope task-library repo). The hierarchy this suite follows:
+Three tiers, in order of authority. When they disagree, the higher tier is right.
 
-**Upstream is authoritative for vocabulary and mental model; the compiler's pydantic models and
-real fleet specs are authoritative for syntax.** Where they conflict, use the working form below
-and know which doc is wrong — don't let a confident tutorial talk you out of the right answer.
+1. **Code** — the source of truth, always.
+2. **Upstream docs** — wt framework docs and Platform SDK docs; good for vocabulary and mental
+   model, not for syntax.
+3. **Workflow examples** — real repos to copy shapes from when the docs don't show how.
 
-Citations in this knowledge base name **symbols** (`TaskInstance` in `wt_compiler.spec`), not
-line numbers; locate any module with
-`python -c "import <module> as m; print(m.__file__)"`.
+Citations in this suite name **symbols** (`TaskInstance` in `wt_compiler.spec`), not line numbers;
+locate any module with `python -c "import <module> as m; print(m.__file__)"`.
 
 ## Contents
-- Known-wrong upstream claims
-- Known-incomplete areas (this suite fills them)
-- What upstream explains best — read these
+- Source of truth: the code
+- Upstream docs (local paths + URLs)
+- Workflow examples
 
-## Known-wrong upstream claims
+## Source of truth: the code
 
-| Claim (doc) | Reality |
+
+#todo: replace local absolute path with UserConfig in the plugin metadata
+Docs drift; code doesn't. Read the code before trusting a tutorial, and cite the code when a doc
+and the code disagree.
+
+| Repo (local checkout) | GitHub | What it is authoritative for |
+|---|---|---|
+| `~/MEP/infra/wt` | `wildlife-dynamics/wt` | The wt framework monorepo: `wt-compiler` (spec schema — the pydantic models in `wt_compiler.spec`: `Spec`, `TaskInstance`, `TaskGroup`), `wt-contracts`, `wt-registry`, `wt-task`, `wt-runner`, `wt-invokers`, plus the `-gcp` variants |
+| `~/MEP/wt-tasks/ecoscope` | `wildlife-dynamics/ecoscope` | The `ecoscope` library and the **Platform SDK** tasks (`ecoscope/platform/`) — what every built-in task actually accepts and returns; also the source the SDK reference pages are generated from |
+| `~/MEP/wt-tasks/ecoscope-workflow-task-library` | `wildlife-dynamics/ecoscope-workflow-task-library` | Custom/extension tasks (`ecoscope_workflows_ext_custom/tasks/`) |
+| `~/MEP/infra/ecoscope-server` | `wildlife-dynamics/ecoscope-server` | The backend: workflow templates, runs, results, layout, rjsf handling, named connections (`ecoscope_server/services/`, `ecoscope_server/utils/rjsf.py`, `utils/er_enum_resolver.py`) |
+| `~/MEP/infra/ecoscope-web` | `wildlife-dynamics/ecoscope-web` | The UI: rjsf form rendering, results grid, desktop server contract (`src/utils/actions/workflow-*`) |
+| `~/MEP/infra/compose` | `wildlife-dynamics/compose` | Deployment: `docker-compose.yaml`, per-environment build-deploy pipelines, and the submodule pins under `ecoscope-platform-workflows-releases/<template>` that decide which catalog workflow version reaches dev/stage/prod ([web-deployment.md](web-deployment.md)) |
+
+Practical rule: for spec syntax read `wt_compiler.spec`; for a task's parameters read the task's
+signature in the task library; for how a form or dashboard renders read ecoscope-web; for what
+the server does with a run read ecoscope-server; for what is deployed where read compose.
+
+## Upstream docs
+
+Two doc trees. Both are mkdocs-material; read the markdown directly from the local checkout (no
+build needed) or browse the hosted site.
+
+### wt framework docs
+
+- Local: `~/MEP/infra/wt/docs/content/` (serve with `cd ~/MEP/infra/wt/docs && uv run mkdocs serve`)
+- Hosted: not published as a site — the local tree is the copy to read
+- Pages: `concepts.md`, `getting-started.md`, `tutorials.md`, `architecture.md`, `changelog.md`,
+  and `reference/{spec-yaml,wt-contracts,wt-registry,wt-task,wt-compiler,wt-invokers,wt-runner}.md`
+
+Best for: the key-terms vocabulary (registered function / task / task instance / registry /
+compiled workflow / invoker / runner / metapackage), and the architecture *whys* (subprocess
+discovery, compile-don't-interpret, fingerprinting, GCP metapackages, `map` argname semantics).
+
+### Platform SDK docs
+
+- Local: `~/MEP/wt-tasks/ecoscope/doc/platform-sdk/content/` (serve with `mkdocs serve` from
+  `doc/platform-sdk/`)
+- Hosted: <https://ecoscope.io/en/latest/platform-sdk/>
+- Pages: `concepts.md`, `getting-started.md`, `understanding-spec.md`, `built-in-tasks.md`,
+  `examples.md`, `troubleshooting.md`, `tutorials/{first-custom-task,data-sources,widgets,groupers,form-customization}.md`,
+  and `reference/` (per-category task pages under `reference/tasks/`, plus `schemas`,
+  `connections`, `indexes`, `annotations`, `jsonschema`, `mock_loaders`)
+
+Best for: the groupers tutorial's `map` vs `mapvalues` explanation, the form-customization
+tutorial's `partial` section (bound parameters are fixed; unbound become form fields) and the
+`Field` → `AdvancedField` → `json_schema_extra` ladder, and the Desktop dev loop in
+getting-started (import the repo root; refresh = delete + re-import).
+
+Caveat that applies to both trees: syntax examples in tutorials are not reliable — several are
+outdated or invented. Use them to learn *what* a feature is for, then confirm the *shape* against
+the compiler models and a real spec before writing it. The suite's topic files
+([spec.md](spec.md), [rjsf.md](rjsf.md), [patterns.md](patterns.md), [testing.md](testing.md))
+already carry the verified shapes.
+
+## Workflow examples
+
+When the docs don't show how to do something, find a repo that already does it and copy the
+shape. Prefer the most recently published wt-framework repos; treat legacy-framework repos as
+history, not as templates.
+
+**Published wt-framework repos** (`~/MEP/wt-workflows/`, all under `github.com/wildlife-dynamics/`):
+
+| Repo | Why look at it |
 |---|---|
-| `rjsf-overrides` as a **task-instance** key with nested `schema:`/`properties:`/`uiSchema:` (platform-sdk form-customization tutorial — the most copy-pasteable error in the corpus) | Hard validation error: `TaskInstance` forbids extra keys. `rjsf-overrides` exists only at the spec **top level** with flat dotted paths ([rjsf.md](rjsf.md)); the tutorial's EnumResolver shape is invented too — the real one uses `ecoscope:transform` + `transformer_kws` |
-| Conda channel allowlist ("a channel outside this set raises a validation error" — wt concepts + spec-yaml reference) | Removed in compiler 0.8.2; any URL-schemed channel passes through |
-| CLI contract of `params`/`params_file`/`output_dir` + `WORKFLOW_*` env vars (wt-contracts reference) | The generated CLI takes `--config-json`/`--config-file`/`--execution-mode`/`--mock-io` and reads the results env var ([testing.md](testing.md)) |
-| `execution_mode: "async"` (wt-runner reference) | Only `sequential` is valid; async templates and pixi tasks are vestigial |
-| Generated package contains `params.py`/`formdata.py` (wt-compiler reference) | Removed in 0.6.0 — schema files are `params.json`/`rjsf.json` |
-| "The Platform SDK ships ~80 tasks" (concepts, built-in-tasks) | ~240 in platform alone; large areas (config, pydeck) are undocumented |
-| Connection picker appears "because the task's return type is a connection protocol type" (concepts, data-sources) | It's the **parameter** type; the return is `str` ([connections.md](connections.md)) |
-| `skip_gdf_fallback_to_none` listed under skip conditions | Not a registered task; cannot appear in `skipif.conditions` |
-| The legacy catalog repos named as the production examples to study (platform-sdk examples) | They're legacy-framework; study current published wt repos instead |
+| `wt-download-events`, `wt-download-patrols`, `wt-download-subjects` | Published, tagged, full CI/staging lifecycle; EarthRanger download + filtering patterns |
+| `wt-ndvi` | Published; GEE connection and raster pattern |
+| `patrol-effort-table`, `patrol-chart`, `patrol-encounter-rate-map` | Tagged patrol analyses — groupers, tables, charts, maps |
 
-Also: the spec-yaml reference omits the `metadata:` top-level key (added 0.9.0), and the
-getting-started path never mentions `--variant`, `--pkg-name-prefix`, `--results-env-var`,
-`test-cases.yaml`, or the publish lifecycle — that entire surface is suite-only knowledge.
+**Production catalog workflows** (`~/MEP/wt-workflows/{patrols,events,event-details,subject-tracking}`,
+under `github.com/ecoscope-platform-workflows-releases/`): the templates shipped in the ecoscope
+web/desktop catalog, tagged on `main` (`v9.x` / `v3.x`), vendored into compose for deployment
+([web-deployment.md](web-deployment.md)). Richest examples of complete dashboards — groupers,
+time-density maps, event/patrol tables and charts, `layout.json`. They are on the legacy
+`ecoscope-workflows` framework and layout (no `dev/`, no outer `pixi.toml`, committed
+`__results_snapshots__/`), so copy their task chains and output shapes, not their repo scaffold.
 
-## Known-incomplete areas
-
-- The groupers tutorial's SpatialGrouper section omits the three-task resolver chain and the
-  mock display-name requirement ([patterns.md](patterns.md)) — following it alone cannot produce
-  a working spatial grouper.
-- `mapvalues` and `skipif` have no upstream how-to at all (the tutorials cover only `partial`,
-  chaining, and `map`).
-
-## What upstream explains best — read these rather than re-deriving
-
-- **groupers tutorial on `map` vs `mapvalues`** — the clearest statement anywhere of the
-  keyed-iterable model and the `mapvalues`→`map` transition at the widget step.
-- **form-customization on `partial`** (the part that IS right): "bound parameters are fixed;
-  unbound parameters become form fields" — why `partial:` is the primary form-control lever; and
-  the escalation ladder `Field` → `AdvancedField` → `json_schema_extra`.
-- **concepts key-terms table** — registered function vs task vs task instance vs registry vs
-  compiled workflow vs invoker vs runner vs metapackage. Use this vocabulary consistently.
-- **architecture doc on the whys**: subprocess discovery (avoids importing task deps — the
-  mechanism behind the silent-ImportError failure); compile-don't-interpret (why generated code
-  is committed); fingerprinting ignoring cosmetic changes (why params_sha256 drives MAJ-vs-MIN);
-  GCP metapackages as conda's substitute for extras (the mechanism behind `--variant=gcp`);
-  `map` argnames semantics (single vs unpacked).
-- **platform getting-started on the Desktop loop**: import the **repo root**, not the compiled
-  subdirectory; no update-in-place (refresh = delete + re-import); edit → compile → run →
-  observe → iterate.
+Other repos in `~/MEP/wt-workflows/` are in-progress ports; useful for a specific pattern but
+check their branch and `[tool.wt] published` state before treating them as canonical
+([repo-layout.md](repo-layout.md)).

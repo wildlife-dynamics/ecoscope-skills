@@ -28,10 +28,10 @@ with a table of contents.
 | Web deployment via compose (catalog workflows only, manual web QA) | `reference/web-deployment.md` |
 | Repo anatomy, vendored files, repo-state signals, branch/commit conventions | `reference/repo-layout.md` |
 | Output styling defaults (colormaps, layers, chart/table config), `layout.json` sizing/placement | `reference/output-style.md` |
-| Where upstream docs are wrong / incomplete / excellent | `reference/upstream-docs.md` |
+| Reference sources — code is truth; wt + Platform SDK docs (local paths, URLs); example workflow repos | `reference/upstream-docs.md` |
 | Sensitive data, merge authorization, GitHub conventions | `reference/process-rules.md` |
 
-Ground rules baked into every file: upstream docs are authoritative for concepts, the compiler's
+Ground rules baked into every file: code is the source of truth; upstream docs are for concepts, the compiler's
 pydantic models and real fleet specs for syntax (`reference/upstream-docs.md`); citations name
 symbols, not line numbers; versions and per-repo facts point at where to verify rather than
 freezing a value.
