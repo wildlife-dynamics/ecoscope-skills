@@ -63,10 +63,8 @@ workflow's hash.
 
 `title`, `description`, `tasks`, `type` — all required, extras forbidden. Groups are flattened for
 execution and cannot nest. Card order = task order inside the group; in-card field order is task
-order too ([rjsf.md](rjsf.md): `ui:order` orders cards only, not fields inside a card). **Never duplicate a group `title`** —
-same-title groups clobber each other's schema ([rjsf.md](rjsf.md)). A fully-partialed group
-renders no card, so a card's params go in an early group and its compute tasks in a later,
-distinctly titled one.
+order too ([rjsf.md](rjsf.md): `ui:order` orders cards only, not fields inside a card). **Never duplicate a group `title`** 
+
 
 ## `requirements:`
 

@@ -11,18 +11,18 @@ The renderer source of truth is the rjsf component set in the ecoscope-web repo
 and a live form; the config-form playground may render some fields differently from Desktop.
 
 ## Contents
-- Override structure and path syntax
-- What `$defs` overrides reach (compiler ≥0.7.0)
-- `ui:order` — card order only, never inside a card
-- Silent path-mismatch failure
+- Write overrides as top-level flat dotted paths, starting with the exact card title
+- Use `$defs` overrides for display only — they never reach `params.json` (compiler ≥0.7.0)
+- Use `ui:order` only for card order, never inside a card
+- Match group titles exactly in override paths — mismatches are silently ignored
 - No duplicate task-group titles
-- `ecoscope:task_group` and the submit-flatten trap
-- "Advanced Configurations" accordions
-- Hiding titles and labels — depends on field kind
-- Field rendering rules
-- Dynamic dropdowns (`ecoscope:transform` / EarthRangerEnumResolver)
+- Never flip `ecoscope:task_group: false` to restyle a card
+- Expect one "Advanced Configurations" accordion per task in a card — don't try to merge them
+- Hide titles with `""` for objects but `" "` for arrays and strings
+- Follow these field rendering rules
+- Populate dropdowns from the connection with `ecoscope:transform` (EarthRangerEnumResolver)
 
-## Override structure and path syntax
+## Write overrides as top-level flat dotted paths, starting with the exact card title
 
 `rjsf-overrides` is a **top-level spec key** (never per-task-instance —
 [upstream-docs.md](upstream-docs.md)) with three sections, all flat dotted-key dicts:
@@ -47,13 +47,13 @@ uiSchema paths omit the `properties.` segments. To **hide a param entirely**, do
 move it to `partial:` in the spec (removes it from rjsf and from the user-facing model; also
 remove it from `test-cases.yaml` or it becomes `extra_forbidden`).
 
-## What `$defs` overrides reach
+## Use `$defs` overrides for display only — they never reach `params.json`
 
 Since compiler 0.7.0, `$defs` overrides apply **only to `rjsf.json`, not `params.json`**. Use them
 for display (titles, labeled oneOf on `$ref`'d types); don't expect them to change the validation
 model.
 
-## `ui:order` — card order only, never inside a card
+## Use `ui:order` only for card order, never inside a card
 
 `ui:order` works at **one level only: the top level, to order task-group cards.** The compiler
 auto-emits a top-level `ui:order` from spec task order, so you rarely need it; override it only
@@ -66,7 +66,7 @@ entries, so in-card field order = task order in the spec. Don't add a per-card `
 nothing and breaks whenever tasks change. To move field A above field B when B's task consumes A's
 return, split A into its own tiny task declared first ([spec.md](spec.md)).
 
-## Silent path-mismatch failure
+## Match group titles exactly in override paths — mismatches are silently ignored
 
 The compiler **silently ignores** override paths that don't match — a group-title typo means the
 override doesn't apply and the property looks "missing". The error
@@ -78,16 +78,9 @@ the spec's `title:` (spaces and capitalization included).
 **Never give two task-groups the same `title:`.** Two field-bearing groups sharing a title merge
 into one card but the schemas don't union — the LAST group's clobbers the earlier one's. Symptom:
 rjsf-overrides on the clobbered tasks create phantom objects with no `type`; the renderer shows
-"Unsupported field schema … Unknown field type undefined" and raw-id card headers. (Observed at
-compiler 0.8.3.)
+"Unsupported field schema … Unknown field type undefined" and raw-id card headers.
 
-There is no reason to share titles anyway: a fully-partialed group is absent from `rjsf.json`
-entirely (no empty card), so put a card's user-facing params in an early group and its compute
-tasks — which must run after `Process Patrols` / `Process Events` — in a later group under a
-distinct title. Some catalog specs still reuse the card's title on the compute group; that is
-legacy, not something to copy.
-
-## `ecoscope:task_group` and the submit-flatten trap
+## Never flip `ecoscope:task_group: false` to restyle a card
 
 `ecoscope:task_group` (set by `type: task-group`) is **not render-only**. The Desktop/web form
 flattens a group's tasks back to **top-level** params at submit time *only when the flag is true*
@@ -103,7 +96,7 @@ The run never starts, **and mock-io tests cannot catch it** — they feed flat p
 the model, bypassing the form's flatten step. Only a Desktop/web run or a playground submit
 exercises it. So: never flip `ecoscope:task_group: false` to restyle a card.
 
-## "Advanced Configurations" accordions
+## Expect one "Advanced Configurations" accordion per task in a card — don't try to merge them
 
 Renderer logic, not compiler logic. The renderer branches on `schema["ecoscope:task_group"]`:
 
@@ -118,7 +111,7 @@ Within the constraint you can still tidy: `title: ""` drops a task header; `part
 `ecoscope:advanced` is honored only on a card's direct task args — ignored inside nested objects
 and array rows.
 
-## Hiding titles and labels — depends on field kind
+## Hide titles with `""` for objects but `" "` for arrays and strings
 
 | Field kind | Remove title via | Why |
 |---|---|---|
@@ -130,7 +123,7 @@ Corollary: `ui:options.label: false` on a string field hides its description as 
 when you want neither; it remains correct for array-*item* labels
 (`<task>.<field>.items.ui:options.label: false`).
 
-## Field rendering rules
+## Follow these field rendering rules
 
 - **Checkbox helper text:** schema `description` renders ABOVE the checkbox; use uiSchema
   `ui:help` for text BELOW. When moving copy to `ui:help`, also blank the schema description or
@@ -156,7 +149,7 @@ when you want neither; it remains correct for array-*item* labels
   `Literal` param is silently ignored — fix task-side ([tasks.md](tasks.md)). Plain `str` params
   have no `enum`, so spec-side `oneOf` works there.
 
-## Dynamic dropdowns (`ecoscope:transform`)
+## Populate dropdowns from the connection with `ecoscope:transform`
 
 `EarthRangerEnumResolver` populates choices from the selected connection:
 
