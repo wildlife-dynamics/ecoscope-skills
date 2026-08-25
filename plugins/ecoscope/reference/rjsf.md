@@ -15,7 +15,7 @@ and a live form; the config-form playground may render some fields differently f
 - What `$defs` overrides reach (compiler ≥0.7.0)
 - `ui:order` — card order only, never inside a card
 - Silent path-mismatch failure
-- The same-title task-group schema clobber
+- No duplicate task-group titles
 - `ecoscope:task_group` and the submit-flatten trap
 - "Advanced Configurations" accordions
 - Hiding titles and labels — depends on field kind
@@ -59,7 +59,7 @@ model.
 auto-emits a top-level `ui:order` from spec task order, so you rarely need it; override it only
 when card order must differ from spec order, and list every group title (rjsf errors on a partial
 list — see the path-mismatch note below). Scrambled card order is usually a symptom of the
-same-title clobber below, not something to fix with `ui:order`.
+duplicate-title clobber below, not something to fix with `ui:order`.
 
 **Inside a task-group card, `ui:order` is ignored** — the custom template iterates schema property
 entries, so in-card field order = task order in the spec. Don't add a per-card `ui:order`; it does
@@ -73,24 +73,19 @@ override doesn't apply and the property looks "missing". The error
 `order list does not contain properties` is very likely a group-title path not exactly matching
 the spec's `title:` (spaces and capitalization included).
 
-## The same-title task-group schema clobber
+## No duplicate task-group titles
 
-**A fully-partialed group renders nothing** — it is absent from `rjsf.json` entirely, no empty
-card (verified: `Process Patrols` / `Process Events` in every catalog map spec). So the standard
-split — an early group holding a card's user-facing params, a later group holding its compute
-tasks that must run after `Process Patrols` / `Process Events` — needs no title trick at all: the
-later group can have any title. Catalog specs reuse the card's title on the compute group purely
-for readability (it marks which card those tasks belong to); it has no rendering effect.
+**Never give two task-groups the same `title:`.** Two field-bearing groups sharing a title merge
+into one card but the schemas don't union — the LAST group's clobbers the earlier one's. Symptom:
+rjsf-overrides on the clobbered tasks create phantom objects with no `type`; the renderer shows
+"Unsupported field schema … Unknown field type undefined" and raw-id card headers. (Observed at
+compiler 0.8.3.)
 
-Sharing a title only *matters* when both groups carry fields — and then it breaks: **the merge
-does not union the params models; the LAST field-bearing group's schema clobbers the earlier
-one's.** Symptom: rjsf-overrides on the clobbered tasks create phantom objects with no `type`;
-the renderer shows "Unsupported field schema … Unknown field type undefined" and raw-id card
-headers.
-
-Rule: a title may appear on at most ONE field-bearing group; any other group with that title must
-be fully partialed. Verify by grepping the compiled `rjsf.json` for **real `type` keys** on the
-fields — not mere member presence. (Observed at compiler 0.8.3; re-verify on ≥0.9.)
+There is no reason to share titles anyway: a fully-partialed group is absent from `rjsf.json`
+entirely (no empty card), so put a card's user-facing params in an early group and its compute
+tasks — which must run after `Process Patrols` / `Process Events` — in a later group under a
+distinct title. Some catalog specs still reuse the card's title on the compute group; that is
+legacy, not something to copy.
 
 ## `ecoscope:task_group` and the submit-flatten trap
 
