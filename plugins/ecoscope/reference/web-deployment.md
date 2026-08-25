@@ -23,11 +23,6 @@ workflow from its release tag directly, no compose deploy needed.
 
 ## Requirements on the workflow repo
 
-- **Validate that every task library the workflow depends on is a published package** before
-  tagging for deploy: each one must resolve from the conda channel (check the version exists in
-  `https://repo.prefix.dev/ecoscope-workflows/noarch/repodata.json`), with no `path:`/`editable:`
-  requirements or `channel: file://` left in spec.yaml. `validate-spec` rejects the local forms,
-  but only a channel lookup proves the pinned version was actually published.
 - **Deployment needs version tags on the workflow repo.** The per-template ref inputs on the
   dev-deploy dispatch must be a version tag (not a branch or SHA), and post-deploy the tag is read
   back via `git submodule status` (git-describe) and registered as the template's service-URL

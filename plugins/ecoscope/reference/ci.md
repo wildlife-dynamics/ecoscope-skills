@@ -68,9 +68,13 @@ release. Consequences:
   highest existing tag to keep tagging monotonic. Check `git tag --list 'v*'` before setting
   VERSION, and verify content by `git grep` **at the tag** (squash merges mean commit SHAs may not
   appear in `git tag --contains`).
+- **Validate that every task library the workflow depends on is a published package** before
+  tagging a release: each one must resolve from the conda channel (check the version exists in
+  `https://repo.prefix.dev/ecoscope-workflows/noarch/repodata.json`), with no `path:`/`editable:`
+  requirements or `channel: file://` left in spec.yaml. `validate-spec` rejects the local forms,
+  but only a channel lookup proves the pinned version was actually published.
 - Verify an upstream task-library release before depending on it: the symbol exists at the
-  task-library tag (`git grep -l <fn> v<X.Y.Z>`) AND the conda build exists in the channel's
-  repodata (`https://repo.prefix.dev/ecoscope-workflows/noarch/repodata.json`).
+  task-library tag (`git grep -l <fn> v<X.Y.Z>`) AND the conda build exists in the same repodata.
 
 ## Repo-specific variation
 
