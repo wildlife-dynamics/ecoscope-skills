@@ -42,3 +42,16 @@ to target a specific worktree, and the plugin has no manifest until step 7; port
 - "Keep it small: bind month interval + effort metrics + styling in the spec" (greenfield design decided silently).
 - "A feature branch buys nothing here." / "assumed a local `fix/…` branch is fine."
 - "Proceeded with committing [the lock churn]: it matches what CI's `recompile.sh --update` produces."
+
+## GREEN micro-test (scenario 2, skill embedded in the prompt — not the step-7 eval)
+
+Same worktree state, same prompt, with the `develop` SKILL.md draft pasted in as the procedure.
+Every baseline failure point bound: `_recompile.yml` read first and the variant derived from it;
+all compile/registry/test output redirected to files and read whole (no `tail`/`grep -v`); state
+stated before acting; job sized with "what is actually missing" named; `develop/<topic>` branch;
+registry confirmation in the inner env; one commit after `--all` green; handoffs offered, not
+started. Functional outcome identical to the baseline (8/8 green, one new case). Three wording gaps
+it exposed (`wt-compiler --version` isn't a flag; detached-HEAD branch read; compile only when a
+compiler input changed) were fixed in the same pass. Residual for step 7: scenarios 1 and 4 have not
+been re-run with the skill; the greenfield design-approval stop and the publish-state CI-recompile
+path are untested GREEN.

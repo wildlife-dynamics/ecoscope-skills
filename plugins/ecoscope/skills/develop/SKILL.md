@@ -28,9 +28,10 @@ exist because each one has silently destroyed work before.
 **Environment: any shell, from the directory that contains (or will contain) `spec.yaml`.**
 
 Run the plugin's preflight if it ships: `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. If it is
-absent, do its checks by hand before anything else — `wt-compiler --version`, `yq --version`
-(must be mikefarah go-yq), `dot -V`, `pixi --version`, and the outer pin
-`grep wt-compiler pixi.toml` versus the global version. Read the diagnosis; repair before
+absent, do its checks by hand before anything else — `wt-compiler compile --help` (it runs;
+the CLI has no `--version`, so read the global version from `uv tool list` or `pixi global
+list`), `yq --version` (must be mikefarah go-yq), `dot -V`, `pixi --version`, and the outer pin
+`grep wt-compiler pixi.toml` versus that global version. Read the diagnosis; repair before
 compiling. Details: `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
 
 Then **derive** the phase from the filesystem and git. Never infer it from the words in the
@@ -38,7 +39,7 @@ request — "validate", "fix", "publish" in a sentence prove nothing about the t
 order:
 
 ```bash
-git branch --show-current; git status --short
+git branch --show-current; git status --short      # empty branch = detached HEAD: cut develop/<topic>
 ls spec.yaml test-cases.yaml layout.json .scratch/progress.yaml 2>&1
 WF=$(ls -d *-workflow 2>/dev/null)                       # exactly one, or none
 cat $WF/VERSION.yaml; ls $WF/pixi.lock; grep -c 'wt-task-gcp' $WF/pixi.toml
@@ -114,13 +115,18 @@ group title. Form-level overrides (`rjsf-overrides`) are the form skill's territ
 (`${CLAUDE_PLUGIN_ROOT}/reference/rjsf.md` for a single fact; `/ecoscope:form` for the job).
 
 Test cases: build the recommended set in `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`
-(§ Recommended case set) — `base` at the rjsf defaults, one case per grouper kind, toggles
-flipped, an empty-fixture regression, live case last and only when asked. A param you just
+(§ Recommended case set) — `base` at the rjsf defaults, each grouper kind covered (combined in
+one case when the fixture carries every key, split when it doesn't), toggles flipped, an empty-fixture regression, live case last and only when asked. A param you just
 bound via `partial:` must leave `test-cases.yaml` too. Spatial-grouper mock cases use the
 fixture's display name (`SpatialGrouperTest` for the stock fixture). Real org data never enters
 a fixture (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md`).
 
 ## 5. The compile→test loop
+
+**Compile only when a compiler input changed** — `spec.yaml` (including `requirements:`). An
+edit confined to `test-cases.yaml`, `layout.json`, or `dev/fixtures/` is not a compiler input:
+skip straight to the test step. This matters most on a publish-state tree, where the CI
+recompile bumps VERSION and re-solves the lock for nothing.
 
 Pick the compile by the state derived in § 1. Both commands are copied from
 `${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § Canonical commands — that file is the single
@@ -179,7 +185,7 @@ Failure classes and fixes: `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`; task-sp
 `${CLAUDE_PLUGIN_ROOT}/reference/task-pitfalls.md`. Debug an opaque failure from the inner
 `default` env (testing.md § `dev/run-test-cases.sh`).
 
-**Loop:** edit → compile → test → until green. Then commit.
+**Loop:** edit → compile (if a compiler input changed) → test → until green. Then commit.
 
 **Commit discipline.** One commit per green cycle, conventional prefix (`feat:`, `fix:`,
 `test:`, `chore:`), containing `spec.yaml`/`test-cases.yaml`/`layout.json` **and** the
