@@ -246,5 +246,5 @@ Hand-authored at the repo root; array of grid entries:
   "widget_id": 0, "static": false}]
 ```
 
-Maps typically `w:10 h:12 minW:5 minH:10`; charts `w:10 h:10 minW:4 minH:8`. `widget_id` matches
-the widget's 0-indexed order in `gather_dashboard.widgets`.
+`widget_id` matches the widget's 0-indexed order in `gather_dashboard.widgets`. Sizing and
+placement conventions: [output-style.md](output-style.md).

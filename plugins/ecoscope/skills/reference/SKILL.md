@@ -26,7 +26,7 @@ with a table of contents.
 | Desktop Playwright E2E authoring and its footguns | `reference/desktop-e2e.md` |
 | CI gates (recompile diff, version gate), publication signals, tagging, deployment | `reference/publish-ci.md` |
 | Repo anatomy, vendored files, repo-state signals, branch/commit conventions | `reference/repo-layout.md` |
-| Output styling defaults (colormaps, layers, chart/table config) | `reference/output-style.md` |
+| Output styling defaults (colormaps, layers, chart/table config), `layout.json` sizing/placement | `reference/output-style.md` |
 | Where upstream docs are wrong / incomplete / excellent | `reference/upstream-docs.md` |
 | Sensitive data, merge authorization, GitHub conventions | `reference/process-rules.md` |
 
