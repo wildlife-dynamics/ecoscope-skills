@@ -23,7 +23,7 @@ branch without an explicit go-ahead. **"Can we merge?" is a readiness question, 
 authorization** — answer it, state the plan AND its side effects ("merging cuts v0.4.0, which
 publishes the template to Desktop users"), then wait for an explicit yes. Opening PRs, pushing
 feature branches, and re-running CI remain autonomous. This matters doubly in repos where merging
-auto-cuts a release ([publish-ci.md](publish-ci.md)).
+auto-cuts a release ([ci.md](ci.md)).
 
 ## GitHub conventions
 

@@ -28,7 +28,7 @@ dev/run-test-cases.sh [recompile.sh postcompile-editable.sh]   <- VENDORED from 
 contains `.scratch` before writing planning artifacts — a third of repos lack the entry.
 
 Legacy catalog repos differ: no `dev/`, no outer `pixi.toml`, committed `__results_snapshots__/`
-([publish-ci.md](publish-ci.md) for their CI family).
+([ci.md](ci.md) for their CI family).
 
 ## Vendored files (hub template sync)
 
@@ -40,7 +40,7 @@ customization belongs in files outside the template tree. The hub also carries b
 rulesets for the staging QA flow and the shared dev-workspace definition.
 
 Not every repo is synced (the target list is maintained by hand), so the repo's checked-in copy is
-still what CI runs — read it, don't assume ([publish-ci.md](publish-ci.md)).
+still what CI runs — read it, don't assume ([ci.md](ci.md)).
 
 ## `.scratch/` planning artifacts
 
@@ -66,7 +66,7 @@ Phase is **derived from the filesystem and git, never guessed from keywords**:
 | `path:` / `editable:` in `requirements:` | dev mode; must revert to released pins before publish |
 | branch `develop/*` / `publish/*` / `staging` / base | which lane the work is in |
 | `.scratch/progress.yaml` exists | a prior multi-session plan — read it and resume |
-| `[tool.wt] published`, guard workflows, tags | publication state ([publish-ci.md](publish-ci.md)) |
+| `[tool.wt] published`, guard workflows, tags | publication state ([ci.md](ci.md)) |
 
 ## Branch and commit conventions
 
