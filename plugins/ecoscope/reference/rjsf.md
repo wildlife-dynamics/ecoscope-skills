@@ -13,7 +13,7 @@ and a live form; the config-form playground may render some fields differently f
 ## Contents
 - Override structure and path syntax
 - What `$defs` overrides reach (compiler ≥0.7.0)
-- `ui:order` — don't
+- `ui:order` — card order only, never inside a card
 - Silent path-mismatch failure
 - The same-title task-group schema clobber
 - `ecoscope:task_group` and the submit-flatten trap
@@ -53,14 +53,18 @@ Since compiler 0.7.0, `$defs` overrides apply **only to `rjsf.json`, not `params
 for display (titles, labeled oneOf on `$ref`'d types); don't expect them to change the validation
 model.
 
-## `ui:order` — don't
+## `ui:order` — card order only, never inside a card
 
-**Never use `ui:order` in rjsf-overrides.** It requires listing every property and breaks whenever
-tasks change; and **inside task-group cards it is ignored anyway** — the custom template iterates
-schema property entries, so in-card order = task order in the spec. To move field A above field B
-when B's task consumes A's return, split A into its own tiny task declared first
-([spec.md](spec.md)). The compiler auto-emits group-level `ui:order` from spec task order;
-scrambled card order is a symptom of the same-title clobber below, not something to fix manually.
+`ui:order` works at **one level only: the top level, to order task-group cards.** The compiler
+auto-emits a top-level `ui:order` from spec task order, so you rarely need it; override it only
+when card order must differ from spec order, and list every group title (rjsf errors on a partial
+list — see the path-mismatch note below). Scrambled card order is usually a symptom of the
+same-title clobber below, not something to fix with `ui:order`.
+
+**Inside a task-group card, `ui:order` is ignored** — the custom template iterates schema property
+entries, so in-card field order = task order in the spec. Don't add a per-card `ui:order`; it does
+nothing and breaks whenever tasks change. To move field A above field B when B's task consumes A's
+return, split A into its own tiny task declared first ([spec.md](spec.md)).
 
 ## Silent path-mismatch failure
 
