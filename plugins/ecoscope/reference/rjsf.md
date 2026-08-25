@@ -104,8 +104,15 @@ Renderer logic, not compiler logic. The renderer branches on `schema["ecoscope:t
   that task's own leaf fields by `ecoscope:advanced` (advanced flags on the task objects
   themselves are ignored). A group with 3 advanced-bearing tasks shows 3 accordions — they cannot
   be merged while it stays a task-group, and un-grouping breaks submission (trap above).
-- **Non-task-group section** → direct child properties split by `ecoscope:advanced`, exactly one
+- **Non-task-group section** (the compiler-built cards with no `ecoscope:task_group` flag —
+  `workflow_details`, `er_client_name`, `time_range`, `base_map_defs`) → the section's direct
+  child properties are split by `ecoscope:advanced`, and all advanced ones share exactly one
   accordion.
+
+To put params from several tasks into **one** accordion, give them a dedicated task: a single
+task that takes all of those params (flagged `ecoscope:advanced`) and returns them for the
+consuming tasks — one task's leaf fields = one accordion. Same split-a-task move as for field
+order ([spec.md](spec.md)).
 
 Within the constraint you can still tidy: `title: ""` drops a task header; `partial` hides fields.
 `ecoscope:advanced` is honored only on a card's direct task args — ignored inside nested objects
