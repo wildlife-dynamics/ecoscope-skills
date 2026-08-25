@@ -33,6 +33,10 @@ the app.
   and parses only `org/repo` — it cannot target a feature branch. For pre-publish/local code, do
   the "Local Folder" import once by hand (the native folder picker cannot be driven — the
   contextBridge freezes `selectFolder`), then start tests from the imported tile.
+- **Always ask the user to import the template manually** — never try to automate or script the
+  import. If the workflow's environment/dependencies changed since the last import (pixi lock,
+  task-library version, new deps), ask them to **delete the old tile first** and re-import: an
+  existing import keeps its stale env, so tests would run against the old dependency set.
 - Tile test-id pattern is `<template-name>-container`, shared by catalog, local, and GitHub-import
   copies of the same workflow. Disambiguate by subtitle:
   `.filter({ hasText: 'Locally imported from' })` vs `.filter({ hasText: 'Source code: <url>' })`.
