@@ -119,7 +119,7 @@ raise the attempts rather than treating the timeout as failure, and check the ru
 
 A failed *workflow* writes `latest_run.error` + `latest_run.trace` into
 `<app-data>/data/workflows/<template-id>/<workflow-uuid>/metadata.json`
-([preview-desktop.md](preview-desktop.md) for the app-data dir per platform). Verify what the
+([preview-dashboard.md](preview-dashboard.md) for the app-data dir per platform). Verify what the
 form actually committed via that file's `config` (flat task-id keys) — silently-dropped fills
 show up as missing keys. Data-backed workflows can fail on default form dates (e.g. satellite
 products lag) — use historical dates from `test-cases.yaml`.

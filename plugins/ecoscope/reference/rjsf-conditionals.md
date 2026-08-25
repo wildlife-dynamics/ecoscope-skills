@@ -76,7 +76,7 @@ the payload (missing key → model default reapplies):
   model field silently stays on.
 
 Verify what actually committed via the run's `metadata.json` `config`
-([preview-desktop.md](preview-desktop.md)).
+([preview-dashboard.md](preview-dashboard.md)).
 
 ## Headless contract testing
 

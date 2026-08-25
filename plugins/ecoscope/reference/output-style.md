@@ -124,4 +124,4 @@ Hand-authored at the repo root; a JSON array with one react-grid-layout entry pe
   with no entry is not drawn, and `[]` renders a dashboard with zero tiles (mt-patrols and
   mt-wildlife ship `[]` and are affected).
 - Desktop preview needs the workflow repo's own `layout.json`, not the one from `result.json`
-  ([preview-desktop.md](preview-desktop.md)).
+  ([preview-dashboard.md](preview-dashboard.md)).
