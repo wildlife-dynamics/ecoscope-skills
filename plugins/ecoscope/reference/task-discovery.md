@@ -6,19 +6,76 @@ would force the compiler to install every library's deps — GDAL, plotting stac
 conflicts.) Every "task not found" symptom traces back to one link of that chain.
 
 ## Contents
-- Finding an existing task — registry, source grep, compiled artifacts; then read the signature
+- Finding an existing task — quick path; source scan, registry, compiled artifacts; the signature
 - A task is missing: triage by symptom
 - The discovery chain (mechanism)
 
 ## Finding an existing task
 
-The inventory is large and moves with every release, so no written list stays true. Three ways to
-find a task, in decreasing order of authority. 
+The inventory is large and moves with every release, so no written list stays true.
 
-### 1. Ask the registry — authoritative
+### Quick path
 
-Answers exactly which tasks the compiler will resolve, and at which public path. Which env you run
-it in depends on whether this workflow has been compiled yet.
+1. **Find the name** — `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/search-tasks.py --lib <tasks-dir>
+   <keyword>` (no env; scans a checkout or installed package).
+2. **Read how to use it** — same script with `-s <name>`: full signature + docstring.
+3. **Confirm it resolves** — `wt-registry --function <name>` in the compiled env; this is the only
+   source of the public path, and the only view of what the spec's pins actually contain.
+4. **Reference it by bare name** in `spec.yaml`; fully qualify only when the compiler reports a
+   collision.
+
+**Everything below this line is detail and triage — stop here if the quick path worked.** The
+methods follow in the order you use them; authority runs the other way, and the registry has the
+last word.
+
+### 1. Scan the source — fastest, not authoritative
+
+Answers "is there something for this, and what is it called?" when you're hunting by concept rather
+than by exact name. The plugin ships `scripts/search-tasks.py`, a pure-AST scan for `@register`
+functions — no environment, and the full listing of ~300 tasks is ~15 KB:
+
+```bash
+S=${CLAUDE_PLUGIN_ROOT}/scripts/search-tasks.py
+python3 $S --lib <tasks-dir> [--lib <tasks-dir>] <keyword>   # names + defining module
+python3 $S --lib <tasks-dir> -s <name>          # signature + docstring, every definition
+python3 $S --lib <tasks-dir>                    # full listing; collisions flagged
+```
+
+`--lib` (repeatable, or `ECOSCOPE_TASK_LIBS=<dir>:<dir>`) takes any directory inside a task
+package. Two things you can point it at, with different guarantees:
+
+- **A checked-out task library** — instant, and its recall over that tree is complete. But a
+  checkout is whatever branch and commit you happen to have, which is routinely ahead of or behind
+  what the spec pins; the gap is widest on a feature branch. A task that exists only in the
+  checkout fails the compile with `Task '<name>' not found in known tasks` while its source sits
+  visibly on disk.
+- **The installed package** — matches the pins, at the cost of needing an env. Resolve the path
+  instead of hardcoding it, since install location varies per machine and per install mode:
+
+```bash
+M=<inner>/pixi.toml
+TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
+  python -c 'import ecoscope.platform.tasks as m; print(m.__path__[0])')
+python3 $S --lib "$TASKS" <keyword>
+```
+
+`__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
+one.
+
+**The scan errs in one direction only:** it can show you a task that your pinned registry doesn't
+have, but it will never hide one that it does. That makes it safe for exploring and unsafe as the
+last word — confirm the name in the registry before it reaches the spec.
+
+**Further limits:** it sees only the roots you pass, so pass one per library in `requirements:`;
+the module it prints is the *defining* module, never a spec reference (the spec takes the bare
+name, or the registry's public path); and it cannot see re-exports, `io` tags, or deprecation. It
+does flag a name defined in more than one library — the compile-blocking collision case.
+
+### 2. Ask the registry — authoritative
+
+Answers exactly which tasks the compiler will resolve, and at which public path — confirm every
+scan hit here before it reaches the spec. Which env you run it in depends on whether this workflow
+has been compiled yet.
 
 *Compiled workflow* → borrow its inner env. This is the only listing that reflects what the
 workflow will actually compile against:
@@ -57,37 +114,6 @@ you need.
 
 **Cost:** needs an environment — a solve, and a download on first use.
 
-### 2. Grep the source — fastest, not authoritative
-
-Answers "is there something for this, and what is it called?" when you're hunting by concept rather
-than by exact name. Two things you can point it at, with different guarantees:
-
-- **A checked-out task library** — instant, and its recall over that tree is complete. But a
-  checkout is whatever branch and commit you happen to have, which is routinely ahead of or behind
-  what the spec pins; the gap is widest on a feature branch. A task that exists only in the
-  checkout fails the compile with `Task '<name>' not found in known tasks` while its source sits
-  visibly on disk.
-- **The installed package** — matches the pins, at the cost of needing an env. Resolve the path
-  instead of hardcoding it, since install location varies per machine and per install mode:
-
-```bash
-M=<inner>/pixi.toml
-TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
-  python -c 'import ecoscope.platform.tasks as m; print(m.__path__[0])')
-grep -rn --include='*.py' -A2 '@register(' "$TASKS" | grep 'def .*<concept>'
-```
-
-`__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
-one.
-
-**Grep errs in one direction only:** it can show you a task that your pinned registry doesn't have,
-but it will never hide one that it does. That makes it safe for exploring and unsafe as the last
-word — confirm the name in the registry before it reaches the spec.
-
-**Three further limits:** it sees only the library you point it at, so repeat it per library in
-`requirements:`; it yields a function name, not a spec reference (the file path it prints is never
-valid); and it cannot see re-exports or flag collisions.
-
 ### 3. Read the compiled artifacts — what this workflow already uses
 
 The generated `params.json` / `rjsf.json` list the tasks this workflow already exposes, with their
@@ -97,8 +123,10 @@ parameters as the form sees them. Narrowest scope of the three, and the quickest
 ### Read the signature
 
 Neither the registry nor `params.json` says what a task returns or how its wired inputs are typed,
-and that is what `${{ }}` wiring depends on. `@register` returns the bare function, so the inner
-env answers directly — take the import line from `import_statement`:
+and that is what `${{ }}` wiring depends on. Two routes to the full signature and docstring:
+`search-tasks.py -s <name>` reads it from source (no env; shows every definition when the name
+collides), and — the ground truth for the pinned version — `@register` returns the bare
+function, so the inner env answers directly; take the import line from `import_statement`:
 
 ```bash
 pixi run --manifest-path <inner>/pixi.toml --frozen -e default python -c '
@@ -110,9 +138,9 @@ print(inspect.signature(f)); print(f.__doc__)'
 **Prefer this over the registry schema or `params.json` when deciding how to use a task.** It is
 the one source with everything at once — every parameter including the excluded wire inputs, the
 full `Annotated`/`Field` metadata, the return type, and the docstring, which often carries usage
-patterns the schema can't (template snippets, examples) — and it reflects the pinned version, not
-a checkout. The source is the same information in readable form, with the checkout-vs-pin caveat
-above.
+patterns the schema can't (template snippets, examples). The `-s` route is the same information
+from a checkout, with the checkout-vs-pin caveat above; use the inner-env route when the two may
+differ.
 
 ### Turn the hit into a spec reference
 
