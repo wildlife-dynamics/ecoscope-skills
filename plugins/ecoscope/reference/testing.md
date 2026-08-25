@@ -176,10 +176,17 @@ downstream fixture as *upstream rows + the columns that task adds* (`event_detai
 same task share one mock key: put both branches' rows in one fixture and filter on
 `event_type` after.
 
-**Shape for coverage.** Decide what each case must exercise and plant it: ≥2 categories per
-pivot/stacked column, every grouper key the combined grouper case uses, a deliberate missing
-row (the "Unknown" fallback), a nested array left empty (the `COALESCE '[]'` path). Note each
-in the script docstring.
+**Shape.** Three requirements, all at once:
+- *Matches the target ER instance's data model* — the event types, patrol-type slugs,
+  title-mapped `event_details` keys, and nested detail structures exactly as that instance
+  defines them (pull the event-type schema and patrol-type list from the instance; don't
+  invent keys). A fixture shaped like a generic ER is a test of nothing.
+- *Supports the test cases* — decide what each case must exercise and plant it: ≥2 categories
+  per pivot/stacked column, every grouper key the combined grouper case uses, a deliberate
+  missing row (the "Unknown" fallback), a nested array left empty (the `COALESCE '[]'` path).
+  Note each planted row in the script docstring.
+- *No real data* — values are generated per the synthetic-only rule above; only the model
+  (schema, slugs, key titles) comes from the instance, never the rows.
 
 **Empty variants.** `df.iloc[0:0].to_parquet(...)` per fixture keeps the schema with zero rows —
 that's the empty-fixture regression case.
