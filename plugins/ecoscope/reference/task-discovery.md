@@ -6,28 +6,30 @@ would force the compiler to install every library's deps — GDAL, plotting stac
 conflicts.) Every "task not found" symptom traces back to one link of that chain.
 
 ## Contents
-- Finding an existing task
+- Finding an existing task — the registry, a source grep, the compiled artifacts
 - A task is missing: triage by symptom
 - The discovery chain (mechanism)
 
 ## Finding an existing task
 
-The inventory is large and moves with every release. Resolve it from what *this repo* pins, never
-from a source checkout.
+The inventory is large and moves with every release, so no written list stays true. Three ways to
+find a task, in decreasing order of authority. 
 
-**List what's available** — run `wt-registry` in an env that has the task libraries installed.
-Which env depends on whether this workflow has been compiled yet.
+### 1. Ask the registry — authoritative
 
-*With a compiled workflow*, its inner env already has them:
+Answers exactly which tasks the compiler will resolve, and at which public path. Which env you run
+it in depends on whether this workflow has been compiled yet.
+
+*Compiled workflow* → borrow its inner env. This is the only listing that reflects what the
+workflow will actually compile against:
 
 ```bash
 pixi run --manifest-path <inner>/pixi.toml --frozen -e default wt-registry --format pretty
 ```
 
-*Before any compile* — a new workflow, or one that has never been compiled with `--install` —
-there is no inner env to borrow, and the **outer** env is no help either: it holds `wt-compiler`,
-`graphviz`, and `go-yq`, never task libraries. Build a throwaway env instead. `pixi exec` solves
-and caches one on the fly, so this needs no workflow, no manifest, and no checkout:
+*No compile yet* → build a throwaway env. The outer env is not a substitute: it holds
+`wt-compiler`, `graphviz`, and `go-yq`, never task libraries. `pixi exec` solves and caches one on
+the fly, needing no workflow, no manifest, and no checkout:
 
 ```bash
 pixi exec -c https://prefix.dev/ecoscope-workflows -c conda-forge \
@@ -35,31 +37,29 @@ pixi exec -c https://prefix.dev/ecoscope-workflows -c conda-forge \
   wt-registry --format pretty
 ```
 
-Add a `-s` per task library you intend to put in `requirements:` — the listing shows exactly the
-libraries you name and nothing else. The first run pays a solve and download; later ones reuse the
-cache (`pixi clean cache --exec` clears it). Because the specs here are unpinned, this answers
-"does a task like this exist?" — once the spec pins real versions, re-check against the inner env,
-which is the only listing that reflects what the workflow will actually compile against.
+One `-s` per library you intend to declare — the listing shows those and nothing else. First run
+pays a solve and a download; later ones reuse the cache (`pixi clean cache --exec` clears it).
+These specs are unpinned, so treat the result as "does such a task exist?" and re-confirm against
+the inner env once the spec pins versions.
 
-Filters, both repeatable: `--function NAME`, `--package PACKAGE`. `--format json` gives the
-machine-readable form — `entries` keyed by fully-qualified name, each carrying `function_name`,
-`public_module_path`, and a ready-made `import_statement`.
+Filters, both repeatable: `--function NAME`, `--package PACKAGE`. `--format json` returns `entries`
+keyed by fully-qualified name, each with `function_name`, `public_module_path`, and a ready-made
+`import_statement`.
 
-**See what this workflow already exposes**: the compiled `params.json` / `rjsf.json`.
+**Cost:** needs an environment — a solve, and a download on first use.
 
-**Turn the hit into a spec reference:**
+### 2. Grep the source — fastest, not authoritative
 
-- Prefer the **bare function name**. It survives internal module moves — in editable checkouts the
-  registry can record a task under its private module after a refactor, breaking dotted references
-  that worked yesterday.
-- Qualify only on a genuine collision, using the **public re-export path** from
-  `public_module_path` (e.g. `ecoscope.platform.tasks.config.set_traj_filters`) — never the private
-  defining module. You don't need to know the collision set in advance: the compiler fails with
-  `Multiple tasks named '<name>' found … Available modules: [...]`, and that list is the answer.
+Answers "is there something for this, and what is it called?" when you're hunting by concept rather
+than by exact name. Two things you can point it at, with different guarantees:
 
-**Grepping the library** is a fair accelerator when you're hunting by concept rather than exact
-name — but resolve the path from the environment, never from a checkout. Install locations differ
-per machine and per install mode, so any hardcoded `~/...` path is wrong on someone else's box:
+- **A checked-out task library** — instant, and its recall over that tree is complete. But a
+  checkout is whatever branch and commit you happen to have, which is routinely ahead of or behind
+  what the spec pins; the gap is widest on a feature branch. A task that exists only in the
+  checkout fails the compile with `Task '<name>' not found in known tasks` while its source sits
+  visibly on disk.
+- **The installed package** — matches the pins, at the cost of needing an env. Resolve the path
+  instead of hardcoding it, since install location varies per machine and per install mode:
 
 ```bash
 M=<inner>/pixi.toml
@@ -68,25 +68,32 @@ TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
 grep -rn --include='*.py' -A2 '@register(' "$TASKS" | grep 'def .*<concept>'
 ```
 
-This needs an inner env for the same reason the listing above does. With no compiled workflow,
-reach for the `pixi exec` listing instead — it answers the same "is there a task for this?"
-question without needing a path at all.
-
 `__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
-one — either way it's the version this repo's pins actually select, which is the same principle as
-everything else in this section.
+one.
 
-Three things grep will not do for you:
+**Grep errs in one direction only:** it can show you a task that your pinned registry doesn't have,
+but it will never hide one that it does. That makes it safe for exploring and unsafe as the last
+word — confirm the name in the registry before it reaches the spec.
 
-- **It only sees the library you resolved.** Repeat the command for every task library in the
-  spec's `requirements:` — swap in `ecoscope_workflows_ext_custom.tasks` and any per-workflow ext
-  package. Resolving one and stopping hides the rest: `generate_etd_raster` lives in ext-custom, so
-  a grep of `ecoscope.platform.tasks` alone reports nothing at all.
-- **It gives you a function name, not a spec reference.** The file path it prints is never a valid
-  reference — the reference is the public re-export path, which only `wt-registry` knows. Confirm
-  the name there before writing it into the spec.
-- **It cannot see re-exports or flag collisions.** A name that grep finds in two libraries looks
-  identical to one found in a single library.
+**Three further limits:** it sees only the library you point it at, so repeat it per library in
+`requirements:`; it yields a function name, not a spec reference (the file path it prints is never
+valid); and it cannot see re-exports or flag collisions.
+
+### 3. Read the compiled artifacts — what this workflow already uses
+
+The generated `params.json` / `rjsf.json` list the tasks this workflow already exposes, with their
+parameters as the form sees them. Narrowest scope of the three, and the quickest way to answer
+"what is this workflow already doing?" or to lift a known-good reference from a sibling workflow.
+
+### Turn the hit into a spec reference
+
+- Prefer the **bare function name**. It survives internal module moves — in editable checkouts the
+  registry can record a task under its private module after a refactor, breaking dotted references
+  that worked yesterday.
+- Qualify only on a genuine collision, using the **public re-export path** from
+  `public_module_path` — never the private defining module. You don't need the collision set in
+  advance: the compiler fails with `Multiple tasks named '<name>' found … Available modules: [...]`,
+  and that list is the answer.
 
 ## A task is missing: triage by symptom
 
