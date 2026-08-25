@@ -6,6 +6,7 @@
 ## Contents
 - The two test layers
 - test-cases.yaml idiom
+- Recommended case set
 - test-cases gotchas
 - How mock-io works
 - `mock_io_overrides` — per-case fixture overrides
@@ -44,7 +45,7 @@ base:
     workflow_details: {name: "Patrol Effort", description: "…"}
     er_client_name: {data_source: {name: "er_asia"}}
     time_range:
-      since: "2015-01-10T00:00:00"
+      since: "2015-01-10T00:00:00"     # naive — no "Z"/offset suffix (see gotchas)
       until: "2015-02-28T23:59:59"
       timezone: {label: "UTC (UTC+00:00)", tzCode: "UTC", name: "(UTC+00:00) UTC", utc: "+00:00"}
     groupers: {groupers: []}          # [] = single view; set a grouper to split
@@ -55,8 +56,30 @@ mep_dev:
 ```
 
 Make case `description`s name the code path exercised ("hits the resolver tasks and
-add_spatial_index"). Ship an **empty-fixture regression case** alongside rich ones where skip
-chains matter.
+add_spatial_index").
+
+## Recommended case set
+
+Build the mock cases first, in this order; add the live case last.
+
+1. **`base`** — `mock_io: true`, every param set to its rjsf default (see gotchas: an omitted
+   param falls back to the pydantic default, not the form default). This is what a user gets by
+   submitting the untouched form; every other case is a delta from it.
+2. **Grouper cases** covering each grouper kind the workflow supports (temporal, categorical,
+   spatial …) — groupers change the fan-out shape, so each is a distinct code path. Combine two
+   or three groupers in one case when the mock data supports it (the fixture has to carry every
+   key, or groups silently vanish); split them only when it doesn't. Spatial groupers need the
+   fixture display name (see gotchas).
+3. **Selection/toggle cases** — every user-facing switch (keep/skip toggles, output selections,
+   optional branches) gets flipped to its non-default value in at least one case. Combine
+   switches that don't interact into the same case and aim for the fewest cases that cover all
+   of them; give a switch its own case only when it changes a branch another switch also touches.
+   Keep these on mock data so the whole set stays fast to run.
+4. **Empty-fixture regression case** wherever skip chains matter — override the rich fixture
+   with an empty one (`mock_io_overrides`) and assert the run completes.
+5. **One live case** (`mock_io: false`) — add it only once the mock cases are settled and
+   passing. Live failures are config drift, data gaps, or network, not workflow logic
+   ([Live cases](#live-cases)); mixing them in early muddies the signal.
 
 ## test-cases gotchas
 
@@ -66,7 +89,9 @@ chains matter.
 - **Only user-configurable params belong in a case** — anything bound via `partial` is
   `extra_forbidden`.
 - **rjsf `default:` is form-only** — an omitted param uses the pydantic model default
-  ([rjsf.md](rjsf.md)); set toggles explicitly.
+  ([rjsf.md](rjsf.md)), not what the form shows. The **base case should exercise the rjsf
+  defaults**: set every param with an rjsf `default:` explicitly to that value, so the case
+  matches what a user gets by submitting the untouched form.
 - **Absolute paths for files** — the CLI runs from the compiled workflow dir.
 - **`SkipJsonSchema` fields silently drop** — they're absent from the Params schema, so pydantic
   discards them as extras and union matching may pick a different branch. Check the compiled
@@ -74,8 +99,6 @@ chains matter.
 - **Spatial-grouper mock cases** must use the display name the mock fixture carries —
   `spatial_index_name: "SpatialGrouperTest"` for the stock fixture ([patterns.md](patterns.md)
   for the mechanism).
-- **Aggregation over event details in mock cases** must use a key the canned
-  `process_events_details` fixture contains ([patterns.md](patterns.md), side-branch pattern).
 
 ## How mock-io works
 

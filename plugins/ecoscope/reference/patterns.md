@@ -6,15 +6,12 @@ semantics in [tasks.md](tasks.md).
 ## Contents
 - The pipeline skeleton
 - Setup and fetch
-- Processing groups
 - Grouping, splitting, and the spatial-grouper resolver chain
-- `groupbykey` — zipping keyed iterables
-- Event-details as a side branch
-- Positive "keep" toggles
 - Widget pipelines (map, chart)
 - Data export and DOCX reports
 - Dashboard assembly and the "Edit Layout" predicate
-- layout.json
+- `groupbykey` — zipping keyed iterables
+- Positive "keep" toggles
 
 ## The pipeline skeleton
 
@@ -48,23 +45,6 @@ workflow:
 `workflow_details` must use exactly that id ([tasks.md](tasks.md)). For file-based sources use
 `load_df`.
 
-## Processing groups
-
-```yaml
-  - title: Process Data
-    type: task-group
-    description: "Process data by applying filters and transformations."
-    tasks:
-      - {name: Convert to Timezone, id: convert_tz, task: convert_values_to_timezone,
-         partial: {df: "${{ workflow.get_event_data.return }}",
-                   timezone: "${{ workflow.get_timezone.return }}", columns: ["time"]}}
-      - {name: Apply SQL Query, id: sql_query, task: apply_sql_query,
-         partial: {df: "${{ workflow.convert_tz.return }}"}}
-```
-
-`apply_sql_query` is SQLite, `normalize_json_column` needs dicts not strings —
-[task-pitfalls.md](task-pitfalls.md) before wiring either.
-
 ## Grouping and splitting
 
 ```yaml
@@ -95,68 +75,6 @@ grouper unresolved, `add_spatial_index` adds nothing, and `split_groups` dies wi
 `KeyError('SpatialGrouper_<name>')`. Mocked test cases must therefore use the display name the
 mock fixture carries (`"SpatialGrouperTest"` for the stock fixture — [testing.md](testing.md)).
 `add_spatial_index` appends the region as a pandas **index level**, not a column.
-
-## `groupbykey` — zipping keyed iterables
-
-Use when two or more keyed iterables (each from `split_groups` or a `mapvalues` chain over it)
-must be paired back together by matching composite-filter keys:
-
-```
-in : [[(K_a, v0_a), (K_b, v0_b)],      # iterable 0
-      [(K_a, v1_a), (K_b, v1_b)]]     # iterable 1
-out: [(K_a, [v0_a, v1_a]), (K_b, [v0_b, v1_b])]
-```
-
-Order is positional; keys are CompositeFilter tuples and must match exactly across inputs.
-
-**Consumer pattern A — multi-argname `mapvalues`** (downstream task takes separate params):
-
-```yaml
-- {id: zipped_layers, task: groupbykey,
-   partial: {iterables: ["${{ workflow.boundary_layer.return }}",     # → geo_layers (pos 0)
-                         "${{ workflow.tile_layers.return }}"]}}      # → tile_layers (pos 1)
-- {id: combined_map, task: draw_map,
-   mapvalues: {argnames: [geo_layers, tile_layers],                   # order matches iterables
-               argvalues: "${{ workflow.zipped_layers.return }}"}}
-```
-
-**Consumer pattern B — single argname** (downstream takes one list param): pass one argname; the
-whole value-list arrives as that argument. The downstream signature dictates A vs B.
-
-**`skipif` for `groupbykey`** — nested values may be SkipSentinels, so:
-
-```yaml
-  skipif:
-    conditions: [any_dependency_skipped, all_keyed_iterables_are_skips]
-    unpack_depth: 1
-```
-
-Without `unpack_depth: 1` the skip check inspects the outer list and misses nested sentinels.
-`groupbykey` itself drops sentinel values from inputs, so a partially-skipped iterable still
-produces a usable result.
-
-**Failure modes:** `iterables: [a, b]` with `argnames: [arg_b, arg_a]` assigns values to the wrong
-parameters **with no compile-time error**; zipping iterables split with *different* `groupers`
-silently disappears groups (key drift). `merge_df` does not zip — it flattens ONE keyed iterable
-into an indexed DataFrame; use `groupbykey` to zip, `merge_df` to flatten.
-
-## Event-details as a side branch
-
-Keep an event-details chain (`process_events_details` + normalization) as a **side branch merged
-back by id, never inline** in a patrol pipeline. The canned mock fixture for
-`process_events_details` is a 1-row frame with no patrol columns, so an inline chain nukes
-`patrol_id`/`patrol_serial_number` under mock tests (KeyError downstream) even though live runs
-work. Pattern: side branch → `map_columns` retaining `["id", <agg column>]`
-(`raise_if_not_found: false`) → `merge_two_dataframes how=left on id`. Mock cases for aggregation
-fields must use a key the canned fixture actually contains ([testing.md](testing.md)).
-
-## Positive "keep" toggles
-
-To show a checked-means-do-it toggle over skip-semantics tasks: chain `invert_bool(value=True)`
-ahead and wire its return into the consumer's `skip` partial. **Unless** the consumer has its own
-skip param with a terminal return (e.g. `download_event_attachments.skip_download`) — then feed
-the toggle straight in and drop `maybe_skip_df` entirely. Keep `maybe_skip_df` only where the
-return (or sentinel) feeds downstream tasks.
 
 ## Widget pipelines
 
@@ -237,14 +155,54 @@ published status; that metadata isn't even passed in. layout.json is still loade
 either way; only the *edit* affordance is gated. Getting the button on an ungrouped workflow means
 adding a real grouper — a data-model change, not a tweak.
 
-## layout.json
+## `groupbykey` — zipping keyed iterables
 
-Hand-authored at the repo root; array of grid entries:
+Use when two or more keyed iterables (each from `split_groups` or a `mapvalues` chain over it)
+must be paired back together by matching composite-filter keys:
 
-```json
-[{"i": "0", "x": 0, "y": 0, "w": 10, "h": 12, "minW": 5, "minH": 10,
-  "widget_id": 0, "static": false}]
+```
+in : [[(K_a, v0_a), (K_b, v0_b)],      # iterable 0
+      [(K_a, v1_a), (K_b, v1_b)]]     # iterable 1
+out: [(K_a, [v0_a, v1_a]), (K_b, [v0_b, v1_b])]
 ```
 
-`widget_id` matches the widget's 0-indexed order in `gather_dashboard.widgets`. Sizing and
-placement conventions: [output-style.md](output-style.md).
+Order is positional; keys are CompositeFilter tuples and must match exactly across inputs.
+
+**Consumer pattern A — multi-argname `mapvalues`** (downstream task takes separate params):
+
+```yaml
+- {id: zipped_layers, task: groupbykey,
+   partial: {iterables: ["${{ workflow.boundary_layer.return }}",     # → geo_layers (pos 0)
+                         "${{ workflow.tile_layers.return }}"]}}      # → tile_layers (pos 1)
+- {id: combined_map, task: draw_map,
+   mapvalues: {argnames: [geo_layers, tile_layers],                   # order matches iterables
+               argvalues: "${{ workflow.zipped_layers.return }}"}}
+```
+
+**Consumer pattern B — single argname** (downstream takes one list param): pass one argname; the
+whole value-list arrives as that argument. The downstream signature dictates A vs B.
+
+**`skipif` for `groupbykey`** — nested values may be SkipSentinels, so:
+
+```yaml
+  skipif:
+    conditions: [any_dependency_skipped, all_keyed_iterables_are_skips]
+    unpack_depth: 1
+```
+
+Without `unpack_depth: 1` the skip check inspects the outer list and misses nested sentinels.
+`groupbykey` itself drops sentinel values from inputs, so a partially-skipped iterable still
+produces a usable result.
+
+**Failure modes:** `iterables: [a, b]` with `argnames: [arg_b, arg_a]` assigns values to the wrong
+parameters **with no compile-time error**; zipping iterables split with *different* `groupers`
+silently disappears groups (key drift). `merge_df` does not zip — it flattens ONE keyed iterable
+into an indexed DataFrame; use `groupbykey` to zip, `merge_df` to flatten.
+
+## Positive "keep" toggles
+
+To show a checked-means-do-it toggle over skip-semantics tasks: chain `invert_bool(value=True)`
+ahead and wire its return into the consumer's `skip` partial. **Unless** the consumer has its own
+skip param with a terminal return (e.g. `download_event_attachments.skip_download`) — then feed
+the toggle straight in and drop `maybe_skip_df` entirely. Keep `maybe_skip_df` only where the
+return (or sentinel) feeds downstream tasks.
