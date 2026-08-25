@@ -15,10 +15,14 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compile�
 - **SQLite dialect, not DuckDB**: `TRY_CAST(x AS DOUBLE)` → `CAST(x AS REAL)`; `DOUBLE` → `REAL`
   or `INTEGER`. `json_extract()` IS available and useful.
 - **Complex column types break SQLite**: columns holding Python dicts or lists can't be stored;
-  `SELECT *` fails silently or errors. Use the `columns:` whitelist to exclude them, or
-  restructure so they're removed/expanded first. Common offenders after
-  `load_df(deserialize_json=true)`: `attributes` (list), `extracted_attributes` (dict),
-  `reported_by` (dict). Only whitelist columns **guaranteed to exist** — optional fields KeyError.
+  `SELECT *` fails silently or errors. Common offenders after `load_df(deserialize_json=true)`:
+  `attributes` (list), `extracted_attributes` (dict), `reported_by` (dict). Fix with
+  `sanitize: true` (default since ecoscope v2.17.0): list/dict/set/bytes columns are converted to
+  JSON strings before the query runs; geometry is preserved. The JSON strings then work with
+  `json_extract()` (below). Only set `sanitize: false` when a downstream task needs the real
+  list/dict values — then use the `columns:` whitelist to exclude them, or restructure so they're
+  removed/expanded first (e.g. `normalize_json_column`). Only whitelist columns **guaranteed to
+  exist** — optional fields KeyError.
 - **`json_extract()` beats normalize+SQL** for simple extractions from JSON-string columns:
 
   ```sql
