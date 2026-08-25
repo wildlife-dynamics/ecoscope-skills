@@ -41,5 +41,4 @@ auto-cuts a release ([ci.md](ci.md)).
 The prefix.dev channels (`https://repo.prefix.dev/ecoscope-workflows/`,
 `https://repo.prefix.dev/ecoscope-workflows-custom/`), the `wildlife-dynamics` GitHub org,
 connection names like `mep_dev`/`mmnr`, package names, and the branch conventions in
-[repo-layout.md](repo-layout.md). Machine-specific paths are never constants — resolve them at
-runtime from the artifact being acted on.
+[repo-layout.md](repo-layout.md). 

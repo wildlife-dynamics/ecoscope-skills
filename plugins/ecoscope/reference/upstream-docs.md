@@ -93,7 +93,3 @@ web/desktop catalog, tagged on `main` (`v9.x` / `v3.x`), vendored into compose f
 time-density maps, event/patrol tables and charts, `layout.json`. They are on the legacy
 `ecoscope-workflows` framework and layout (no `dev/`, no outer `pixi.toml`, committed
 `__results_snapshots__/`), so copy their task chains and output shapes, not their repo scaffold.
-
-Other repos in `~/MEP/wt-workflows/` are in-progress ports; useful for a specific pattern but
-check their branch and `[tool.wt] published` state before treating them as canonical
-([repo-layout.md](repo-layout.md)).

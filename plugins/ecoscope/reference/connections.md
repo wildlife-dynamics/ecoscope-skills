@@ -23,8 +23,7 @@ Three layers:
    whose BeforeValidator resolves the name string into a live client at task-call time.
 
 **The UI's data-source picker comes from the setup task's *parameter* type**
-(`data_source: Annotated[EarthRangerConnection, DataSourceField]`), not from its return type —
-upstream docs saying "return type" are wrong ([upstream-docs.md](upstream-docs.md)). The
+(`data_source: Annotated[EarthRangerConnection, DataSourceField]`), not from its return type. The
 connection dataclass carries `name` (titled "Data Source") plus an excluded `connection_type`
 discriminator.
 

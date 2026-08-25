@@ -1,5 +1,5 @@
 # Workflow repo layout and the development loop
-
+# todo: we may not need this file.
 What's hand-authored, what's generated, what's vendored, and the branch/commit conventions the
 fleet actually follows. Repo-state signals here are the single source the develop skill derives
 its behavior from.
