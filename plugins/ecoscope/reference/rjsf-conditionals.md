@@ -1,10 +1,10 @@
 # Conditional form fields — what works, what fails, and at which layer
 
-The densest failure matrix in the whole knowledge set. Two systems must both accept a conditional:
-RJSF (which resolves schemas pre-render with `removeAdditional: 'failing'` and its own allOf
-merge) and the server's Draft-2020-12 validation (which 422s on submit). Each wrong shape passes
-one layer and fails the other, so a form can render perfectly and still be unusable. Renderer
-observed at RJSF 5.19.4 — re-verify on major ecoscope-web bumps.
+A conditional must pass two independent checks: RJSF in the browser (decides what renders) and
+the server's schema validation on submit (decides whether the run starts). A wrong shape can pass
+one and fail the other, so **a form that renders correctly is not proof it works — always test
+submit too.** Use only the shape below; the alternatives each fail at one of the two layers.
+(Observed at RJSF 5.19.4 — re-verify on major ecoscope-web bumps.)
 
 ## Contents
 - Reveal-on-check: the one working shape
