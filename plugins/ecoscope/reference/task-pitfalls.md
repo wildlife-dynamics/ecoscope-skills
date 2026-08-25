@@ -5,7 +5,6 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compileâ†
 ## Contents
 - `apply_sql_query`
 - `normalize_json_column`
-- `load_df` and live-API differences
 - `create_docx`
 - `persist_df_wrapper`
 - Misc
@@ -40,22 +39,6 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compileâ†
   after normalize â‡’ input was strings.
 - Must run **before** any SQL that references the expanded columns; the original column is
   replaced by `column__field1`, `column__field2`, â€¦.
-
-## `load_df` and live-API differences
-
-`deserialize_json` trade-off:
-
-| Setting | JSON columns become | SQL-compatible | normalize-compatible |
-|---|---|---|---|
-| `false` (default) | strings | yes | **no (silent failure)** |
-| `true` | dicts/lists | **no (complex types break)** | yes |
-
-Recommended: `deserialize_json: false` + `json_extract()` in SQL.
-
-**Switching from file-based dev to a live source changes column types** â€” live SMART/ER return
-dicts where `load_df` gave strings, so `json_extract()` SQL must become column references, with
-`normalize_json_column` added before SQL and a `columns:` whitelist excluding remaining complex
-types.
 
 ## `create_docx`
 

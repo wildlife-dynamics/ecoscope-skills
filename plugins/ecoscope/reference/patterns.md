@@ -46,7 +46,7 @@ workflow:
 ```
 
 `workflow_details` must use exactly that id ([tasks.md](tasks.md)). For file-based sources use
-`load_df` — see [task-pitfalls.md](task-pitfalls.md) for its `deserialize_json` trade-offs.
+`load_df`.
 
 ## Processing groups
 
