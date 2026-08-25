@@ -10,7 +10,7 @@ observed at RJSF 5.19.4 — re-verify on major ecoscope-web bumps.
 - Reveal-on-check: the one working shape
 - The four failing alternatives and which layer each breaks
 - Arrays: no conditional `items.oneOf`
-- Cross-card conditionals
+- Cross-card conditionals: don't work
 - Desktop submit drop-rules for revealed fields
 - Headless contract testing (no browser, no server)
 
@@ -55,16 +55,14 @@ RJSF cannot swap a nested array's `items.oneOf` based on a sibling field. A root
 visible and degrade gracefully (e.g. a metric falls back to counting when no field is chosen),
 with a `ui:help` note.
 
-## Cross-card conditionals
+## Cross-card conditionals: don't work
 
-Work **in principle** — the config form is ONE form over the whole root schema — but are not
-expressible today. Two blockers: the compiler's override models
+**Not possible today.** Two blockers: the compiler's override models
 (`ReactJSONSchemaFormConfiguration` / `ReactJSONSchemaFormOverrides` in `wt_compiler.jsonschema`)
 are closed (properties/$defs/uiSchema/additionalProperties only), so a root `allOf` is dropped on
 serialization; and `additionalProperties: false` at any level whose properties are then-declared
-kills it twice (RJSF drops the field; server 422s) — those levels would need aP stripped, while a
-root aP:false may stay when then-branches only restate existing card names. Until a wt-compiler
-change lands, cross-card reveals are off the table.
+kills it twice (RJSF drops the field; server 422s). Both need a wt-compiler change (accept a root
+`allOf`; strip aP:false at then-declared levels) before cross-card reveals become possible.
 
 ## Desktop submit drop-rules for revealed fields
 
