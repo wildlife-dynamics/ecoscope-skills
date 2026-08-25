@@ -75,8 +75,14 @@ the spec's `title:` (spaces and capitalization included).
 
 ## The same-title task-group schema clobber
 
-Two task-groups sharing a `title:` merge into one rendered card, **but the merge does not union
-the params models — the LAST field-bearing group's schema clobbers the earlier one's.** Symptom:
+**Sharing a `title:` across two groups is a deliberate trick, not a mistake.** Card order and
+execution order both follow spec order, and for a map/output card those conflict: its user-facing
+params belong early in the form, but its compute tasks must run after `Process Patrols` /
+`Process Events`. So declare an early group with the params and a later same-title group with the
+compute tasks — they merge into one card at the early position (every catalog map card does this).
+
+**But the merge does not union the params models — the LAST field-bearing group's schema clobbers
+the earlier one's.** Symptom:
 rjsf-overrides on the clobbered tasks create phantom objects with no `type`; the renderer shows
 "Unsupported field schema … Unknown field type undefined" and raw-id card headers.
 
