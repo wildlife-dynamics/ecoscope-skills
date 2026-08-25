@@ -15,12 +15,31 @@ conflicts.) Every "task not found" symptom traces back to one link of that chain
 The inventory is large and moves with every release. Resolve it from what *this repo* pins, never
 from a source checkout.
 
-**List what's available** — run `wt-registry` in an env with the libraries installed; the compiled
-workflow's inner env qualifies:
+**List what's available** — run `wt-registry` in an env that has the task libraries installed.
+Which env depends on whether this workflow has been compiled yet.
+
+*With a compiled workflow*, its inner env already has them:
 
 ```bash
 pixi run --manifest-path <inner>/pixi.toml --frozen -e default wt-registry --format pretty
 ```
+
+*Before any compile* — a new workflow, or one that has never been compiled with `--install` —
+there is no inner env to borrow, and the **outer** env is no help either: it holds `wt-compiler`,
+`graphviz`, and `go-yq`, never task libraries. Build a throwaway env instead. `pixi exec` solves
+and caches one on the fly, so this needs no workflow, no manifest, and no checkout:
+
+```bash
+pixi exec -c https://prefix.dev/ecoscope-workflows -c conda-forge \
+  -s ecoscope-platform -s ecoscope-workflows-ext-custom -s wt-registry \
+  wt-registry --format pretty
+```
+
+Add a `-s` per task library you intend to put in `requirements:` — the listing shows exactly the
+libraries you name and nothing else. The first run pays a solve and download; later ones reuse the
+cache (`pixi clean cache --exec` clears it). Because the specs here are unpinned, this answers
+"does a task like this exist?" — once the spec pins real versions, re-check against the inner env,
+which is the only listing that reflects what the workflow will actually compile against.
 
 Filters, both repeatable: `--function NAME`, `--package PACKAGE`. `--format json` gives the
 machine-readable form — `entries` keyed by fully-qualified name, each carrying `function_name`,
@@ -48,6 +67,10 @@ TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
   python -c 'import ecoscope.platform.tasks as m; print(m.__path__[0])')
 grep -rn --include='*.py' -A2 '@register(' "$TASKS" | grep 'def .*<concept>'
 ```
+
+This needs an inner env for the same reason the listing above does. With no compiled workflow,
+reach for the `pixi exec` listing instead — it answers the same "is there a task for this?"
+question without needing a path at all.
 
 `__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
 one — either way it's the version this repo's pins actually select, which is the same principle as
