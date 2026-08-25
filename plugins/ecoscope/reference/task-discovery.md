@@ -50,6 +50,11 @@ against, but it is **not the signature**: parameters with `Field(exclude=True)` 
 wire inputs such as `df`) are dropped from `properties` and survive only as a name in `required`,
 and the return type is absent. `--format pretty` shows no parameters at all.
 
+**Never dump the unfiltered output into context.** A typical inner env lists ~230 tasks: `--format
+json` is ~480 KB (well over 100k tokens), `--format pretty` ~50 KB. Always narrow with
+`--function NAME`, or `grep '^=== '` the pretty listing for names only, then fetch the one schema
+you need.
+
 **Cost:** needs an environment — a solve, and a download on first use.
 
 ### 2. Grep the source — fastest, not authoritative
