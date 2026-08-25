@@ -107,8 +107,12 @@ from <public_module_path> import <name> as f
 print(inspect.signature(f)); print(f.__doc__)'
 ```
 
-The docstring often carries usage patterns the schema can't (template snippets, examples). The
-source is the same information in readable form, with the checkout-vs-pin caveat above.
+**Prefer this over the registry schema or `params.json` when deciding how to use a task.** It is
+the one source with everything at once — every parameter including the excluded wire inputs, the
+full `Annotated`/`Field` metadata, the return type, and the docstring, which often carries usage
+patterns the schema can't (template snippets, examples) — and it reflects the pinned version, not
+a checkout. The source is the same information in readable form, with the checkout-vs-pin caveat
+above.
 
 ### Turn the hit into a spec reference
 
