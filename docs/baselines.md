@@ -74,3 +74,20 @@ verification prompt; offered handoffs without starting them. Four wording gaps f
 reference conflict remains for the owner: `compile.md`'s "never dev-compile a publish-state tree"
 vs. the improve-loop model where a dev compile's VERSION/lock reset is expected and `publish`
 restores it.
+
+## GREEN micro-test 3 — publish (2026-08-26)
+
+Scenario 3 re-run on the same frozen snapshot with the `publish` SKILL.md as the procedure
+(reference files read from the plugin tree; `/ecoscope:*` and `/pr` unavailable). Every RED
+failure point bound: `bash dev/recompile.sh --update` run verbatim through the outer pixi env
+(exit 0 first try, `dot -c` and the outer-lock churn included), whole-tree restore from base
+first, CI's exact four-exclusion diff read (two `dags/*.py` lines from the fix; byte-identical to
+develop's compile), variant and `win-64` checked, **pins left as develop proved them with the
+available refresh named and not applied**, VERSION 1.2.0 from a single `--update` with the
+reason stated and checked against main and tags, every exit code recorded to a file, no
+suffixed branch (the canonical one being checked out elsewhere and ahead of develop went into
+the proposal as a question), one release commit, stopped before push with the `/pr` commands
+and a landing plan. 6/6 mock cases green. Six wording gaps fixed in the same pass, one of them
+factual: some repos' CI runs `dev/pytest-cli.sh <id> --all` rather than
+`dev/run-test-cases.sh --all` (`ci.md` corrected). Residual for step 7: no run yet on a repo
+with `tag.yml` / legacy tags, a `staging` base, or editable pins to revert.
