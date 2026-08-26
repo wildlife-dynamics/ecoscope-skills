@@ -67,9 +67,10 @@ fleet-invariant — always pass them, or the generated package defaults to the u
   the dir. Declaring `graphviz` in `pixi.toml` is not sufficient: the cache file is generated,
   not shipped, and the package delegates generating it to a post-link script that pixi skips
   unless `--run-post-link-scripts` is passed. That is why a re-solve keeps re-breaking it.
-- **Use `--frozen`, not `--locked`, when git-tag deps are present.** pixi resolves a git-tag dep
-  to a SHA in the lockfile but compares it symbolically, so `--locked` reports the lock stale
-  forever, even immediately after `pixi lock`.
+- **Use `--frozen`, not `--locked`, when git-tag or editable `path:` deps are present.** pixi
+  resolves a git-tag dep to a SHA in the lockfile but compares it symbolically, so `--locked`
+  reports the lock stale forever, even immediately after `pixi lock`; an editable checkout's
+  version string moves with every commit there, with the same effect.
 - **Editable ecoscope requires the post-compile patch script after every compile**
   (`./dev/postcompile-editable.sh`), and pins must revert to released versions before publish —
   CI rejects `path:`/`editable:`. See [spec.md](spec.md) for the full editable pin stack.

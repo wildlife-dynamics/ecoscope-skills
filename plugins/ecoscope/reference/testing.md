@@ -142,6 +142,11 @@ Reach for overrides to test multiple data shapes per task or reproduce a bug fro
 parquet; if you're overriding the same task in most cases, improve the packaged fixture instead
 (as its own deliberate change — it's shared).
 
+Inspecting a packaged fixture: `wt_task.testing.create_func_magicmock(anchor, func_name)()`
+works only for tasks tagged `io` (the ones listed in the generated `tests/conftest.py`
+`IO_TASKS_IMPORTABLE_REFERENCES`); a non-io task has no fixture and raises `FileNotFoundError`.
+And `pixi lock --check` rewrites the lock despite its name — restore it from git afterwards.
+
 ## Generating mock data
 
 Build workflow-specific fixtures when the packaged ones can't reach a code path: org-specific

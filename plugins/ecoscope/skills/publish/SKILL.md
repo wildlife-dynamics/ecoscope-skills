@@ -45,7 +45,7 @@ Repo-specific variation). Read, and write down what each says:
 | `_recompile.yml` "Recompile workflow" step | the exact recompile invocation: `bash dev/recompile.sh --update`, or an inline `pixi run … wt-compiler compile …`. |
 | `dev/recompile.sh` (when CI calls it) | every flag it passes — `--variant=gcp` or not, `pixi update` on the outer manifest or not, `dot -c`. This is the record of this workflow's deployment target (`${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § `--variant=gcp`). |
 | `test.yml` | the version gate (compares to `origin/main`), the OS matrix, the test command (`dev/run-test-cases.sh --all` in most repos; `dev/pytest-cli.sh <id> --all` in some — the same harness shape, but it runs `pixi update` on the inner manifest first unless `--skip-setup`), and the `env:` block naming the secrets the live cases need. |
-| outer `pixi.toml` + `pixi.lock` | compiler pin; `platforms` must list `win-64` when the matrix has Windows; `[tool.wt] published`. |
+| outer `pixi.toml` + `pixi.lock` | compiler pin; `platforms` must list `win-64` when the matrix has Windows; `[tool.wt] published`, if present. |
 | `spec.yaml` `requirements:` | every pin; any `path:` / `editable:` / `channel: file://` / `version: "*"` (`validate-spec` rejects them). |
 | repo-state signals (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Repo-state signals) | branch and lane; `VERSION.yaml` here vs `git show origin/main:<WF>/VERSION.yaml`; whether the inner `pixi.lock` exists; `wt-task-gcp` in the inner `pixi.toml`; `git status` clean. |
 | `git tag --list 'v*'`, `gh pr list --state open`, root `README.md` | highest existing tag; an open publish PR to update instead of a new one; whether the user guide describes the options this release ships. |
@@ -58,7 +58,7 @@ publish", route the fix to `/ecoscope:develop` first. Settle:
 | Item | Proposal |
 |---|---|
 | Base branch | `staging` when the repo has `guard-main-prs.yml` / an `origin/staging` branch (catalog repos, QA'd on `staging`); otherwise `main`. Say which and why. |
-| Branch | `publish/<repo-name>`, cut from the develop branch. If it already exists — locally, on origin, or with an open PR — continue it (switch to it, bring the develop branch in) or ask which; if it is *ahead* of develop (an earlier release attempt), list its commits and propose which stay — that is part of this design. Never invent a suffixed variant. |
+| Branch | `publish/<repo-name>`, cut from the develop branch. If it already exists — locally, on origin, or with an open PR — continue it (switch to it, bring the develop branch in) or ask which; if it is *ahead* of develop (an earlier release attempt), list its commits and propose which stay — pins it already carries are listed as "already on the branch", and only further bumps are proposed. After switching, re-run § 0 on that tree. Never invent a suffixed variant. |
 | Pins | **Propose the refresh.** Look up the latest released version of the compiler (outer `pixi.toml` pin) and of every task library in `requirements:` (§ 2's lookup) and list each as `current → latest`, recommending the update — a release is the moment to carry the fleet forward, and CI compiles at whatever the outer pin says. Editable / `path:` requirements revert to a released version regardless. The user approves or declines each line; what is approved passes § 2's gate and the tests prove it, what is declined stays exactly as develop proved it. |
 | Recompile | the command copied from the repo (§ 3), with the flags it passes and no others. |
 | Version | the intended `MAJ.MIN.0`: +1 on MIN, or +1 on MAJ (MIN reset) when the form's parameters changed — `--update` decides this from `params_sha256` (§ 5), and a MAJ bump means saved Desktop configurations must be redone, which goes in the PR body. |
@@ -111,8 +111,8 @@ the log — the compile stage in full, the `pixi update` churn above it for `err
 `refus` — and check the step off. `<WF>` is the single `*-workflow/` directory; `<base>` is
 the base branch from § 1.
 
-- [ ] **Restore the publish-state inputs from base.** A dev compile on the develop branch reset
-      `VERSION.yaml` to 0.0.0 and dropped the inner `pixi.lock`; `--update` refuses to run without
+- [ ] **Restore the publish-state inputs from base.** A dev compile on the develop branch may
+      have reset `VERSION.yaml` to 0.0.0 and dropped the inner `pixi.lock`; `--update` refuses to run without
       `pixi.lock`, `VERSION.yaml` *and* `README.md`, and the version bump in § 5 counts from
       whatever VERSION it finds. Restore the whole generated tree, not three files — everything
       under it is regenerated in the next step anyway, and this is also the restore path if the
@@ -167,8 +167,10 @@ the base branch from § 1.
 ## 4. Test as CI tests
 
 **Environment: the inner pixi env, only through the harness.** CI's `test-workflows` runs the
-full case set on ubuntu, macOS and Windows with `pixi run --locked` against the committed inner
-lock — the lock § 3 just produced. Run the same set locally:
+full case set on ubuntu, macOS and Windows with `pixi run --locked` — against the committed
+inner lock § 3 just produced when its script is `run-test-cases.sh`, or against a freshly
+re-solved one when it is `pytest-cli.sh` (§ 1), so a lock-dependent failure can appear only in
+CI there. Run the same set locally:
 
 ```bash
 ./dev/run-test-cases.sh --all > test.log 2>&1; echo exit=$?

@@ -26,7 +26,9 @@ nothing is restated here.
 Otherwise run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. It reports — never repairs — the
 global compiler (runs, imports `jsonschema`, version), graphviz, go-yq, pixi, and this repo's
 compiler pin and task-library pins from `spec.yaml`; each `FAIL` carries its repair command.
-Run the repairs before compiling. Environments and standing rules:
+Run the repairs before compiling; a WARN that the repo's compiler pin differs from the global
+compiler is informational here (the dev compile uses the global one; matching the pin is
+`/ecoscope:publish`'s job). Environments and standing rules:
 `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
 
 ## 1. Design — always, then approval
@@ -44,8 +46,10 @@ of the job, and route two of the three:
   event-sum-map ready" — improve or publish?), ask.
 
 **Research before proposing.** Read `spec.yaml`, `test-cases.yaml`, `layout.json`, the
-compiled `rjsf.json`, and run the existing `base` mock case (§ 3 test command) so you have the
-current form and dashboard in front of you. The proposal then names real cards, fields, widget
+compiled `rjsf.json`, and run the existing `base` mock case (§ 3 test command — on a fresh tree
+this installs the inner env first, and an editable tree needs `--frozen`) so you have the
+current form and dashboard in front of you. Any fixture inspection for the fan-out or the data
+model runs in the inner pixi env, as in § 4. The proposal then names real cards, fields, widget
 ids and what changes. If what was asked for is already in the spec, say so and propose what is
 actually missing (a case, an override, a fixture). Ask for the user's opinion up front only
 where the request leaves a real choice.
@@ -81,7 +85,9 @@ with that contract and stop; it authors, registers, re-exports and tests the tas
 library repo. When it returns, resume here: point the spec's requirement for that library at
 the local checkout with `path:` + `editable: true` (`${CLAUDE_PLUGIN_ROOT}/reference/spec.md`
 § Editable — the full pin stack when the library is `ecoscope` itself), then first compile with
-`--clobber --install` and run `./dev/postcompile-editable.sh` after every compile. Reverting to
+`--clobber --install` and run `./dev/postcompile-editable.sh` after every compile — its
+`pixi install` re-solves the editable entry in the inner lock; that lock is the one you test
+with (`--frozen`) and commit while the tree is editable. Reverting to
 released pins when the library ships is `/ecoscope:publish`'s job; CI rejects `path:`.
 
 - **Spec** — syntax, validation rules, `requirements:`, `skipif`:
@@ -144,8 +150,11 @@ full run comes after § 4's checks pass.
 ./dev/run-test-cases.sh --all             # the full set incl. live cases — after § 4, before the commit
 ```
 
-`--frozen` when git-tag requirements are present. Pass = `result.json` present, `.error ==
-null`, exit 0 — necessary, not sufficient (§ 4). Failure classes:
+`--frozen` when git-tag or editable `path:` requirements are present (`--locked` reports the
+lock stale for both). Live cases need the connection env vars in your shell
+(`${CLAUDE_PLUGIN_ROOT}/reference/connections.md`); when they are not set, run every mock case
+and report the live ones as CI's. Pass = `result.json` present, `.error == null`, exit 0 —
+necessary, not sufficient (§ 4). Failure classes:
 `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`.
 
 **Loop** edit → compile → mock cases until green → § 4 your checks → `--all` → **commit on
@@ -171,8 +180,9 @@ repo for files; the inner pixi env for any recomputation):
 - **Accuracy** — recompute the expected numbers independently from the same fixture the mock
   returns (load it in the inner env with pandas/geopandas: counts per bucket, totals, group
   keys, feature counts and bounds for maps, row counts for tables) and compare with what the
-  widget renders. A plausible-looking chart built on the wrong column is the failure this
-  catches.
+  widget renders — chart traces from the HTML; for maps whose data is embedded as binary
+  (lonboard), the view keys, legend titles, feature counts and bounds. A plausible-looking chart
+  built on the wrong column is the failure this catches.
 
 Then the full `--all` run and the commit (§ 3). **Then ask for human verification** — the form
 and the dashboard are the deliverable and only a person can judge them. Give the user a ready
@@ -180,7 +190,8 @@ prompt, filled in:
 
 > Please check `<workflow>` in Ecoscope Desktop. Preview from the `<case>` run per
 > `${CLAUDE_PLUGIN_ROOT}/reference/preview-dashboard.md` (copy the run dir into the app data
-> dir, relaunch), or import the template and run it against `<connection>`.
+> dir, relaunch), or import the template and run it against `<connection>` (or the packaged
+> mock data, when every case is mock).
 > **Form:** cards `<list>` in this order; `<field>` defaults to `<value>`; `<hidden param>`
 > is no longer shown; `<dropdown>` lists your `<event types / feature groups>`.
 > **Dashboard:** `<widget>` shows `<what>` (`<the numbers I verified>`); grouping by
