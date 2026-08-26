@@ -107,7 +107,9 @@ keyed by fully-qualified name, each with `function_name`, `public_module_path`, 
 `description`, and `ecoscope:advanced`. That schema is what `partial:` literals are written
 against, but it is **not the signature**: parameters with `Field(exclude=True)` (the dataframe /
 wire inputs such as `df`) are dropped from `properties` and survive only as a name in `required`,
-and the return type is absent. `--format pretty` shows no parameters at all.
+and the return type is absent. `--format pretty` shows no parameters at all, and its `===` header and
+`Import:` line print the **private defining module** (`…analysis._raster`) even for a re-exported task —
+the public path is only in `--format json`'s `public_module_path`.
 
 **Never dump the unfiltered output into context.** A typical inner env lists ~230 tasks: `--format
 json` is ~480 KB (well over 100k tokens), `--format pretty` ~50 KB. Always narrow with
