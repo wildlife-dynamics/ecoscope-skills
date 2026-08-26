@@ -24,7 +24,7 @@ A card stacks up to five text slots, read top-down:
 | Slot | Comes from | What it says |
 |---|---|---|
 | Card title | task-group `title:` | the thing being configured (`Filter Data`) |
-| Card description | override on the group | one clause on what the card produces, or `""` |
+| Card description | group `description:` in the spec, or `"<Card Title>.description"` override | one clause on what the card produces, or `""` |
 | Task header | task `name:` | `""` in a one-task card; a sub-heading only when the card holds several tasks the user must tell apart |
 | Field title | pydantic `title` / override | the specific input, minus the words above it |
 | Field description / `ui:help` | override | format, example, empty-means-what, dashboard consequence |
@@ -106,7 +106,10 @@ their copy is a compiler change, not a spec override.
 
 Copy the canonical strings from a sibling workflow (`patrol-chart`, `patrol-effort-table`) rather
 than rephrasing — the fleet's copy-pasted typo `based the workflow data` shows that pasting
-without reading is the other failure.
+without reading is the other failure. When rules collide, in order: shared compiler cards stay
+as they are; then the table above; then no repeat in the card stack; then the sibling's string.
+A sibling string dropped for repeating its card (`Filter Data` → `Filter Exact Point
+Coordinates` → `Excluded Coordinates`) is noted in the report so the sibling gets the same fix.
 
 ## Reword with dotted paths, not wholesale copies
 
