@@ -59,7 +59,9 @@ TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
 python3 $S --lib "$TASKS" <keyword>
 ```
 
-`__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
+(`--frozen` skips pixi's lock check, so these commands also work when git-tag requirements make
+`--locked` report the lock stale; on a plain env `--locked`, which the test harness uses, is
+equivalent.) `__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
 one.
 
 **The scan errs in one direction only:** it can show you a task that your pinned registry doesn't

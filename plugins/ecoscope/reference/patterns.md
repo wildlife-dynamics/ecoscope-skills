@@ -62,7 +62,7 @@ workflow:
      partial: {groupers: "${{ workflow.groupers.return }}"}}
   - {id: spatial_feature_groups, task: get_spatial_features_group,
      partial: {client: "${{ workflow.er_client_name.return }}"},
-     map: {argnames: name, argvalues: "${{ workflow.spatial_group_names.return }}"}}
+     map: {argnames: spatial_features_group_name, argvalues: "${{ workflow.spatial_group_names.return }}"}}
   - {id: resolved_groupers, task: resolve_spatial_feature_groups_for_spatial_groupers,
      skipif: {conditions: [never]},
      partial: {groupers: "${{ workflow.groupers.return }}",

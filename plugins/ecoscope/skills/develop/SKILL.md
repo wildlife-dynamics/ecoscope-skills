@@ -131,8 +131,7 @@ and a plain `--clobber` deletes the inner `pixi.lock`:
 
 Any compile without `--update` resets `VERSION.yaml` to 0.0.0 and drops the gcp variant —
 expected in the improve loop even on a previously published tree; `/ecoscope:publish` restores
-VERSION and lock from base and recompiles the CI way (compile.md's "never dev-compile a
-publish-state tree" is about trees being published as-is, which is publish's job). Never
+VERSION and lock from base and recompiles the CI way (compile.md § `--update` semantics). Never
 `--variant=gcp` here. Before running `--clobber` know the restore path: `git checkout <base> --
 <WF>/` (compile.md § Restore playbook). Run the compile bare or `> compile.log 2>&1` and read
 the whole file; on failure match compile.md § Common compile errors, fix, recompile.

@@ -1,8 +1,8 @@
 # Workflow repo layout and the development loop
-# todo: we may not need this file.
+
 What's hand-authored, what's generated, what's vendored, and the branch/commit conventions the
-fleet actually follows. Repo-state signals here are the single source the develop skill derives
-its behavior from.
+fleet actually follows. The repo-state signals table is the single source for reading a tree —
+used by the publish and review procedures before they act on one.
 
 ## Contents
 - Repo anatomy
@@ -54,7 +54,7 @@ work was cut from. There is no root-level `progress.yaml` convention — only `.
 
 ## Repo-state signals
 
-Phase is **derived from the filesystem and git, never guessed from keywords**:
+How to read a tree — what the filesystem and git say, independent of what the request says:
 
 | Signal | What it means |
 |---|---|
@@ -62,7 +62,7 @@ Phase is **derived from the filesystem and git, never guessed from keywords**:
 | `spec.yaml` present, no `*-workflow/` sibling | authored but never compiled |
 | generated tree differs from a CI-matching recompile | stale — recompile before trusting anything ([compile.md](compile.md) fingerprints) |
 | `VERSION.yaml` = `{0,0,0}` and no inner `pixi.lock` | last compile was a dev compile |
-| inner `pixi.lock` + VERSION > 0 + `wt-task-gcp` in inner `pixi.toml` | **publish state — do NOT dev-compile this** ([compile.md](compile.md)) |
+| inner `pixi.lock` + VERSION > 0 + `wt-task-gcp` in inner `pixi.toml` | **publish state** — a dev compile resets VERSION and drops the lock (expected while developing); publish restores both from base and recompiles the CI way before committing ([compile.md](compile.md)) |
 | `path:` / `editable:` in `requirements:` | dev mode; must revert to released pins before publish |
 | branch `develop/*` / `publish/*` / `staging` / base | which lane the work is in |
 | `.scratch/progress.yaml` exists | a prior multi-session plan — read it and resume |

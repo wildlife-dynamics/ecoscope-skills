@@ -17,19 +17,19 @@ locate any module with `python -c "import <module> as m; print(m.__file__)"`.
 
 ## Source of truth: the code
 
-
-#todo: replace local absolute path with UserConfig in the plugin metadata
 Docs drift; code doesn't. Read the code before trusting a tutorial, and cite the code when a doc
-and the code disagree.
+and the code disagree. Where you keep these checkouts is yours; the plugin never assumes a layout
+— when a procedure needs one (an editable task library, the compiler source) it reads the path
+from the spec's existing `path:` requirement or asks once.
 
-| Repo (local checkout) | GitHub | What it is authoritative for |
+| Repo | GitHub | What it is authoritative for |
 |---|---|---|
-| `~/MEP/infra/wt` | `wildlife-dynamics/wt` | The wt framework monorepo: `wt-compiler` (spec schema — the pydantic models in `wt_compiler.spec`: `Spec`, `TaskInstance`, `TaskGroup`), `wt-contracts`, `wt-registry`, `wt-task`, `wt-runner`, `wt-invokers`, plus the `-gcp` variants |
-| `~/MEP/wt-tasks/ecoscope` | `wildlife-dynamics/ecoscope` | The `ecoscope` library and the **Platform SDK** tasks (`ecoscope/platform/`) — what every built-in task actually accepts and returns; also the source the SDK reference pages are generated from |
-| `~/MEP/wt-tasks/ecoscope-workflow-task-library` | `wildlife-dynamics/ecoscope-workflow-task-library` | Custom/extension tasks (`ecoscope_workflows_ext_custom/tasks/`) |
-| `~/MEP/infra/ecoscope-server` | `wildlife-dynamics/ecoscope-server` | The backend: workflow templates, runs, results, layout, rjsf handling, named connections (`ecoscope_server/services/`, `ecoscope_server/utils/rjsf.py`, `utils/er_enum_resolver.py`) |
-| `~/MEP/infra/ecoscope-web` | `wildlife-dynamics/ecoscope-web` | The UI: rjsf form rendering, results grid, desktop server contract (`src/utils/actions/workflow-*`) |
-| `~/MEP/infra/compose` | `wildlife-dynamics/compose` | Deployment: `docker-compose.yaml`, per-environment build-deploy pipelines, and the submodule pins under `ecoscope-platform-workflows-releases/<template>` that decide which catalog workflow version reaches dev/stage/prod ([web-deployment.md](web-deployment.md)) |
+| wt monorepo | `wildlife-dynamics/wt` | The wt framework monorepo: `wt-compiler` (spec schema — the pydantic models in `wt_compiler.spec`: `Spec`, `TaskInstance`, `TaskGroup`), `wt-contracts`, `wt-registry`, `wt-task`, `wt-runner`, `wt-invokers`, plus the `-gcp` variants |
+| ecoscope | `wildlife-dynamics/ecoscope` | The `ecoscope` library and the **Platform SDK** tasks (`ecoscope/platform/`) — what every built-in task actually accepts and returns; also the source the SDK reference pages are generated from |
+| ecoscope-workflow-task-library | `wildlife-dynamics/ecoscope-workflow-task-library` | Custom/extension tasks (`ecoscope_workflows_ext_custom/tasks/`) |
+| ecoscope-server | `wildlife-dynamics/ecoscope-server` | The backend: workflow templates, runs, results, layout, rjsf handling, named connections (`ecoscope_server/services/`, `ecoscope_server/utils/rjsf.py`, `utils/er_enum_resolver.py`) |
+| ecoscope-web | `wildlife-dynamics/ecoscope-web` | The UI: rjsf form rendering, results grid, desktop server contract (`src/utils/actions/workflow-*`) |
+| compose | `wildlife-dynamics/compose` | Deployment: `docker-compose.yaml`, per-environment build-deploy pipelines, and the submodule pins under `ecoscope-platform-workflows-releases/<template>` that decide which catalog workflow version reaches dev/stage/prod ([web-deployment.md](web-deployment.md)) |
 
 Practical rule: for spec syntax read `wt_compiler.spec`; for a task's parameters read the task's
 signature in the task library; for how a form or dashboard renders read ecoscope-web; for what
@@ -42,7 +42,7 @@ build needed) or browse the hosted site.
 
 ### wt framework docs
 
-- Local: `~/MEP/infra/wt/docs/content/` (serve with `cd ~/MEP/infra/wt/docs && uv run mkdocs serve`)
+- Local: `docs/content/` in the wt monorepo checkout (serve with `uv run mkdocs serve` from `docs/`)
 - Hosted: not published as a site — the local tree is the copy to read
 - Pages: `concepts.md`, `getting-started.md`, `tutorials.md`, `architecture.md`, `changelog.md`,
   and `reference/{spec-yaml,wt-contracts,wt-registry,wt-task,wt-compiler,wt-invokers,wt-runner}.md`
@@ -53,7 +53,7 @@ discovery, compile-don't-interpret, fingerprinting, GCP metapackages, `map` argn
 
 ### Platform SDK docs
 
-- Local: `~/MEP/wt-tasks/ecoscope/doc/platform-sdk/content/` (serve with `mkdocs serve` from
+- Local: `doc/platform-sdk/content/` in the ecoscope checkout (serve with `mkdocs serve` from
   `doc/platform-sdk/`)
 - Hosted: <https://ecoscope.io/en/latest/platform-sdk/>
 - Pages: `concepts.md`, `getting-started.md`, `understanding-spec.md`, `built-in-tasks.md`,
@@ -78,7 +78,7 @@ When the docs don't show how to do something, find a repo that already does it a
 shape. Prefer the most recently published wt-framework repos; treat legacy-framework repos as
 history, not as templates.
 
-**Published wt-framework repos** (`~/MEP/wt-workflows/`, all under `github.com/wildlife-dynamics/`):
+**Published wt-framework repos** (all under `github.com/wildlife-dynamics/`):
 
 | Repo | Why look at it |
 |---|---|
@@ -86,7 +86,7 @@ history, not as templates.
 | `wt-ndvi` | Published; GEE connection and raster pattern |
 | `patrol-effort-table`, `patrol-chart`, `patrol-encounter-rate-map` | Tagged patrol analyses — groupers, tables, charts, maps |
 
-**Production catalog workflows** (`~/MEP/wt-workflows/{patrols,events,event-details,subject-tracking}`,
+**Production catalog workflows** (`patrols`, `events`, `event-details`, `subject-tracking`,
 under `github.com/ecoscope-platform-workflows-releases/`): the templates shipped in the ecoscope
 web/desktop catalog, tagged on `main` (`v9.x` / `v3.x`), vendored into compose for deployment
 ([web-deployment.md](web-deployment.md)). Richest examples of complete dashboards — groupers,

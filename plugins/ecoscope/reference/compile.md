@@ -27,8 +27,10 @@ wt-compiler compile \
     --clobber --no-progress
 ```
 
-Append exactly one of: nothing (iteration, no dep changes), `--install` (first compile / fresh
-lockfile), or `--update` (dep bump on an existing workflow).
+Append exactly one of: nothing (iteration, no dep changes — then put the committed lock back
+with `git checkout HEAD -- <WF>/pixi.lock`, because a compile without `--update` drops it and
+`dev/run-test-cases.sh` runs `pixi run --locked`), `--install` (first compile / fresh lockfile /
+switching to or from editable requirements), or `--update` (dep bump on an existing workflow).
 
 **Publish compile** — the repo's pinned compiler through the outer pixi env, mirroring *this
 repo's* CI. Read the repo's `.github/workflows/_recompile.yml` and `dev/recompile.sh` (if present)
@@ -116,19 +118,23 @@ in the opposite direction from the usual gotcha. Do not pass `--variant=gcp` on 
 ## `--update` semantics and VERSION behavior
 
 - `--update` **requires** a pre-existing `pixi.lock`, `VERSION.yaml`, **and `README.md`** in the
-  release dir, or it raises `FileNotFoundError`. It copies `pixi.lock` forward verbatim and bumps
-  VERSION: **MAJ+1/MIN=0 if `params_sha256` changed, else MIN+1**.
+  release dir, or it raises `FileNotFoundError`. It carries `pixi.lock` forward, bumps VERSION
+  (**MAJ+1/MIN=0 if `params_sha256` changed, else MIN+1**), then re-solves the carried lock with
+  `pixi update --no-install` — so expect lock churn from `--update`, not a byte-identical copy.
 - Without `--update`, a compile **resets `VERSION.yaml` to `{MAJ: 0, MIN: 0, PATCH: 0}`** and
   carries no lockfile (a dev compile also deletes the committed `pixi.lock`).
 - Because CI's generated-files diff excludes `VERSION.yaml`/`pixi.lock`/`README.md`/`graph.png`,
   the publish procedure writes the intended VERSION *after* the final compile and restores the
   lockfile if a dev compile clobbered it (`git checkout HEAD -- <WF>/pixi.lock`).
 
-**Never dev-compile a publish-state tree.** Publish state = committed inner `pixi.lock`,
-VERSION > 0.0.0, and `wt-task-gcp`/`wt-runner-gcp` in the inner `pixi.toml`. A casual global-dev
-compile strips the gcp variant, resets VERSION, deletes the lockfile, and churns
-README/graph.png/tests. Recover by restoring env files from HEAD and re-running the pinned
-publish compile.
+**A dev compile on a publish-state tree is expected in the develop loop — never publish from
+one.** Publish state = committed inner `pixi.lock`, VERSION > 0.0.0, and
+`wt-task-gcp`/`wt-runner-gcp` in the inner `pixi.toml`. A global-dev compile strips the gcp
+variant, resets VERSION, deletes the lockfile, and churns README/graph.png/tests; that is fine
+while improving the workflow (the develop skill), and it is why the publish procedure restores
+`pixi.lock` and `VERSION.yaml` from the base branch and re-runs the pinned, CI-matching compile
+before anything is committed to a publish branch. Committing a dev-compiled tree to a publish
+branch fails CI's recompile diff and version gate.
 
 ## Restore playbook (when `--clobber` fails mid-way)
 
