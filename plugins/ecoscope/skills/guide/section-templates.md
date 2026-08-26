@@ -176,21 +176,37 @@ The workflow creates an interactive dashboard with [N] main visualization(s):
 
 #### [Widget title, as in result.json]
 - **Format**: Interactive [bar/line chart | map | table | value]
-- **How it is calculated**: [the method in one plain sentence — e.g. "Home ranges are estimated
-  with a Brownian Bridge Movement Model (BBMM) from each subject's track"; "Density is the time
-  each patrol spent in every grid cell"; omit for a plain count or table]
 - **Features**:
   - X-axis: … / Layers: … / Columns: …
   - [Legend, hover, labels — what the base run actually shows]
 
 If you configured **Group Data** groupers, the dashboard gains a view selector — one [chart/map] per group.
+
+### How the Results Are Calculated
+
+#### [Method name — e.g. Brownian Bridge Movement Model (BBMM)]
+[Two to four plain sentences: what the method does, which output it produces, and which
+settings change it — e.g. "Home ranges are estimated with a Brownian Bridge Movement Model,
+which turns each subject's sequence of GPS fixes into a probability surface of where the animal
+was between fixes. The map shows the [95%] contour of that surface. **Grid Size** and **Location
+Error** set the resolution and the assumed GPS error."]
+
+#### [Next method — e.g. Time density, Encounter rate]
+…
 ```
 
 Widgets = `result.views` of the base run (title and `widget_type`), in `layout.json` order; the
 grouped-views sentence only when the form has groupers. Describe what the base run rendered, not
-what the task could render. The method line comes from the spec's task and its parameters
-(`method: bbmm`, a kernel, a weighting) — the algorithm is the one thing a user cannot see on
-the dashboard and must be told.
+what the task could render.
+
+*How the Results Are Calculated* is a **dedicated subsection**, one `####` per critical
+algorithm the workflow applies — a home-range estimator (BBMM, MCP, kernel), a density
+calculation and its weighting, an encounter-rate denominator, a smoothing or aggregation that
+changes what the numbers mean. Omit it only when every output is a plain count, list or table.
+The methods come from the spec's tasks and their parameters (`method: bbmm`, a kernel, a
+weighting), confirmed in the task's description in the pinned library; name the form fields
+(bold, by title) that tune each one. This is the one thing a user cannot see on the dashboard and
+must be told.
 
 ## 7. Common Use Cases & Examples
 

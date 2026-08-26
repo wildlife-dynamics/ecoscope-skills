@@ -59,8 +59,9 @@
 - [ ] Prerequisites name the platform (Desktop or catalog) and the data-source product the
       spec connects to — neither assumed
 - [ ] The single example is the base case, values verbatim
-- [ ] Results section describes what the base run rendered, in layout order, and names the
-      method behind each analytical output
+- [ ] Results section describes what the base run rendered, in layout order, and has a
+      *How the Results Are Calculated* subsection naming each critical algorithm (unless every
+      output is a plain count, list or table)
 - [ ] Troubleshooting is workflow-specific only, as reviewed by the user
 - [ ] Installation present only for a Desktop workflow; its URL matches `origin`
 - [ ] In gate mode, `git diff` touches only the flagged sections

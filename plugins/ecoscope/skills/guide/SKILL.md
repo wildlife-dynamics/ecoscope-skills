@@ -92,8 +92,8 @@ What the user sees versus what the files say:
   one-paragraph intro; where it runs (catalog / Web or Desktop) and therefore what Prerequisites
   and Installation will say; the data-source product and the server-side objects the dropdowns
   need; the Configuration Guide cards in form order with the fields you will document under
-  each; the widgets and the method behind each (from the spec); the one example (the `base`
-  case); and the **troubleshooting list — only issues specific to this workflow, for the user to
+  each; the widgets, and the critical algorithms that get the *How the Results Are
+  Calculated* subsection (from the spec); the one example (the `base` case); and the **troubleshooting list — only issues specific to this workflow, for the user to
   prune** before anything is written.
 - **Gate** — an existing 8-section README. Run the check:
 
@@ -137,14 +137,16 @@ terminology of `${CLAUDE_PLUGIN_ROOT}/skills/guide/style-guide.md`. What keeps t
   `test-cases.yaml`. Never invent a value and never quote a real data pull
   (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data — connection names and
   patrol-type slugs are org constants and fine).
-- **Results describe the run and name the method.** One subsection per widget the base run
-  produced, in `layout.json` order, each saying in one plain sentence how the result is computed
-  when the spec's task applies a real algorithm (BBMM for a home range, a kernel density, a
-  time-weighted density, an encounter rate's denominator) — from the task and its parameters in
+- **Results describe the run; the algorithms get their own subsection.** One `####` per widget
+  the base run produced, in `layout.json` order; then *How the Results Are Calculated* — a
+  dedicated subsection with one `####` per critical algorithm the workflow applies (BBMM or
+  another home-range estimator, a kernel or time-weighted density, an encounter rate's
+  denominator, any aggregation that changes what a number means), each explained in plain
+  sentences with the form fields that tune it — from the task and its parameters in
   `spec.yaml`, confirmed in the task's description in the pinned library
-  (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md`). A *Data Outputs* subsection only when
-  the spec persists files, with columns read from the run's output or the fixture. Groupers →
-  the view-selector sentence.
+  (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md`). Omitted only when every output is a
+  plain count, list or table. A *Data Outputs* subsection only when the spec persists files,
+  with columns read from the run's output or the fixture. Groupers → the view-selector sentence.
 - **Troubleshooting is only what is specific to this workflow** — the form's own constraints (a
   combination the schema forbids, a required field blank by default), a name that must match the
   server, the run that succeeds with nothing to show. No fixed count, no generic connection
