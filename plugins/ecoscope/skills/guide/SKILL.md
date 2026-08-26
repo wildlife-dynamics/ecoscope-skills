@@ -31,7 +31,8 @@ writes and overwrites (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Repo 
 
 | Read | Take from it |
 |---|---|
-| `spec.yaml` | what the workflow does (the task chain: fetch → transform → widgets), its data source (the connection task), and the `rjsf-overrides` that rename, hide and re-describe fields — so you know the spec's task names are **not** what the user sees |
+| `spec.yaml` | what the workflow does (the task chain: fetch → transform → widgets), which **data-source product** it connects to (the connection task — EarthRanger, SMART, Google Earth Engine …), the **analysis methods** its tasks apply (a home-range task's `bbmm`, a density kernel, a time-weighting — the results section names these), and the `rjsf-overrides` that rename, hide and re-describe fields — so you know the spec's task names are **not** what the user sees |
+| `.github/workflows/` + `dev/recompile.sh` | **where the workflow runs**: a catalog workflow (a `staging` branch / `guard-main-prs.yml`, `--variant=gcp`) is used from the workflow catalog in Ecoscope Web and needs no Desktop install; otherwise it is installed into Ecoscope Desktop from its GitHub URL (`${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § Repo-specific variation, `${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § `--variant=gcp`). This decides Prerequisites and Installation |
 | the compiled `<WF>/<pkg>/rjsf.json` | the form exactly as rendered: card order (`uiSchema["ui:order"]`), card and field titles, defaults, option labels, descriptions, `ecoscope:advanced` (the "Advanced Configurations" accordion), hidden fields — § 1 inventories it |
 | `test-cases.yaml` | every documented option exercised somewhere; `base` is the form-default submission, the other cases are your examples' values (synthetic, safe to quote) |
 | a `base` mock run (§ 1) | the widgets the dashboard actually shows — type and title — and the grouped-view fan-out |
@@ -84,10 +85,12 @@ What the user sees versus what the files say:
 **Environment: none — write the proposal.** Open with one line stating the mode and why:
 
 - **Write** — no README, or one without the eight sections. Propose the outline: the title and
-  one-paragraph intro, the prerequisites the spec implies (data-source product, the EarthRanger
-  objects the dropdowns need), the Configuration Guide cards in form order with the fields you
-  will document under each, the widgets, which case becomes which example, and the
-  troubleshooting items the form's constraints and the connection's failure modes imply.
+  one-paragraph intro; where it runs (catalog / Web or Desktop) and therefore what Prerequisites
+  and Installation will say; the data-source product and the server-side objects the dropdowns
+  need; the Configuration Guide cards in form order with the fields you will document under
+  each; the widgets and the method behind each (from the spec); the one example (the `base`
+  case); and the **troubleshooting list — only issues specific to this workflow, for the user to
+  prune** before anything is written.
 - **Gate** — an existing 8-section README. Run the check:
 
   ```bash
@@ -119,16 +122,25 @@ terminology of `${CLAUDE_PLUGIN_ROOT}/skills/guide/style-guide.md`. What keeps t
 - **Field names are the inventory's titles, verbatim and bold** — `**Patrol Status**`, not
   "Status"; `(required)` when the inventory flags it, `(optional)` otherwise; `Default:` and
   `Options:` by label.
-- **Every example is a case.** Dates, timezones, patrol types and group names come from
-  `test-cases.yaml`; Example 1 is `base`, "submitted as-is". Never invent a value and never
-  quote a real data pull (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data —
-  connection names and patrol-type slugs are org constants and fine).
-- **Results describe the run.** One subsection per widget the base run produced, in
-  `layout.json` order; a *Data Outputs* subsection only when the spec persists files, with
-  columns read from the run's output or the fixture. Groupers → the view-selector sentence.
-- **Troubleshooting is workflow-specific**: the form's own constraints (a combination the
-  schema forbids, a required field blank by default), the connection's failure modes
-  (`connections.md` § Troubleshooting), and the run that succeeds with nothing to show.
+- **Prerequisites and Installation follow § 0's platform.** A catalog workflow needs no
+  Desktop install and gets no Installation steps; a Desktop workflow gets the four fixed steps.
+  The data-source item names the product the spec connects to — EarthRanger is not assumed.
+- **One example, and it is a case.** The `base` case, "submitted as-is", with its values from
+  `test-cases.yaml`. Never invent a value and never quote a real data pull
+  (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data — connection names and
+  patrol-type slugs are org constants and fine).
+- **Results describe the run and name the method.** One subsection per widget the base run
+  produced, in `layout.json` order, each saying in one plain sentence how the result is computed
+  when the spec's task applies a real algorithm (BBMM for a home range, a kernel density, a
+  time-weighted density, an encounter rate's denominator) — from the task and its parameters in
+  `spec.yaml`, confirmed in the task's description in the pinned library
+  (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md`). A *Data Outputs* subsection only when
+  the spec persists files, with columns read from the run's output or the fixture. Groupers →
+  the view-selector sentence.
+- **Troubleshooting is only what is specific to this workflow** — the form's own constraints (a
+  combination the schema forbids, a required field blank by default), a name that must match the
+  server, the run that succeeds with nothing to show. No fixed count, no generic connection
+  boilerplate; the list is the one the user pruned in § 2.
 - **Gate mode edits only the listed sections.** No rewording, reordering or restyling elsewhere;
   the reviewer reads the diff as "what changed in this release".
 
@@ -142,8 +154,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/guide/scripts/form-inventory.py <WF>/<pkg>/
 ```
 
 exit 0 — every visible card, field and widget title is a label or heading in the README. Then by
-eye, with the style guide's checklist: the eight `##` sections in order; the Installation URL
-equals `origin`; each example's values are grep-able in `test-cases.yaml`; nothing the inventory
+eye, with the style guide's checklist: the eight `##` sections in order; Installation present
+only for a Desktop workflow and its URL equals `origin`; the example's values are grep-able in
+`test-cases.yaml`; nothing the inventory
 marks `HIDDEN`, no spec task name; defaults by label. In gate mode `git diff README.md` shows
 only the flagged sections. Commit `docs: user guide README` (write) or `docs(readme): <what
 changed>` (gate) — or, inside a publish run, leave it for the release commit

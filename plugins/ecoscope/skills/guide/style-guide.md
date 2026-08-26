@@ -33,9 +33,8 @@
   `Since: 2015-01-10T00:00:00`, `Until: 2015-02-28T23:59:59`,
   `Timezone: UTC (UTC+00:00)` or `Africa/Nairobi (UTC+03:00)`.
 - **Temporal grouper values**: `%Y` (Year), `%B` (Month), `%Y-%m-%d` (Date).
-- **File formats**, always in this order with these blurbs: **CSV** (quick review in
-  spreadsheets), **Parquet / GeoParquet** (large datasets, programmatic analysis), **GPKG** (GIS
-  software).
+- **File formats**, in this order with these blurbs: **CSV** (quick review in spreadsheets),
+  **Parquet / GeoParquet** (large datasets, programmatic analysis). GPKG is not offered.
 - **EarthRanger admin locations**: patrol types — **Activity → Patrol Types**; event types —
   **Activity → Event Types** (`https://<your-site>.pamdas.org/admin/activity/eventtype/`);
   subject groups — `https://<your-site>.pamdas.org/admin/observations/subjectgroup/`; spatial
@@ -56,8 +55,11 @@
       (`form-inventory.py --check` exit 0)
 - [ ] Defaults and options quoted by their labels; `(required)`/`(optional)` per the schema
 - [ ] No hidden field, `partial:`-bound param, task name or spec key mentioned
-- [ ] Examples map to cases; Example 1 is the base case
-- [ ] Results section describes what the base run rendered, in layout order
-- [ ] Troubleshooting is workflow-specific, not generic
-- [ ] Installation URL matches `origin`
+- [ ] Prerequisites name the platform (Desktop or catalog) and the data-source product the
+      spec connects to — neither assumed
+- [ ] The single example is the base case, values verbatim
+- [ ] Results section describes what the base run rendered, in layout order, and names the
+      method behind each analytical output
+- [ ] Troubleshooting is workflow-specific only, as reviewed by the user
+- [ ] Installation present only for a Desktop workflow; its URL matches `origin`
 - [ ] In gate mode, `git diff` touches only the flagged sections

@@ -41,27 +41,34 @@ title case). Bold the data-source product name. Bullets come from the spec's tas
 
 Before using this workflow, you need:
 
-1. **Ecoscope Desktop** installed on your computer
+1. **Ecoscope Desktop** installed on your computer            ← Desktop-installed workflows
    - If you haven't installed it yet, please follow the installation instructions for Ecoscope Desktop
+   — or, for a catalog workflow —
+1. **Access to Ecoscope** — this workflow is available from the workflow catalog
 
-2. **[EarthRanger] Data Source** configured in Ecoscope Desktop
-   - You must have already set up a connection to your [EarthRanger] server
+2. **[EarthRanger | SMART | Google Earth Engine] Data Source** configured in Ecoscope
+   - You must have already set up a connection to your [product] [server / account]
    - Your data source should be configured with proper authentication credentials
    - You'll need to know the name of your configured data source (e.g., "[a connection name from the cases]")
 
-3. **[The data this workflow reads]** in [EarthRanger]
-   - [Patrols / events of the types you want / a subject group / a spatial feature group …]
-   - [Where to find their names in the EarthRanger admin site — see the URLs in style-guide.md]
+3. **[The data this workflow reads]** in [product]
+   - [Patrols / events of the types you want / a subject group / a spatial feature group / an image collection …]
+   - [Where to find their names in the product's admin site — see the URLs in style-guide.md]
 ```
 
-Always three items in this order. Item 2's product comes from the spec's connection task
-(`connections.md` § Connection types and fields). Item 3 lists what the connection-fed dropdowns
-(`EarthRangerEnumResolver` fields) and required inputs need to exist server-side — one bullet each.
+Three items in this order. Item 1 follows the platform from the skill's § 0 — Desktop is
+**not** assumed. Item 2's product comes from the spec's connection task (`connections.md` §
+Connection types and fields) — EarthRanger is **not** assumed. Item 3 lists what the
+connection-fed dropdowns and required inputs need to exist server-side — one bullet each.
 
 ## 3. Installation
 
+**Desktop-installed workflows only.**
+
 ```markdown
 ## Installation
+
+These steps are for Ecoscope Desktop.
 
 1. Select "Workflow Templates" tab
 2. Click "+ Add Template"
@@ -70,6 +77,13 @@ Always three items in this order. Item 2's product comes from the spec's connect
 ```
 
 Four steps, exact UI wording, URL from `git remote get-url origin` in https form without `.git`.
+A catalog workflow gets instead:
+
+```markdown
+## Installation
+
+No installation is needed — open the workflow catalog in Ecoscope and choose **[Workflow Title]**.
+```
 
 ## 4. Configuration Guide
 
@@ -149,8 +163,8 @@ After the workflow completes successfully, open the run to view its dashboard.
 Your [data] will be saved in the format(s) you selected:
 
 #### [Output name]
-- **File formats**: [CSV, Parquet, GeoParquet, GPKG — the ones the filetypes field offers]
-- **Opens in**: Microsoft Excel, Google Sheets (CSV), Python/R (Parquet), QGIS/ArcGIS (GPKG)
+- **File formats**: [CSV, Parquet / GeoParquet — the ones the filetypes field offers]
+- **Opens in**: Microsoft Excel, Google Sheets (CSV), Python/R (Parquet)
 - **Contents**: [what rows are]
   - `[column]`: [meaning]            ← columns read from the run's output file or the fixture
 
@@ -160,6 +174,9 @@ The workflow creates an interactive dashboard with [N] main visualization(s):
 
 #### [Widget title, as in result.json]
 - **Format**: Interactive [bar/line chart | map | table | value]
+- **How it is calculated**: [the method in one plain sentence — e.g. "Home ranges are estimated
+  with a Brownian Bridge Movement Model (BBMM) from each subject's track"; "Density is the time
+  each patrol spent in every grid cell"; omit for a plain count or table]
 - **Features**:
   - X-axis: … / Layers: … / Columns: …
   - [Legend, hover, labels — what the base run actually shows]
@@ -169,7 +186,9 @@ If you configured **Group Data** groupers, the dashboard gains a view selector �
 
 Widgets = `result.views` of the base run (title and `widget_type`), in `layout.json` order; the
 grouped-views sentence only when the form has groupers. Describe what the base run rendered, not
-what the task could render.
+what the task could render. The method line comes from the spec's task and its parameters
+(`method: bbmm`, a kernel, a weighting) — the algorithm is the one thing a user cannot see on
+the dashboard and must be told.
 
 ## 7. Common Use Cases & Examples
 
@@ -190,13 +209,11 @@ Here are some typical scenarios and how to configure the workflow for each:
 
 **Result**:
 - [What the dashboard shows for this configuration]
-
----
 ```
 
-Example 1 is the `base` case ("the workflow's default setup, submitted as-is"); the rest map one
-case each to a user question, covering the form's branches (a grouper, a comparison mode, a
-filter). 3–5 examples, `---` between them, complete configurations, values verbatim from the case.
+**One example**: the `base` case ("the workflow's default setup, submitted as-is") — a complete
+configuration with values verbatim from the case and what the dashboard then shows. Other
+cases are not examples; the Configuration Guide already explains the branches.
 
 ## 8. Troubleshooting
 
@@ -213,10 +230,8 @@ filter). 3–5 examples, `---` between them, complete configurations, values ver
 - [Actionable step]
 ```
 
-Five or more, always including: *Workflow fails to start* (connection / credentials), *The
-[chart/map] is empty or the run reports no data* (time range, status filter, type names, filters
-excluding everything — the silently-empty run), one per form constraint that blocks a submission or
-a run (from the schema's descriptions and `oneOf` rules), one per connection-fed input whose name
-must match EarthRanger exactly, and *Workflow runs very slowly* (narrow the range; the first run
-after installing a template warms up the environment). Reference the EarthRanger admin pages where
-the user verifies names.
+Only issues **specific to this workflow**, as few as that is — no minimum, no generic
+connection or performance boilerplate. Candidates: a form constraint that blocks a submission or
+a run (from the schema's descriptions and `oneOf` rules), an input whose name must match the
+server exactly, an output that is empty when a filter excludes everything. The list is proposed
+in the skill's § 2 and the user prunes it before it is written.

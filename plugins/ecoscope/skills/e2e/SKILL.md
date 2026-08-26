@@ -55,15 +55,18 @@ one chart tile":
 |---|---|
 | Tile | the GitHub-URL tile (`Source code: <url>`) proves the **published** artifact on the default branch; the local-folder tile proves the working copy — pre-publish work needs the local tile, imported by hand once (`desktop-e2e.md` § Import strategies). Say which and why. |
 | Import | the tile is already in the library (default), or the test imports the GitHub URL itself through the page object when it is absent; after a pin or lock change the user deletes the old tile and re-imports before the run. |
-| Case | which `test-cases.yaml` case the fill reproduces — `base` unless asked; the live window and connection name it needs (org connection names are fine to commit; passwords never). |
+| Case | `base` first, always — the form-default submission; further cases are proposed only after the base test is green (§ 3), one test per case. |
+| Data source and time range | **the user's decision, asked explicitly**: the mock cases prove nothing here, and a real connection may not hold what the case needs (the patrol types, the dates, a feature group). Propose a connection name and window taken from a live case or the sibling tests, say what the run needs to find there, and wait for the answer — never assume. Org connection names are fine to commit; passwords never. |
 | Fields | each card you will drive and how, from the compiled form; which stay at their defaults — and are *asserted* at their defaults where the run depends on them. |
 | Assertions | submit toast → row → Run → `Success`; the run on disk: `result.json` with `error == null` and non-empty `views`, because a green run with zero widgets is a failure (`${CLAUDE_PLUGIN_ROOT}/reference/preview-dashboard.md` § On-disk contract); the dashboard: open the row, the results navbar renders, every expected widget tile is present and its spinner clears (`desktop-e2e.md` § Submit, run, assert). Name the widget titles. |
 | App data dir | resolved per platform at runtime by the helper in `desktop-e2e.md` § App data dir — never a literal path. |
 | File, name, branch | `tests/desktop-tests/my-workflows/<workflow>[-github]-workflow.pw.test.ts`, the test title, the topic branch (or the caller's), a per-run unique workflow name. |
 | Preconditions for the user | the hand steps from § 0 that are not yet true. |
 
-**Stop and wait for approval.** After it, §§ 2–5 run without check-ins; come back for a hang
-you cannot explain (§ 4), a red run that is the workflow's fault, or a missing precondition.
+**Stop and wait for approval** — of the design as a whole, and of the data source and time
+range in particular. After it, §§ 2–5 run without check-ins; come back for a hang you cannot
+explain (§ 4), a red run that is the workflow's fault, a missing precondition, or to propose the
+next case once `base` is green.
 
 ## 2. Scaffold, then fill
 
@@ -86,7 +89,9 @@ NO_PROXY="localhost,127.0.0.1" yarn playwright test --config=playwright.desktop.
 ```
 
 Read the log whole. Green means every assertion from § 1's row held — status, on-disk result,
-rendered tiles — not that Playwright exited 0 on a status check alone. Between runs reset the
+rendered tiles — not that Playwright exited 0 on a status check alone. **Base first**: the base
+test is green before any other case is authored; each further case is its own test and its own
+approved item, and inherits the base test's proven fill. Between runs reset the
 app's route rather than clicking through a stale page (`desktop-e2e.md` § Setup footguns);
 heavily grouped runs get a larger success-wait, not a "flaky" label (§ Submit, run, assert).
 
@@ -122,6 +127,8 @@ under pressure ("the other tests do it", "it only needs the path on this Mac").
   Never launch the app, delete a tile or workflow, or reconfigure a data source yourself.
 - Never assert `Success` alone: a run with zero outputs reads as a pass
   (`preview-dashboard.md`, `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`).
+- Never choose the data source or the time range yourself — proposed in § 1, decided by the
+  user; real data decides whether a case can run at all.
 - Never pick the timezone or a select by "first option", never index selects by position, never
   swallow a hang with `.catch()` — each mechanism is in `desktop-e2e.md` § Field-driving rules.
 - Never pipe the Playwright run through `tail` or `head`; file plus exit code
