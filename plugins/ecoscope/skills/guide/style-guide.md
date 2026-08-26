@@ -32,7 +32,8 @@
 - **Time range example** — the form's format, from the case:
   `Since: 2015-01-10T00:00:00`, `Until: 2015-02-28T23:59:59`,
   `Timezone: UTC (UTC+00:00)` or `Africa/Nairobi (UTC+03:00)`.
-- **Temporal grouper values**: `%Y` (Year), `%B` (Month), `%Y-%m-%d` (Date).
+- **Grouper and interval options** are quoted by the label the form shows (`Month`, `Year`),
+  never by the format code behind it.
 - **File formats**, in this order with these blurbs: **CSV** (quick review in spreadsheets),
   **Parquet / GeoParquet** (large datasets, programmatic analysis). GPKG is not offered.
 - **EarthRanger admin locations**: patrol types — **Activity → Patrol Types**; event types —

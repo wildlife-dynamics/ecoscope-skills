@@ -124,7 +124,9 @@ the "Advanced Configurations" accordion of their card.
   reveals them, with the condition stated ("For **Line** charts:").
 - Array-of-rows fields (metrics, groupers) list the row types as sub-bullets with a one-line
   meaning each; connection-fed dropdowns say where the values come from in EarthRanger.
-- `(required)` = in the schema's `required` list with no default; everything else `(optional)`.
+- `(required)` = the form will not submit without it (a scalar in the schema's `required`
+  list with no default) or the workflow cannot run without it (then state the default);
+  arrays and objects that submit empty are `(optional)` and follow their description.
 
 ## 5. Running the Workflow
 

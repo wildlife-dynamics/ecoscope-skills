@@ -68,7 +68,11 @@ What the user sees versus what the files say:
 - A card is `properties.<key>`: its title is `.title` for a single-task card and the key itself
   for a task group (`ecoscope:task_group: true`); order is `ui:order`.
 - An object titled `""` or `" "` is an invisible wrapper — document its children, never it
-  (`${CLAUDE_PLUGIN_ROOT}/reference/rjsf.md` § Hide titles).
+  (`${CLAUDE_PLUGIN_ROOT}/reference/rjsf.md` § Hide titles). An *array* titled `" "` (a
+  groupers list) is documented by its row types directly under the card, never by its spec key.
+- Union arrays (metric rows, groupers) are documented by row type; the inventory lists each row
+  type's own fields (`Unit`, `Event Field to Sum` …) — those titles are what a row shows once
+  picked, and a stale one hides in prose, so check them against the inventory too.
 - `ecoscope:advanced` fields sit under their card's "Advanced Configurations" accordion → the
   guide's *Advanced Configuration* subsection; everything else is *Basic* (`rjsf.md` § Expect one
   "Advanced Configurations" accordion per task).
@@ -120,8 +124,12 @@ wording, which readers know from the other workflows — in the voice, formattin
 terminology of `${CLAUDE_PLUGIN_ROOT}/skills/guide/style-guide.md`. What keeps the text honest:
 
 - **Field names are the inventory's titles, verbatim and bold** — `**Patrol Status**`, not
-  "Status"; `(required)` when the inventory flags it, `(optional)` otherwise; `Default:` and
-  `Options:` by label.
+  "Status"; `Default:` and `Options:` by label. `(required)` means the form will not submit
+  without a value: a scalar the inventory flags `required`. An array or object in the schema's
+  `required` list still submits empty, so it follows its own description ("leave empty to …" is
+  `(optional)`); a defaulted field the workflow cannot run without (the metrics, the interval)
+  may say `(required)` with its default stated. A description that contradicts what the schema
+  enforces is a `/ecoscope:develop` finding — note it, do not resolve it in the README.
 - **Prerequisites and Installation follow § 0's platform.** A catalog workflow needs no
   Desktop install and gets no Installation steps; a Desktop workflow gets the four fixed steps.
   The data-source item names the product the spec connects to — EarthRanger is not assumed.
@@ -173,8 +181,9 @@ under pressure ("the spec says what the field is", "the old README was close eno
 - Never edit `spec.yaml`, `test-cases.yaml`, `layout.json` or anything under `<WF>/` from here —
   a form or dashboard that reads badly is a `/ecoscope:develop` job, and the README follows it.
 - Never write real organisational data into an example (`process-rules.md`).
-- Never pipe `dev/run-test-cases.sh` through `tail`, `head` or `grep -v`; redirect to a file and
-  record the exit code (`${CLAUDE_PLUGIN_ROOT}/reference/environments.md`).
+- Never pipe `dev/run-test-cases.sh` or the check script through `tail`, `head`, `sed` or
+  `grep -v` when its exit code is what you are recording; redirect to a file, then read it
+  (`${CLAUDE_PLUGIN_ROOT}/reference/environments.md`).
 - In gate mode, never touch a section the report did not list.
 
 ## 6. Handoffs

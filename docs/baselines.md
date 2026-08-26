@@ -109,3 +109,23 @@ and a landing plan. 6/6 mock cases green. Six wording gaps fixed in the same pas
 factual: some repos' CI runs `dev/pytest-cli.sh <id> --all` rather than
 `dev/run-test-cases.sh --all` (`ci.md` corrected). Residual for step 7: no run yet on a repo
 with `tag.yml` / legacy tags, a `staging` base, or editable pins to revert.
+
+## GREEN micro-test 5 — guide (2026-08-26)
+
+Scenario 5 re-run on the same worktree reset to `main` with the `guide` SKILL.md (pre-feedback
+draft) as the procedure. Every RED failure point bound: gate mode chosen from the README on disk,
+a missing / stale / extra report written and the approval stop honoured before any edit, the
+diff confined to the flagged sections (+57/−38 against RED's +191/−99; the `-U0` hunk list
+checked), card numbering kept in `ui:order` with the fleet's Advanced Configuration section
+added, `mep_dev` kept as an org constant, the form-text-vs-`required` contradiction reported
+rather than resolved, base run and check redirected to files with exit codes, one
+`docs(readme):` commit after the check exited 0. Six wording gaps fixed: the required/optional
+rule for arrays and defaulted fields, grouper options by label (the style guide had format
+codes), untitled arrays, exit-code discipline for the check script, and — the substantive one —
+`form-inventory.py` now lists each union row type's own fields (`Unit`, `Event Field to Sum`),
+which is where RED and GREEN both found the stale "Aggregate Column" only by reading `$defs`;
+those are reported as advisory `REVIEW` lines, since fleet prose compresses row types
+("per Distance / per Duration"). Residual for step 7: write mode (a repo with no README) and
+a catalog workflow (no Desktop prerequisite, no Installation) have not been run GREEN; the
+review-feedback changes (platform derivation, methods named, one example, pruned
+troubleshooting) postdate this run.

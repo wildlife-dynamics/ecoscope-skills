@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Inventory the compiled config form the way a Desktop user sees it, and check a README against it.
 
-  form-inventory.py <rjsf.json>                         cards -> fields: title, default, options, flags
+  form-inventory.py <rjsf.json>                         cards -> fields: title, default, options, flags,
+                                                        and the row types of union arrays with their fields
   form-inventory.py <rjsf.json> --result <result.json>  ...plus the widgets of that run (views, titles)
   form-inventory.py <rjsf.json> [--result ...] --check README.md
                                                         report every visible card / field / widget title
-                                                        the README never mentions; exit 1 if any
+                                                        the README never names as a bold label or heading
+                                                        (exit 1 if any), plus advisory REVIEW lines for
+                                                        row types and their fields not mentioned verbatim
 
 Titles come from the compiled schema after rjsf-overrides — never from spec.yaml task names.
 """
@@ -78,6 +81,31 @@ class Inventory:
             })
             if "properties" in sub:
                 self.walk(card, sub, usub, path + [name], when)
+            # row types of an array of unions: their own fields are what the user fills per row
+            items = self.deref(sub.get("items")) if isinstance(sub.get("items"), dict) else None
+            if items and ("anyOf" in items or "oneOf" in items):
+                discriminator = (items.get("discriminator") or {}).get("propertyName")
+                for branch in items.get("anyOf") or items["oneOf"]:
+                    b = self.deref(branch)
+                    if "properties" not in b:
+                        continue
+                    self.rows.append({"card": card, "path": path + [name, b.get("title") or "?"],
+                                      "path_titles": [str(sub.get("title") or name).strip() or name, str(b.get("title") or "?")],
+                                      "title": str(b.get("title") or "?"), "kind": "row type",
+                                      "default": None, "options": [], "advanced": False,
+                                      "hidden": False, "when": when, "required": False,
+                                      "description": (b.get("description") or "").strip(), "sub": True})
+                    for fname, fs in b.get("properties", {}).items():
+                        fs = self.deref(fs)
+                        if fname == discriminator:
+                            continue
+                        self.rows.append({"card": card, "path": path + [name, b.get("title") or "?", fname],
+                                          "path_titles": [str(sub.get("title") or name).strip() or name, str(b.get("title") or "?"), str(fs.get("title", fname))],
+                                          "title": str(fs.get("title", fname)), "kind": fs.get("type", "choice"),
+                                          "default": fs.get("default"), "options": self.options(fs),
+                                          "advanced": False, "hidden": False, "when": when,
+                                          "required": fname in set(b.get("required", [])) and "default" not in fs,
+                                          "description": (fs.get("description") or "").strip(), "sub": True})
             for cond in sub.get("allOf", []):
                 if_props = cond.get("if", {}).get("properties", {})
                 then = cond.get("then", {})
@@ -133,7 +161,7 @@ def check(inv, readme_text, widget_titles):
         t = t.lower()
         return f"**{t}**" in text or re.search(r"^#{1,6} .*" + re.escape(t), text, re.M) is not None
 
-    missing, prose_only = [], []
+    missing, prose_only, review = [], [], []
     for t in inv.card_titles():
         if not t.strip():
             continue
@@ -144,6 +172,12 @@ def check(inv, readme_text, widget_titles):
         t = r["title"].strip()
         if not t or r["hidden"] or r["kind"] == "object":
             continue
+        if r.get("sub"):
+            # a row type or one of its fields: prose usually compresses these ("per Distance /
+            # per Duration"), so an absent mention is advisory, not a gate failure
+            if t.lower() not in text:
+                review.append(("row field", f"{r['card']} > {' > '.join(r['path_titles'])}"))
+            continue
         if as_label(t):
             continue
         (prose_only if t.lower() in text else missing).append(("field", f"{r['card']} > {t}"))
@@ -151,7 +185,7 @@ def check(inv, readme_text, widget_titles):
         if not t or as_label(t):
             continue
         (prose_only if t.lower() in text else missing).append((f"widget:{kind}", t))
-    return missing, prose_only
+    return missing, prose_only, review
 
 
 def main():
@@ -176,15 +210,17 @@ def main():
     if a.check:
         with open(a.check) as f:
             readme = f.read()
-        missing, prose_only = check(inv, readme, widget_titles)
+        missing, prose_only, review = check(inv, readme, widget_titles)
         print(f"\n## check against {a.check}")
-        if not missing and not prose_only:
-            print("- every visible card, field and widget title appears as a bold label or heading")
-            return 0
         for kind, t in missing:
             print(f"- MISSING {kind}: {t}")
         for kind, t in prose_only:
             print(f"- NOT A LABEL {kind}: {t}  (mentioned in prose only — the field is documented under another name, or not at all)")
+        for kind, t in review:
+            print(f"- REVIEW {kind}: {t}  (advisory — a row type or its field is not mentioned verbatim; confirm the prose covers it)")
+        if not missing and not prose_only:
+            print("- every visible card, field and widget title appears as a bold label or heading")
+            return 0
         return 1
     return 0
 
