@@ -2,8 +2,9 @@
 
 Per-workflow form customization via the spec's top-level `rjsf-overrides` key, plus the
 renderer behaviors that determine what actually works. Conditional (reveal-on-check) fields have
-their own file: [rjsf-conditionals.md](rjsf-conditionals.md). Task-level (all-workflow) schema
-control lives in [tasks.md](tasks.md).
+their own file: [rjsf-conditionals.md](rjsf-conditionals.md); what to *write* in titles,
+descriptions and help text — short, one string per card stack — is [rjsf-style.md](rjsf-style.md).
+Task-level (all-workflow) schema control lives in [tasks.md](tasks.md).
 
 The renderer source of truth is the rjsf component set in the ecoscope-web repo
 (`CheckboxWidget`, `FieldTemplate`, `ObjectFieldTemplate`, `ArrayFieldTemplate`,
