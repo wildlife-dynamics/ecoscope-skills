@@ -1,7 +1,7 @@
-# Eval baselines (RED arm) — build steps 2–4, `develop`, `publish`, `guide`, `e2e`
+# Eval baselines (RED arm) — build steps 2–6, `develop`, `publish`, `guide`, `e2e`, `task`, `plan`
 
 Summary of the without-suite runs recorded on 2026-08-25 (scenarios 1, 2, 4) and 2026-08-26
-(scenarios 3, 5, 6); full notes, verbatim commands and rationalizations live in the gitignored
+(scenarios 3, 5, 6, 9, 10); full notes, verbatim commands and rationalizations live in the gitignored
 `.scratch/baselines/`. Harness: hand-rolled parallel subagents in detached git worktrees — `claude plugin
 eval` is enabled on this install but runs each case in a throwaway workspace with no documented way
 to target a specific worktree, and the plugin has no manifest until step 7; port these scenarios to
@@ -13,6 +13,8 @@ to target a specific worktree, and the plugin has no manifest until step 7; port
 | 2 | Small change: spatial grouper on patrol-chart + re-run tests | Correctly found the spec already had it; added a mock case; 8/8 green; 2 commits | `_recompile.yml` never opened (only `ls`ed); test runs piped through `tail -60` and `grep -v`; committed the new case before running it; branch `feat/*` not `develop/*`; glob incidentally read the other checkout. Correctly refused to dev-compile the publish-state tree (signal: `wt-task-gcp` in inner `pixi.toml`) |
 | 4 | Polish: duplicate heading on event-sum-map's form | Right fix (`ui:options.displayLabel: false`, copied from sibling specs); `base` case green; 1 commit | Hand-assembled the CI compile *without* `--update` on a publish-state tree → lock deleted, VERSION reset to 0.0.0, restored piecemeal; skipped `dot -c` until the compile died at the graph step (inside a `\| tail -30`); deviated from `dev/recompile.sh` "to avoid its `pixi update`"; ran only `--case base`; final commit bundled a 4.4k-line lock re-solve + VERSION 1.0.0→1.1.0 into a `fix:` |
 | 3 | Publish: patrol-track-density-map from a develop branch one `fix:` over main | Reached the push boundary: gcp recompile at the pinned compiler, 6/6 mock cases, VERSION 1.2.0, 2 commits; 3 compile attempts | Read `dev/recompile.sh` then hand-assembled the compile "to avoid its `pixi update` churning the root lock" — so skipped `dot -c`, the compile died at the graph step **after `--clobber` emptied the tree**, a lock+VERSION-only restore made `--update` refuse (README missing), whole-tree restore on attempt 3; bumped platform 2.17→2.19 and ext-custom rc18→**0.1.0 final** unasked ("the skill's Publish setup has update-deps steps"), 16k-line lock churn in a `chore:`; every compile through `grep -v \| tail -40`, the test loop through `--quiet \| tail -4` with no exit code; invented a suffixed `publish/<repo>-2026-08-26` branch. Correct: gcp from the script not asserted, pins verified with `pixi search`, VERSION from `--update` kept, secrets read not set, stopped before push |
+| 9 | Task: patrol effort per ranger (hours, km) in the custom task library, usable from a spec | Right place and shape (`tasks/analysis/_patrol_effort.py`, `@register`, excluded `AnyDataFrame` input, `AdvancedField`), re-exported, 9 flat synthetic unit tests green, 2 local commits, no push | Contract never designed or approved (ranger column, units, rounding, empty input all silent — only disk questions "would have been asked"); registry proof = unfiltered 695 KB `--format json` dump to `/tmp` + `grep -c`, not `--function` / `public_module_path`; "usable from a spec" proven by a scratch workflow **inside the library worktree** and, after ENOSPC in the compiler's ephemeral env, a hand-rolled driver importing `wt_compiler` internals with discovery replaced by the saved dump (the unmodified CLI compile later exited 0 once disk freed); env binaries called from `.pixi/envs/default/bin/` not `pixi run`; every command through `tail`/`head`; no editable pin, PR text or release ask handed back; branch `feat/*`. Worktree was `wt-release-candidate`, not the legacy default branch |
+| 10 | Plan: subject speed distribution for MMNR, empty directory | Wrote a PRD and did not build; research-first (three reference specs, fixture schema and row count, a real `apply_classification`+`draw_chart` bin-ordering trap found in source, a doc-vs-spec conflict resolved for the specs); form card by card, 9 widgets with layout, 6 cases, one optional task contract | 13 questions it "would have asked one at a time" (legacy skill forbids batching); task existence from `search-tasks.py` + source, never a registry; PRD = 1,450 lines with an 830-line `spec.yaml` draft, layout and cases inline, legacy three-phase dev strategy and `/implement-workflow` handoff prompts; `progress.yaml` written unconditionally in the `setup`/`tasks`/`wrapup` state-machine shape; `.scratch` gitignore asserted from legacy text; a validation script written to `/tmp`; `\| head` / `\| tail` habitual |
 | 5 | Guide: write the user guide README for patrol-chart (one already committed) | Corrected README, every field from `rjsf.json`, examples from cases, series labels checked against three mock runs and the library source; 4 commits | Rewrote an 8-section README in place (+191/−99) where a dozen targeted fixes were due — "the user said 'write'"; renumbered cards out of form order, added a non-template section and two examples; replaced the `mep_dev` example connection with the mock fixture's `er_asia` (data rule over-applied); resolved a form-text-vs-behaviour discrepancy inside the README; harness piped through `tail -60` / `--quiet \| tail -5` with no exit code; `docs/*` branch; four commits for one docs change |
 | 6 | E2E: Desktop test for patrol-chart's base case + dashboard renders | Lint-clean, type-checked test with a real render assertion (widget wrapper, spinner gone, content iframe, no Retry); stopped before running with the command and missing preconditions written down; 2 commits | No live form (no CDP), so timezone / data-source / Add-button ids came from the legacy notes, unverified; automated the GitHub import and picked the tile with `.first()` (local and GitHub copies share the test-id); refactored two shared page objects in an "add a test" job; assertions UI-only (no data-dir path — portable by construction, but no on-disk check) |
 
@@ -67,6 +69,30 @@ path and are the wrong model). Two reference corrections came out of run 6: the 
 import *is* automatable through the suite's page object (the legacy note said never to try),
 and the results page's anchors (`workflow-results-navbar`, `iframe-widget-<slug>`,
 `iframe-widget-content-<type>`, "Loading content...") are verifiable in the app bundle.
+
+## Step 6 — task and plan baselines (scenarios 9 and 10, 2026-08-26)
+
+Both runs reached the right artefact — a registered, tested task in the right module; a PRD
+without a build — so the two skills bind **the seams around the artefact**, not its shape. For
+`task`: the contract (name, library, typed inputs, output, io or not) proposed and approved
+before authoring, since the baseline decided every field of the signature silently; the registry
+proof as one filtered `wt-registry --function <name> --format json` whose pass condition is
+stated (one entry, `public_module_path` is the category package, stderr empty) — the run dumped
+the whole registry to `/tmp` and grepped a count; the boundary that the compile proving
+`task: <name>` is `develop`'s in the workflow repo — the run built a scratch workflow inside the
+library and, when the compiler's ephemeral env hit ENOSPC, hand-rolled a compile driver around
+`wt_compiler` internals rather than halting; the return report (editable pin block, spec
+reference, release condition) that the run never produced; and the branch fact that the
+library's default branch is still the legacy framework. For `plan`: one batch of questions with
+a default each (the legacy skill's one-at-a-time HALTs produced 13 sequential questions); the
+registry via `pixi exec` when nothing is compiled yet; the PRD as decisions with no `spec.yaml`
+draft (the run's PRD was 1,450 lines, 830 of them spec); `progress.yaml` gated on a Size answer
+and shaped as milestones, not the `setup`/`tasks`/`wrapup` state machine the run copied; and the
+greenfield placement asked once rather than the legacy hardcoded `~/MEP/wt-workflows/` default.
+One reference correction: `wt-registry --format pretty` prints the private defining module in
+its header and `Import:` line even for a re-exported task — the public path is only in
+`--format json` (`task-discovery.md`). A second run of each scenario was needed: the first pair
+was killed by the session usage limit before writing anything.
 
 ## GREEN micro-test (scenario 2, skill embedded in the prompt — not the step-7 eval)
 
