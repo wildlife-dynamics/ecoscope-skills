@@ -59,11 +59,13 @@ publish", route the fix to `/ecoscope:develop` first. Settle:
 |---|---|
 | Base branch | `staging` when the repo has `guard-main-prs.yml` / an `origin/staging` branch (catalog repos, QA'd on `staging`); otherwise `main`. Say which and why. |
 | Branch | `publish/<repo-name>`, cut from the develop branch. If it already exists — locally, on origin, or with an open PR — continue it (switch to it, bring the develop branch in) or ask which; if it is *ahead* of develop (an earlier release attempt), list its commits and propose which stay — that is part of this design. Never invent a suffixed variant. |
-| Pins | publish ships the pins the develop branch proved; editable / `path:` requirements revert to the released version they were built against. A **dependency refresh** (platform, ext-custom, compiler) is a separate decision: name the released versions available (§ 2's lookup) and ask; fold one in only on a yes, and then each new pin passes § 2's gate and the tests prove it. |
+| Pins | **Propose the refresh.** Look up the latest released version of the compiler (outer `pixi.toml` pin) and of every task library in `requirements:` (§ 2's lookup) and list each as `current → latest`, recommending the update — a release is the moment to carry the fleet forward, and CI compiles at whatever the outer pin says. Editable / `path:` requirements revert to a released version regardless. The user approves or declines each line; what is approved passes § 2's gate and the tests prove it, what is declined stays exactly as develop proved it. |
 | Recompile | the command copied from the repo (§ 3), with the flags it passes and no others. |
 | Version | the intended `MAJ.MIN.0`: +1 on MIN, or +1 on MAJ (MIN reset) when the form's parameters changed — `--update` decides this from `params_sha256` (§ 5), and a MAJ bump means saved Desktop configurations must be redone, which goes in the PR body. |
 | Tests | `--all` locally; live cases need the connection env vars in your shell or they are CI's job; the secrets `test.yml` names must exist in the repo (the user sets them). |
-| User guide | if a user-visible option changed since the last release, offer `/ecoscope:guide` before the PR. |
+| Review and E2E | propose `/ecoscope:review` (verified passes plus the human checklist) and, when the workflow runs in Ecoscope Desktop, `/ecoscope:e2e` — both on the develop branch, **before** the release is cut; a red finding goes back to `/ecoscope:develop` first. |
+| User guide | **a gate, not an offer**: the root `README.md` must describe this release — every config-form card and field (compiled `rjsf.json`) and every dashboard widget, at this release's defaults. Name what is missing or stale; `/ecoscope:guide` brings it current before § 6, and no PR opens without it. |
+| Preview deploy | catalog workflows only (base `staging`, vendored into the compose repo): after CI is green, propose the preview-environment deploy — a manual step the user performs (§ 6). |
 | Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and publishes the template"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". Stated now, repeated at the PR. |
 
 **Stop and wait for approval.** After approval §§ 2–6 run without check-ins, per the user's
@@ -90,8 +92,9 @@ publish/<repo-name>` from the develop branch. Then, in `spec.yaml`:
   (channel `https://repo.prefix.dev/ecoscope-workflows/` or `…/ecoscope-workflows-custom/`;
   `ci.md` § Release tagging). For a library released *for* this workflow, also confirm the task
   symbol exists at the library's tag (`git grep -l <fn> v<X.Y.Z>` in the library checkout).
-- Outer `pixi.toml`: `platforms` includes `win-64` when `test.yml` runs Windows; if you add it,
-  the outer lock re-solves in § 3 and is committed with the tree (`ci.md` § test-workflows).
+- Outer `pixi.toml`: set the approved compiler pin (`wt-compiler = "==<version>"`); `platforms`
+  includes `win-64` when `test.yml` runs Windows. Either edit re-solves the outer lock in § 3,
+  and it is committed with the tree (`ci.md` § test-workflows).
 
 Nothing else in the repo is edited by hand from here on. The only file under `<WF>/` ever
 written by hand is `VERSION.yaml` (§ 5).
@@ -151,8 +154,11 @@ the base branch from § 1.
       Every file listed is a real output change: `params.json` / `rjsf.json` (the form),
       `dags/*.py` (the pipeline), `pixi.toml` (pins or **variant** — `wt-task-gcp` appearing or
       vanishing means the variant differs from base; check § 1's reading of `recompile.sh` before
-      believing it). Nothing listed and a spec that did change means the change had no compiled
-      effect — say so.
+      believing it). **Report this diff to the user now, before going on** — a short list, one
+      line per file: what changed and which cause it traces to (the develop fix, a pin from § 2,
+      a **compiler bump** whose codegen change touches files the spec never mentioned — expected,
+      and CI will reproduce it at the same pin). Nothing listed and a spec that did change means
+      the change had no compiled effect — say so. The same list goes into the PR body.
 
 - [ ] **Variant check.** `grep -c 'wt-task-gcp' <WF>/pixi.toml` matches what § 1 said CI does
       (1+ for gcp, 0 for Desktop-only). Committing the wrong variant fails CI's diff in the
@@ -210,20 +216,27 @@ generated tree or the case to make it pass.
 4. Say the number and its reason in the commit and the PR ("1.1.0 → 1.2.0, parameters
    unchanged").
 
-## 6. Commit, PR, watch — and stop
+## 6. Guide gate, commit, PR, watch — and stop
 
-**Environment: git and `gh`.** One commit carrying the whole release: `spec.yaml` (if pins
+**Environment: git and `gh`.** **Guide gate first.** Compare the root `README.md` against
+this release: the cards and fields in `<WF>/…/rjsf.json`, the widgets the `base` run produced,
+the defaults. If any option, default or widget this release ships is missing or described
+differently, stop here and hand to `/ecoscope:guide`; resume when the README is current. The
+guide is part of the release, so it goes into the same PR.
+
+One commit carrying the whole release: `spec.yaml` (if pins
 changed), the outer `pixi.lock` (if re-solved), the regenerated `<WF>/` including its
-`pixi.lock` and `VERSION.yaml` — `chore: publish-mode recompile (<variant>, <library> <version>);
-VERSION <old> → <new>`. `git status` clean afterwards; a generated tree committed piecemeal is
+`pixi.lock` and `VERSION.yaml`, the outer `pixi.toml` (if the compiler pin moved), the
+`README.md` from the guide gate — `chore: publish-mode recompile (<variant>, <library>
+<version>); VERSION <old> → <new>`. `git status` clean afterwards; a generated tree committed piecemeal is
 the diff CI will find.
 
 Then hand off to the user's `/pr` skill when it is available — it resolves the base, pushes
 the branch, opens or updates the PR, and watches CI. Without it: `git push -u origin
 publish/<repo-name>` and `gh pr create --base <base>`. Either way the PR body carries: what the
-release contains (from `git log <base>..HEAD`), pins and compiler version, variant, VERSION and
-why, which cases ran locally and which are CI-only, and — where `tag.yml` exists — the line
-"merging cuts `v<X.Y.0>` and publishes the template".
+release contains (from `git log <base>..HEAD`), the generated-tree change list from § 3, pins
+and compiler version, variant, VERSION and why, which cases ran locally and which are CI-only,
+and — where `tag.yml` exists — the line "merging cuts `v<X.Y.0>` and publishes the template".
 
 Watch `gh pr checks --watch` and read each failing job's log to its gate:
 
@@ -235,7 +248,13 @@ Watch `gh pr checks --watch` and read each failing job's log to its gate:
 | `test-workflows` on one OS only | a platform-specific solve or path issue; read that leg's log — it is the one you could not run. |
 | `test-workflows` auth / connection errors | secrets missing in the repo — name them for the user (`connections.md` § CI secrets). |
 
-Green CI ends this skill. Report the PR URL, the version, and the merge consequence, then stop.
+Green CI ends this skill. Report the PR URL, the version, and the merge consequence. For a
+**catalog workflow** (base `staging`, vendored into the compose repo), also propose the
+preview-environment deploy — the user performs it by hand, there is no skill for it yet: a
+WIP tag `v<X.Y.0>.0` on the release branch and the compose repo's "Create PR to deploy dev"
+dispatch with **Deploy Preview Environment** ticked
+(`${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` § WIP-tag flow). You cut no tag and
+dispatch nothing. Then stop.
 If the cycle waits on something (a secret, a library release, a review), offer to record it in
 `.scratch/progress.yaml` (check `.scratch` is gitignored first — `repo-layout.md`).
 
@@ -250,8 +269,8 @@ catch it", "they clearly want it merged").
   answer them, state the side effect ("merging cuts v1.2.0 and publishes the template"), and
   wait (`process-rules.md`).
 - Never `gh secret set`. Name the secret and stop (`process-rules.md`, `connections.md`).
-- Never bump a task-library or compiler pin the user did not ask for. Publish ships what
-  `develop` proved; a refresh is proposed in § 1 and approved, or it does not happen.
+- Never bump a task-library or compiler pin without approval. The refresh is proposed line by
+  line in § 1; a declined line stays exactly as `develop` proved it.
 - Never compile for a publish branch with the global `wt-compiler`, and never change the flags
   the repo's CI passes — not `--local`, not dropping `pixi update`, not adding or removing
   `--variant=gcp` (`environments.md`, `compile.md`).
@@ -270,10 +289,10 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 |---|---|
 | The request bundles a fix or feature with the release, or a case is red | `/ecoscope:develop` — first; come back here after its human verification |
 | A task-library pin is not released yet | `/ecoscope:task` — release it, then § 2 again |
-| A user-visible option changed since the last release | `/ecoscope:guide` — before the PR |
-| The user wants a verified review before the PR | `/ecoscope:review` |
+| The README does not describe this release (§ 6 gate) | `/ecoscope:guide` — no PR without it |
+| Before the release is cut | `/ecoscope:review`, and `/ecoscope:e2e` for Desktop workflows |
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
-| The release reaches Ecoscope Web through the compose repo | `${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` — a separate, human-driven step |
+| CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` |
 
 Close every session by naming what comes next — usually "CI is green; merging is yours". Do not
 start it.
