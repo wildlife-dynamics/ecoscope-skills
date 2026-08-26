@@ -124,8 +124,9 @@ workflowName` (the per-run unique name), never by "the newest directory". Templa
   imports once by hand; the test starts from the tile.
 - A changed environment (task-library pin, lock, new deps) is **not** picked up by an existing
   tile — ask the user to delete it and re-import, or the run uses the stale env.
-- Tile test-id is `<template-name>-container`, shared by catalog, local and GitHub copies of the
-  same workflow. Disambiguate by subtitle: `.filter({ hasText: 'Locally imported from' })` vs
+- Tile test-id is `<template-name>-container` — the template's display name slugified, which
+  for a GitHub import is the repo name (`patrol-chart-container`, `event-details-container`) —
+  shared by catalog, local and GitHub copies of the same workflow. Disambiguate by subtitle: `.filter({ hasText: 'Locally imported from' })` vs
   `.filter({ hasText: 'Source code: <url>' })`. Only CI can assume a single tile.
 
 ## Scaffold-then-fill loop
@@ -160,7 +161,11 @@ so.
   `toHaveValue`.
 - **rjsf selects** (`select-widget-show-dropdown-button` / `select-widget-input`): non-unique —
   scope to a section root (`page.getByTestId('title-<Section>').locator('..').locator('..')`).
-  The only select-widget on a typical form is the **Data Source** picker.
+  The **Data Source** picker is the one select every form has; forms with `Literal` / `oneOf`
+  params add more (interval, mode, chart type, metric-row pickers), and an enum select may
+  render as a shadcn `select-trigger` instead of a `select-widget-*` depending on the render
+  pass — try `select-trigger` first for those, fall back to the select-widget ids, find the one
+  you want by its displayed value, never by position.
 - **EnumResolver array fields** (`patrol_types`, `event_types`): on Desktop these are an **array
   text input with an "Add" button, NOT a dropdown** — click the section's `add-btn`, type the raw
   value, then **press Tab to commit** (without the blur the value silently drops on submit).
@@ -222,9 +227,9 @@ treating the timeout as failure, and check the run's `metadata.json` status dire
 `Success` is not the assertion — a run with zero outputs reports it too. Assert at least one of:
 
 - **On disk**: this run's `result.json` (uuid subdir under the workflow dir, § App data dir) has
-  `error == null` and non-empty `result.views`; widget files (`*_v2.html`) sit beside it
-  ([preview-dashboard.md](preview-dashboard.md) § On-disk contract). Not available on a runner
-  that cannot see the app's data dir.
+  `error == null` and non-empty `result.views`; the widget HTML files (`<hash>_<suffix>.html`,
+  e.g. `3c8fe29_trend_chart.html`) sit beside it ([preview-dashboard.md](preview-dashboard.md)
+  § On-disk contract). Skip with a log line on a runner that cannot see the app's data dir.
 - **In the UI** (portable): click the run's row (`getTableRowByText(...).click()`); the results
   page renders `workflow-results-navbar` (and `workflow-results-sidebar-view-select` when the
   run is grouped); each widget is a wrapper `iframe-widget-<slug>` — the title lower-cased,

@@ -26,7 +26,7 @@ Contract details below were read from ecoscope-web's `workflows.desktop.server.u
 ```
 <app-data>/data/workflows/<template>/<wf>/
 ├── metadata.json                       # lists the workflow + marks the run succeeded
-└── <run>/ { result.json, layout.json, *_v2.html }
+└── <run>/ { result.json, layout.json, <hash>_<suffix>.html … }
 ```
 
 `<app-data>` is Electron's `userData` for the app name `ecoscope-desktop` — macOS
@@ -44,9 +44,11 @@ uses uuids) but must match the ids inside `metadata.json`.
   **workflow repo's own `layout.json`**. **Do NOT use `result["layout"]`** — it is `[]` for mock-io
   runs and renders a dashboard with **zero widgets** (opens fine, no tiles). Every layout entry's
   `widget_id` must match a widget `id` in the view.
-- **widget HTML** — a `map`/`graph`/`table` widget's `data` is a filename; the app serves it by
-  basename from the `<run>` dir. A `*_v2.html` file must post a message to the parent to clear the
-  spinner (Source B for the shape). `stat` and `text` widgets render `data` inline — no file.
+- **widget HTML** — a `map`/`graph`/`table` widget's `data` is a path (the run writes it
+  absolute, named `<hash>_<suffix>.html`, e.g. `3c8fe29_trend_chart.html`); the app serves it by
+  **basename** from the `<run>` dir, so copying the file next to `result.json` is enough. Each
+  file must post a message to the parent to clear the spinner (Source B for the shape). `stat`
+  and `text` widgets render `data` inline — no file.
 - **metadata.json** — the one file no run emits; see its own section.
 
 Drop the files in, relaunch the app (it lists from disk at load), open the row under My
@@ -64,10 +66,10 @@ same dir, auth bypassed) plus `data/app-state.json` = `{"onboarding":"completed"
 
 Results land in `/tmp/workflow-test-results/<workflow>/<case>/` (`$RUNNER_TEMP` on CI; the script
 prints the path and `rm -rf`s it per run, so nothing stale survives). Find `result.json` under
-it — the `*_v2.html` widget files (plotly charts, lonboard maps, ag-grid tables) sit next to it.
+it — the widget HTML files (plotly charts, lonboard maps, ag-grid tables) sit next to it.
 Check `result["views"]` is non-empty: a "successful" run with zero outputs is the
-silently-empty-run trap ([testing.md](testing.md)). Copy `result.json` and every `*_v2.html`
-into `<run>/`, add the repo's `layout.json` and a `metadata.json`.
+silently-empty-run trap ([testing.md](testing.md)). Copy `result.json` and every `.html` it
+names into `<run>/`, add the repo's `layout.json` and a `metadata.json`.
 
 ## Source B: hand-stubbed run
 
@@ -82,15 +84,15 @@ never read (a real ungrouped run keys its single view `'{"All": "True"}'` instea
   "metadata": {"title": "Preview", "description": "", "time_range": "", "time_zone": "UTC"},
   "views": {"{}": [
     {"id": 0, "widget_type": "stat",  "title": "Event Count", "data": "42", "type": "number"},
-    {"id": 1, "widget_type": "graph", "title": "Events by Type", "data": "chart_v2.html",
+    {"id": 1, "widget_type": "graph", "title": "Events by Type", "data": "chart.html",
      "is_link": true, "is_image": false, "is_expandable": true, "is_downloadable": true},
-    {"id": 2, "widget_type": "map",   "title": "Events Map",     "data": "map_v2.html"},
-    {"id": 3, "widget_type": "table", "title": "Events Table",   "data": "table_v2.html"}
+    {"id": 2, "widget_type": "map",   "title": "Events Map",     "data": "map.html"},
+    {"id": 3, "widget_type": "table", "title": "Events Table",   "data": "table.html"}
   ]}
 }}
 ```
 
-Each `*_v2.html` is a self-contained page; the spinner clears only when it posts
+Each widget file is a self-contained page; the spinner clears only when it posts
 `{type, widgetId}` where `widgetId` **equals the widget's `title`** and `type` matches the
 widget type — `PlotLoaded` (graph), `TileLoaded` (map), `TableLoaded` (table):
 

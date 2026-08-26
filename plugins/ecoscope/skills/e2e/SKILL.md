@@ -56,9 +56,9 @@ one chart tile":
 | Tile | the GitHub-URL tile (`Source code: <url>`) proves the **published** artifact on the default branch; the local-folder tile proves the working copy — pre-publish work needs the local tile, imported by hand once (`desktop-e2e.md` § Import strategies). Say which and why. |
 | Import | the tile is already in the library (default), or the test imports the GitHub URL itself through the page object when it is absent; after a pin or lock change the user deletes the old tile and re-imports before the run. |
 | Case | `base` first, always — the form-default submission; further cases are proposed only after the base test is green (§ 3), one test per case. |
-| Data source and time range | **the user's decision, asked explicitly**: the mock cases prove nothing here, and a real connection may not hold what the case needs (the patrol types, the dates, a feature group). Propose a connection name and window taken from a live case or the sibling tests, say what the run needs to find there, and wait for the answer — never assume. Org connection names are fine to commit; passwords never. |
+| Data source and time range | **the user's decision, asked explicitly**: a mock case's connection and slugs (`er_asia`, `demo_patrol`) are fixture names, not live values, and a real connection may not hold what the case needs (the patrol types, the dates, a feature group). Propose a connection name and window taken from a live case when the repo has one, else from the sibling tests; say what the run needs to find there; put the type filters to the user too (empty = all, or a slug they confirm exists); wait for the answer — never assume. Org connection names are fine to commit; passwords never. |
 | Fields | each card you will drive and how, from the compiled form; which stay at their defaults — and are *asserted* at their defaults where the run depends on them. |
-| Assertions | submit toast → row → Run → `Success`; the run on disk: `result.json` with `error == null` and non-empty `views`, because a green run with zero widgets is a failure (`${CLAUDE_PLUGIN_ROOT}/reference/preview-dashboard.md` § On-disk contract); the dashboard: open the row, the results navbar renders, every expected widget tile is present and its spinner clears (`desktop-e2e.md` § Submit, run, assert). Name the widget titles. |
+| Assertions | submit toast → row → Run → `Success`; the run on disk: `result.json` with `error == null` and non-empty `views`, because a green run with zero widgets is a failure (`${CLAUDE_PLUGIN_ROOT}/reference/preview-dashboard.md` § On-disk contract) — skipped with a log line on a runner that cannot see the app's data dir; the dashboard, always: open the row, the results navbar renders, every expected widget tile is present and its spinner clears (`desktop-e2e.md` § Submit, run, assert). Name the widget titles. |
 | App data dir | resolved per platform at runtime by the helper in `desktop-e2e.md` § App data dir — never a literal path. |
 | File, name, branch | `tests/desktop-tests/my-workflows/<workflow>[-github]-workflow.pw.test.ts`, the test title, the topic branch (or the caller's), a per-run unique workflow name. |
 | Preconditions for the user | the hand steps from § 0 that are not yet true. |
@@ -77,6 +77,11 @@ accordions expanded first, **Time Range and Data Source last**, Tab to commit ar
 filter-then-click for the timezone. Reuse the page objects (`my-workflows-page` for run and
 verify, `workflow-templates-page` for navigation and import) rather than re-deriving them.
 Delete the scaffold before committing.
+
+Without the app (§ 0 not met) there is no scaffold: write the fill from § Field-driving rules
+and the page objects, mark every id you could not see in the file's header comment, time-bound
+each of those interactions (`{ timeout: 15000 }`) so a wrong id fails in seconds, and call the
+test a draft in the report — § 3's run, when the preconditions hold, is its verification.
 
 ## 3. Run and assert
 
@@ -105,8 +110,9 @@ trace; do not patch the test around it.
 
 ## 5. Commit and hand back
 
-`yarn lint && yarn format` (the repo's pre-commit hook runs both; `yarn format:fix` repairs),
-then `test: <workflow> Desktop e2e (<tile>, <case>)` on the topic branch. Report the file, the
+`yarn lint && yarn format` (the repo's pre-commit hook runs both over the whole suite — allow
+minutes, not the default two; `yarn format:fix` repairs), then `test: <workflow> Desktop e2e
+(<tile>, <case>)` on the topic branch. Report the file, the
 exact command that ran it, what it asserted, the run time, and the preconditions another machine
 or CI needs. The PR is the caller's — `/pr` when it is available; never push unasked. Hand back
 to whichever skill called you.
@@ -124,7 +130,9 @@ under pressure ("the other tests do it", "it only needs the path on this Mac").
   in the suite that hardcode the macOS path are not the model.
 - Never run the test unless the app is listening on CDP, the tile is imported and initialised,
   and the connection exists; otherwise stop before running and say exactly what is missing.
-  Never launch the app, delete a tile or workflow, or reconfigure a data source yourself.
+  Never launch the app, delete a tile or workflow, or edit or delete an existing data source
+  (the suite's create-if-missing page object, fed from `ER_PASSWORD`, is the one sanctioned
+  way to add one).
 - Never assert `Success` alone: a run with zero outputs reads as a pass
   (`preview-dashboard.md`, `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`).
 - Never choose the data source or the time range yourself — proposed in § 1, decided by the

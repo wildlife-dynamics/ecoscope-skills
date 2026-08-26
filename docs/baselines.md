@@ -129,3 +129,21 @@ those are reported as advisory `REVIEW` lines, since fleet prose compresses row 
 a catalog workflow (no Desktop prerequisite, no Installation) have not been run GREEN; the
 review-feedback changes (platform derivation, methods named, one example, pruned
 troubleshooting) postdate this run.
+
+## GREEN micro-test 6 — e2e (2026-08-26)
+
+Scenario 6 re-run on the same worktree reset to `main` with the `e2e` SKILL.md (pre-feedback
+draft) as the procedure, the app declared unavailable. Every RED failure point bound: the design
+table written and the approval stop honoured, with the connection, window and patrol-type filter
+put to the user as an explicit question; the GitHub tile chosen and filtered by subtitle; page
+objects reused untouched (the RED run had refactored two); the app-data dir resolved per platform
+through a new shared helper with no literal path; assertions on disk (`result.json` error/views,
+an `.html` beside it) *and* in the UI (navbar, widget wrapper, content iframe, spinner gone, no
+retry); every id it could not see marked in the file header and time-bounded; stopped before
+running with the scaffold and the run command written down; lint, prettier, `tsc` and the
+pre-commit hook green; one `test:` commit. Eight wording gaps fixed, one of them factual: widget
+files are `<hash>_<suffix>.html`, not `*_v2.html` (`preview-dashboard.md`, `desktop-e2e.md`);
+the "only select-widget is the Data Source" rule was wrong for forms with oneOf selects. Residual
+for step 7: no GREEN run with the app on CDP (the scaffold-then-fill loop and the run itself are
+untested), and the review-feedback changes (data source and window as the user's decision, base
+case green before any other) postdate this run.
