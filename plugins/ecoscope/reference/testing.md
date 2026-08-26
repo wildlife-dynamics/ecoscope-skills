@@ -196,6 +196,27 @@ same task share one mock key: put both branches' rows in one fixture and filter 
 **Empty variants.** `df.iloc[0:0].to_parquet(...)` per fixture keeps the schema with zero rows —
 that's the empty-fixture regression case.
 
+### Pulling a sample
+
+The model comes from a real pull; the rows never leave `.scratch/`
+([process-rules.md](process-rules.md)). The fleet pattern is a one-off script in `.scratch/`
+(never committed) that runs in an env holding `ecoscope-platform` — the repo's inner env for an
+existing workflow, the nearest sibling workflow's inner env or a `pixi exec … -s
+ecoscope-platform` throwaway env ([task-discovery.md](task-discovery.md) § Ask the registry)
+when nothing is compiled yet — with the connection's `ECOSCOPE_WORKFLOWS__CONNECTIONS__…`
+variables exported ([connections.md](connections.md) § Environment-variable format). It calls
+the same platform io tasks the workflow will use (`get_patrols…`, `get_events…`,
+`get_subjectgroup_observations`, the `*_from_combined_params` variants) in two modes:
+
+1. **Discovery** — list the instance's patrol types / event types / subject groups, print the
+   `event_details` schema keys for the types in play, and count records per month for the
+   last year to pick a data-rich range. This is what settles the model and the defaults.
+2. **Sample** — pull that range and write one parquet per io task under `.scratch/`
+   (`GeoDataFrame.to_parquet(index=False)`), plus the discovery output as JSON.
+
+The synthetic fixture is then generated from the sample's *schema, slugs and key titles* by
+the committed `dev/fixtures/build_*.py`; the sample itself is never read by a test.
+
 ## `dev/run-test-cases.sh`
 
 ```

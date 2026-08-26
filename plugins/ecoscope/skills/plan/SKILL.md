@@ -54,11 +54,12 @@ proposed default.
   (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § `dev/run-test-cases.sh`) so the current
   form and dashboard are in front of you. The PRD then names real cards, fields and widget ids
   and what changes.
-- **New workflow**: read the nearest fleet workflow(s) — the user's existing repos for the
-  same data kind (patrols, events, subjects) and output kind (map, chart, table, download);
-  ask which if none is obvious — their `spec.yaml`, cases and layout. The shapes to plan
-  against: `${CLAUDE_PLUGIN_ROOT}/reference/patterns.md` (pipeline skeleton, grouping,
-  widget chains, dashboard assembly).
+- **Reference workflows**: find the nearest fleet workflow(s) — the user's existing repos for
+  the same data kind (patrols, events, subjects) and output kind (map, chart, table,
+  download) — and read their `spec.yaml`, cases and `layout.json`; they are proposed in § 2
+  and the user confirms or adds. The shapes to plan against:
+  `${CLAUDE_PLUGIN_ROOT}/reference/patterns.md` (pipeline skeleton, grouping, widget chains,
+  dashboard assembly).
 - **Tasks**: for each thing the workflow must do, find the task and read its signature
   (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md` § Finding an existing task — quick
   path), and confirm every name in the registry: the inner env of the repo for an improvement,
@@ -67,7 +68,13 @@ proposed default.
   a **task contract** (§ 3).
 - **Data**: what the connection provides and needs (`${CLAUDE_PLUGIN_ROOT}/reference/connections.md`),
   and what the packaged mock fixtures already carry for the io tasks in play (`testing.md`
-  § How mock-io works) — the data-model question in § 2 is decided against this.
+  § How mock-io works). **Then pull the sample** — planning is where the data model gets
+  settled, so the pull happens here, not in `develop`: discovery first (types, detail-schema
+  keys, counts per month → the range), then the parquets, all under gitignored `.scratch/`
+  and nowhere else (`testing.md` § Pulling a sample; `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md`).
+  The connection name and its credentials are the user's: ask for them once if the
+  `ECOSCOPE_WORKFLOWS__CONNECTIONS__…` variables are not in the shell, and plan on the
+  packaged fixtures when they cannot be had — say which in the PRD.
 
 ## 2. Ask — one batch, a default per question
 
@@ -80,8 +87,9 @@ Never one question at a time.
 |---|---|
 | Outcome and reader | the question the dashboard answers; who reads it (ranger, manager, donor) |
 | Name | repo name and workflow `id` (a Python identifier, short; no `-report` / `-dashboard` suffixes) |
+| Reference workflows | the ones § 1 found, to model on — confirm, add, or replace |
 | Data source | connection kind and the connection name to default to; time-range default; what is fetched (subject group / patrol types / event types) and filtered |
-| **Data model and fixtures** | does the packaged mock data carry what the widgets need — the event types, patrol types, detail keys, geometry, grouper keys? If not: a sample pulled into gitignored `.scratch/` first, then a synthetic fixture built from its model (`testing.md` § Generating mock data) |
+| **Data model and fixtures** | what § 1's discovery and sample showed — the event / patrol types, detail keys, geometry and grouper keys in play — against what the packaged mock data carries; which widgets need a synthetic fixture built from the sample's model (`testing.md` § Generating mock data) and which run on the packaged fixtures |
 | **Config form, card by card** | for each card: title, the fields the user sees with titles and defaults, what is fixed and hidden (`partial:`), what is advanced, dropdowns fed from the connection, conditional fields (`${CLAUDE_PLUGIN_ROOT}/reference/rjsf.md`, `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`) |
 | **Dashboard** | the widgets (map / chart / table / text / stat) and what each shows; groupers, and the view fan-out the *fixture* will produce, keyed how; placement and sizes (`${CLAUDE_PLUGIN_ROOT}/reference/output-style.md`; `patterns.md` § Dashboard assembly) |
 | Test cases | `base` plus per-grouper, toggles and the empty fixture (`testing.md` § Recommended case set); a live case only if asked |
@@ -92,8 +100,9 @@ Never one question at a time.
 ## 3. Write the PRD
 
 **Environment: the editor.** Write `.scratch/prd.md` as decisions `develop` can act on, in
-this order. No `spec.yaml` draft — it goes stale, duplicates `spec.md`, and `develop` writes
-the spec from the chains below with the reference files open. No mechanism restated: link the
+this order. No `spec.yaml` draft and no task chains with `partial:` values — they go stale,
+duplicate `spec.md`, and `develop` composes the chains from the tasks and reference workflows
+named below with the reference files open. No mechanism restated: link the
 reference file where a decision depends on one.
 
 ```markdown
@@ -107,11 +116,11 @@ reference_workflows: [<repo>, …]
 ---
 ## Outcome            — the question answered, the reader, in/out of scope
 ## Data               — connection, default connection name, time range, what is fetched, filters
-## Data model         — fixture per io task: packaged | synthetic from a sample (what it must contain, per case)
+## Data model         — what the sample in .scratch/ showed (types, keys, geometry, grouper keys; the range); per io task: packaged fixture | synthetic from the sample (what it must contain, per case)
 ## Config form        — one table per card: field · title · default · basic/advanced/hidden(partial) · source (task param / override)
 ## Dashboard          — widget table: id · kind · shows · grouped by · fan-out on the fixture · layout slot
-## Pipeline           — per widget, the task chain as registered names with the values that matter
-                        (partial: literals, groupers, skipif), naming the patterns.md shape it follows
+## Tasks              — per widget, the registered tasks that carry it (names confirmed in the registry, qualified on
+                        collision) and the reference workflow whose chain it follows; the wiring is develop's
 ## Test cases         — name · mock_io · what it proves · params that differ from base · fixture
 ## Task contracts     — per gap: name · library · inputs (typed) · output · io? · nearest existing task
 ## Deployment         — Desktop/Web, variant, base branch, secrets the live case needs
@@ -121,16 +130,16 @@ reference_workflows: [<repo>, …]
 
 Before presenting, check the PRD against itself:
 
-- every task name in **Pipeline** was confirmed in the registry (§ 1), and a colliding one is
+- every task name in **Tasks** was confirmed in the registry (§ 1), and a colliding one is
   qualified;
-- every widget has a layout slot, a case that renders it, and a chain that ends in
+- every widget has a layout slot, a case that renders it, and its tasks end in
   `gather_dashboard` (or `gather_output_files` for a download workflow — `tasks.md` § The
   tasks nearly every workflow uses);
 - every card lists its fields with defaults; nothing relies on in-card `ui:order` (`rjsf.md`
   § Use `ui:order` only for card order);
 - the fan-out is stated against the fixture the mock run will use, not the theoretical set;
-- the io tasks' fixtures are named and are synthetic; a sample, if pulled, stays in
-  `.scratch/` (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md`);
+- the io tasks' fixtures are named and are synthetic; the sample and the discovery output
+  are under `.scratch/` and referenced from **Data model** by path (`process-rules.md`);
 - each task contract has all five fields.
 
 ## 4. Approval, then hand to develop
@@ -180,8 +189,8 @@ under pressure ("I'll just scaffold it while I'm here", "the spec draft makes th
   gitignored (§ 0, `repo-layout.md`).
 - Never put a task name in the PRD that the registry has not confirmed, and never a bare
   name the registry lists twice (`task-discovery.md`).
-- Never pull real data anywhere but `.scratch/`; fixtures are synthetic (`process-rules.md`,
-  `testing.md`).
+- Never pull real data anywhere but `.scratch/`, and never let a test read the sample;
+  fixtures are synthetic (`process-rules.md`, `testing.md`).
 - Never ask one question at a time, and never ask what § 1's research answers.
 
 ## 7. Handoffs

@@ -59,8 +59,9 @@ Settle these, in one batch of questions with a proposed default for each:
 | Requirement | What to settle |
 |---|---|
 | Outcome | the question the dashboard answers; who reads it |
+| Reference workflows | which existing workflows to model on — the nearest by data kind (patrols, events, subjects) and output kind; propose them from the user's repos and ask; their `spec.yaml`, cases and `layout.json` are the shapes you copy |
 | Data | connection / data source, time range, what is fetched (patrols, events, subjects …), filters |
-| **Data model** | does the change need data the packaged mock fixtures don't carry — new event types, patrol types, detail keys, geometry, a grouper key? If yes: pull a sample into gitignored `.scratch/` first, then build a synthetic fixture from that model (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Generating mock data). If no: the packaged mock data. |
+| **Data model** | does the change need data the packaged mock fixtures don't carry — new event types, patrol types, detail keys, geometry, a grouper key? If yes: the sample `/ecoscope:plan` pulled into gitignored `.scratch/` (its PRD names it), or pull one now (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Pulling a sample), then build a synthetic fixture from that model (`testing.md` § Generating mock data). If no: the packaged mock data. |
 | **Config form** | the cards the user sees and their order; the fields in each, titles and defaults; what is fixed and hidden (`partial:`); dropdowns fed from the connection; conditional fields |
 | **Dashboard** | widgets (map / chart / table / text) and what each shows; groupers → how many views and keyed how — the fan-out the *mock fixture* will actually produce, not the theoretical set; `layout.json` placement and sizes |
 | Tests | mock cases to add or change (`base`, per-grouper, toggles, empty fixture); a live case only if asked |
