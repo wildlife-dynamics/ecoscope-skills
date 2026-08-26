@@ -28,13 +28,7 @@ This workflow helps you to [primary purpose, one sentence]. [One sentence on wha
 **What this workflow does:**
 - Downloads [patrols / events / observations / imagery] from **[EarthRanger | SMART | Google Earth Engine]**
 - [Calculates / summarizes …]   ← one bullet per transformation stage in the spec
-- [Optionally splits / groups …] ← only when the form has groupers or a comparison mode
 - Creates [an interactive chart / a map / a table / files …] on a dashboard
-
-**Who should use this:**
-- Conservation managers monitoring [domain]
-- Researchers analyzing [type of data]
-- Anyone needing to [visualize / export] [data] stored in [source]
 ```
 
 Title = the workflow's display name (spec `metadata.name` when present, else the repo name in
