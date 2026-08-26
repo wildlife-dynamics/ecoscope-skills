@@ -2,11 +2,12 @@
 # preflight.sh — discover and REPORT the global ecoscope-workflow tooling. Never repairs anything;
 # every FAIL line names the repair, built from what was discovered on this machine.
 #
-# Usage: preflight.sh          Exit: 0 = no FAIL; 1 = at least one FAIL.
+# Usage: preflight.sh [<workflow-repo-dir>]   Exit: 0 = no FAIL; 1 = at least one FAIL.
 #
 # Checks: wt-compiler runs and its env imports jsonschema (the classic uv-tool gap); graphviz dot
 # actually renders png (plugin cache registered); yq is go-yq (mikefarah); pixi is present.
-# Repo-level facts (the CI recompile command, pins, envs) are read from the repo by the skills.
+# When run inside a workflow repo it also lists the compiler pin and the task-library pins from
+# spec.yaml. CI recompile flags and env health are read from the repo by the skill that needs them.
 
 set -u
 fails=0
@@ -81,6 +82,25 @@ else
 fi
 
 if have pixi; then ok "pixi $(pixi --version 2>/dev/null | awk '{print $2}')"; else fail "pixi not on PATH — https://pixi.sh"; fi
+
+# ---- versions this repo asks for (only when run inside a workflow repo; a new workflow has none)
+repo="${1:-.}"
+if [ -f "$repo/spec.yaml" ]; then
+  echo "== repo pins ($repo) =="
+  pin="$(sed -n 's/^wt-compiler[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "$repo/pixi.toml" 2>/dev/null | head -1)"
+  if [ -n "$pin" ]; then
+    case "$pin" in
+      *"${ver:-__none__}"*) ok "wt-compiler: pinned $pin in pixi.toml, global ${ver:-unknown} — match" ;;
+      *) warn "wt-compiler: pinned $pin in pixi.toml, global ${ver:-unknown} — differ; dev compiles use the global one, publish compiles must run through the outer pixi env (pinned)" ;;
+    esac
+  else
+    warn "no wt-compiler pin found in $repo/pixi.toml"
+  fi
+  if have yq; then
+    yq '.requirements[] | "  " + .name + "  " + (.version // .tag // .rev // (.path | select(.) | "path: " + .) // "")' "$repo/spec.yaml" 2>/dev/null \
+      | sed 's/^/      /' | sed '1s/^      /task libraries (spec.yaml requirements):\n      /'
+  fi
+fi
 
 echo "== $fails FAIL =="
 [ "$fails" -eq 0 ]
