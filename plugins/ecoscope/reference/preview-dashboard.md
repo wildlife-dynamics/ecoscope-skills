@@ -29,11 +29,13 @@ Contract details below were read from ecoscope-web's `workflows.desktop.server.u
 └── <run>/ { result.json, layout.json, *_v2.html }
 ```
 
-`<app-data>` is platform-specific and can be found by "Open Result Folder" from an existing workflow on Ecoscope Desktop. macOS
-`~/Library/Application Support/ecoscope-desktop/`, Windows `%APPDATA%\ecoscope-desktop\`, Linux
-`$XDG_CONFIG_HOME/ecoscope-desktop/` (default `~/.config/…`). `<template>` is the workflow
-template id (e.g. the repo's spec id); `<wf>` and `<run>` are free-form (the real app uses uuids)
-but must match the ids inside `metadata.json`.
+`<app-data>` is Electron's `userData` for the app name `ecoscope-desktop` — macOS
+`Library/Application Support/ecoscope-desktop/` under the home dir, Windows `%APPDATA%\ecoscope-desktop\` (check
+`%LOCALAPPDATA%` too), Linux `$XDG_CONFIG_HOME/ecoscope-desktop/` (default `~/.config/…`); the
+one that holds `data/workflows` is it, and there is no supported override to point the app
+elsewhere ([desktop-e2e.md](desktop-e2e.md) § App data dir has a resolver). `<template>` is the
+workflow template id (e.g. the repo's spec id); `<wf>` and `<run>` are free-form (the real app
+uses uuids) but must match the ids inside `metadata.json`.
 
 - **result.json** — `{"error": null, "trace": null, "result": {views, filters, metadata, layout}}`.
   `result["views"]` maps a view key → list of widgets; the loader ignores `result["layout"]`.
@@ -70,8 +72,8 @@ into `<run>/`, add the repo's `layout.json` and a `metadata.json`.
 ## Source B: hand-stubbed run
 
 For a layout-only preview, write `result.json` with one view whose widgets carry the `id`s that
-`layout.json` references. Ungrouped workflows use the view key `"{}"`; this shape also hides the
-view selector so `filters` is never read.
+`layout.json` references. Use the view key `"{}"` — it hides the view selector so `filters` is
+never read (a real ungrouped run keys its single view `'{"All": "True"}'` instead; both load).
 
 ```json
 {"error": null, "trace": null, "result": {
@@ -151,7 +153,8 @@ groupers:
 ```
 
 The run emits one view per group value, keyed `'{"<col>":"<value>"}'`, plus
-`result.filters.schema.properties.<col>.oneOf` as the dropdown options. Two gotchas: grouper
+`result.filters.schema.properties.<col>.oneOf` as the dropdown options (rendered as
+`workflow-results-sidebar-view-select` on the results page). Two gotchas: grouper
 values render **raw** — the fixture must hold display-ready values ("Lion", not "lion"); and
 don't set `category_field` to the same column (each view becomes a single-slice chart) — use a
 different field for the in-view breakdown.
