@@ -49,12 +49,14 @@ default for each so the user can just say "yes":
 | Outcome | the question the dashboard answers; who reads it |
 | Data | connection / data source, time range, what is fetched (patrols, events, subjects …), filters |
 | **Config form** | the cards the user sees and their order; the fields in each, their titles and defaults; what is fixed and hidden (`partial:`); dropdowns fed from the connection; conditional fields |
-| **Dashboard** | widgets (map / chart / table / text) and what each shows; groupers → how many views and keyed how; `layout.json` placement and sizes |
+| **Dashboard** | widgets (map / chart / table / text) and what each shows; groupers → how many views and keyed how — state the fan-out the *mock fixture* will actually produce, not the theoretical set; `layout.json` placement and sizes |
 | Tests | mock cases to add or change (`base`, per-grouper, toggles, empty fixture); a live case only if asked |
 | Tasks | which registered tasks carry it — `${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md` quick path (find, read the signature, confirm in the registry the spec pins). None suitable → `/ecoscope:task` |
 
 Read the current `spec.yaml`, `test-cases.yaml`, `layout.json` and the compiled `rjsf.json`
-first so the proposal names real cards, fields and ids. Then propose, concretely: the
+first so the proposal names real cards, fields and ids. If what was asked for is already in the
+spec, the design says so and proposes what is actually missing (a case, an override, a fixture).
+Then propose, concretely: the
 `spec.yaml` edits (tasks, `partial:` bindings, groups, overrides), the test cases, the
 `layout.json` changes, the branch (`develop/<topic>` off the base branch —
 `${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md`), and how you will verify it (§ 4).
@@ -110,8 +112,10 @@ and a plain `--clobber` deletes the inner `pixi.lock`:
 | spec edit, `requirements:` untouched | none | `git checkout HEAD -- <WF>/pixi.lock` puts the committed lock back |
 | `requirements:` changed, or no lock in git | `--update` | carries the lock and re-solves it; churn is expected |
 
-A dev compile also resets `VERSION.yaml` to 0.0.0 — expected; `/ecoscope:publish` restores
-VERSION and lock from base. Never `--variant=gcp` here. Editable/`path:` requirements need
+A dev compile also resets `VERSION.yaml` to 0.0.0 and drops the gcp variant — expected in the
+improve loop even on a previously published tree; `/ecoscope:publish` restores VERSION and lock
+from base and recompiles the CI way (compile.md's "never dev-compile a publish-state tree" is
+about trees being published as-is, which is publish's job). Never `--variant=gcp` here. Editable/`path:` requirements need
 `./dev/postcompile-editable.sh` after every compile (spec.md § Editable). Before running
 `--clobber` know the restore path: `git checkout <base> -- <WF>/` (compile.md § Restore
 playbook). Run the compile bare or `> compile.log 2>&1` and read the whole file; on failure
@@ -166,7 +170,8 @@ Each has its mechanism in the linked file; here they are prohibitions because th
 under pressure ("just a quick recompile", "the top is only pixi noise").
 
 - Never pipe `wt-compiler`, `pixi`, or `dev/run-test-cases.sh` output through `tail`, `head`,
-  or `grep -v` — it masks the exit code (`environments.md`). Redirect to a file, read the file.
+  or `grep -v` — it masks the exit code (`environments.md`). Redirect to a file, record the exit
+  code, then read the file (grepping the saved file is fine).
 - Never `--clobber` without knowing the restore path (`compile.md` § Restore playbook).
 - Never merge, tag, or push a default branch, and never `gh secret set`, without an explicit
   go-ahead — "can we merge?" is a question (`process-rules.md`).

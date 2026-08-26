@@ -55,3 +55,15 @@ it exposed (`wt-compiler --version` isn't a flag; detached-HEAD branch read; com
 compiler input changed) were fixed in the same pass. Residual for step 7: scenarios 1 and 4 have not
 been re-run with the skill; the greenfield design-approval stop and the publish-state CI-recompile
 path are untested GREEN.
+
+## GREEN micro-test 2 — redesigned skill (2026-08-26)
+
+Scenario 2 re-run against the design-first spine (no state derivation, design + approval for every
+job, form/dashboard as requirements, human verification prompt). The agent produced a complete
+design proposal and stopped for approval before editing; skipped the compile for a test-only edit;
+redirected all harness output to files; investigated a single-view result before committing;
+committed once after `--all` 8/8; ran its own verification and wrote a filled-in human
+verification prompt; offered handoffs without starting them. Four wording gaps fixed. One
+reference conflict remains for the owner: `compile.md`'s "never dev-compile a publish-state tree"
+vs. the improve-loop model where a dev compile's VERSION/lock reset is expected and `publish`
+restores it.
