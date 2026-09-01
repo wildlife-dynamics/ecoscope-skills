@@ -23,6 +23,10 @@ Gotchas when wiring specific tasks in specs. Cross-referenced from the compile�
   list/dict values — then use the `columns:` whitelist to exclude them, or restructure so they're
   removed/expanded first (e.g. `normalize_json_column`). Only whitelist columns **guaranteed to
   exist** — optional fields KeyError.
+- **`sanitize: true` re-joins attributes onto geometry by index**: a non-unique index (relocations,
+  trajectory segments — the packaged patrol fixture goes 7324 → 7930 rows) duplicates rows and
+  every downstream sum inflates silently. Check `df.index.is_unique` first; a frame of scalar
+  columns + geometry can run with `sanitize: false`.
 - **`json_extract()` beats normalize+SQL** for simple extractions from JSON-string columns:
 
   ```sql
@@ -92,6 +96,9 @@ list of `(CompositeFilter, value)` tuples, i.e. `split_groups`/`groupbykey` outp
   (`process_events_details(map_to_titles=True)`) — a raw-slug default silently matches nothing.
   Verify titles from a live run's output before setting defaults.
 - **`convert_values_to_timezone`** — `columns: [...]` or `auto_detect: true`, mutually exclusive.
+- **`relocations_to_trajectory`** carries extra relocation columns onto the segments prefixed
+  `extra__` (`patrol_id` → `extra__patrol_id`); strip once with `strip_prefix_from_column_names`
+  (`prefix: extra__`) before SQL, grouping or charts.
 - **`with_unit` / quantity fields** — unit suffixes auto-append on CustomMetric-style outputs on
   current platform releases; don't hand-append in labels.
 - A task importable in Python but unknown to the compiler is a discovery problem —

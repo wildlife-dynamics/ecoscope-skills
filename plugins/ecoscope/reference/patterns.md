@@ -51,7 +51,7 @@ workflow:
   - {name: Set Groupers, id: groupers, task: set_groupers}
   - {name: Add Temporal Index, id: temporal_index, task: add_temporal_index,
      partial: {df: "${{ workflow.sql_query.return }}", groupers: "${{ workflow.groupers.return }}"}}
-  - {name: Split by Group, id: split_groups, task: split_groups,
+  - {name: Split by Group, id: grouped, task: split_groups,   # id ≠ task name (spec.md rule 2)
      partial: {df: "${{ workflow.temporal_index.return }}", groupers: "${{ workflow.groupers.return }}"}}
 ```
 
@@ -85,7 +85,7 @@ create_map_widget_single_view → merge_widget_views` (styling defaults in
 ```yaml
       - {name: Apply Colormap, id: colormap, task: apply_color_map,
          partial: {input_column_name: category, colormap: tab20b},
-         mapvalues: {argnames: df, argvalues: "${{ workflow.split_groups.return }}"}}
+         mapvalues: {argnames: df, argvalues: "${{ workflow.grouped.return }}"}}
       - {name: Create Polyline Layer, id: polyline_layer, task: create_polyline_layer,
          skipif: {conditions: [any_is_empty_df, any_dependency_skipped, all_geometry_are_none]},
          partial: {layer_style: {get_color_column: category_colormap, get_width: 2},
@@ -142,8 +142,9 @@ required for grouped items, skip handling, template-path resolution and raw URLs
 ```
 
 An ungrouped workflow (no groupers/split/merge; widgets flow straight in) produces `views` of
-exactly `{"{}": [...]}`, and Ecoscope Desktop **hides the "Edit Layout" button** on it. The
-render predicate in ecoscope-web's `WorkflowResults.tsx`:
+exactly `{"{}": [...]}`, and Ecoscope Desktop **hides the "Edit Layout" button** on it. With
+`set_groupers` in the spec and nothing selected the key is `{"All": "True"}` (the AllGrouper) —
+a real view, Edit Layout stays; an empty fixture still yields `{}`. The render predicate in ecoscope-web's `WorkflowResults.tsx`:
 
 ```js
 isNoView = data.views && Object.keys(data.views).length == 1 && Object.keys(data.views)[0] === '{}'

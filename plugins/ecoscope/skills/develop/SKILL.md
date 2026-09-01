@@ -22,8 +22,8 @@ nothing is restated here.
 
 ## 0. Preflight
 
-**Environment: any shell, from the workflow repo.** Skip this for a new workflow with no repo.
-Otherwise run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. It reports — never repairs — the
+**Environment: any shell, from the workflow repo.** For a new workflow run it once the
+scaffold exists, before the first compile. Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. It reports — never repairs — the
 global compiler (runs, imports `jsonschema`, version), graphviz, go-yq, pixi, and this repo's
 compiler pin and task-library pins from `spec.yaml`; each `FAIL` carries its repair command.
 Run the repairs before compiling; a WARN that the repo's compiler pin differs from the global
@@ -38,6 +38,10 @@ of the job, and route two of the three:
 
 - **New workflow, no repo** — offer `/ecoscope:plan` to write the PRD (`.scratch/prd.md`), then
   come back here and design the build from it. Check `.scratch` is gitignored first.
+  `wt-compiler scaffold init` writes `spec.yaml`, `test-cases.yaml`, CI and a README only: copy
+  `dev/run-test-cases.sh` and the outer `pixi.toml` from the hub template or a synced sibling
+  repo before the first test, and write `layout.json` yourself — never hand-roll the harness
+  (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Vendored files).
 - **Publish / release** — hand to `/ecoscope:publish`; it owns the CI-matching recompile,
   pins, lock/VERSION and the PR.
 - **Improve an existing workflow** — continue. A big improvement (a new widget chain, a new
@@ -61,7 +65,7 @@ Settle these, in one batch of questions with a proposed default for each:
 | Outcome | the question the dashboard answers; who reads it |
 | Reference workflows | which existing workflows to model on — the nearest by data kind (patrols, events, subjects) and output kind; propose them from the user's repos and ask; their `spec.yaml`, cases and `layout.json` are the shapes you copy |
 | Data | connection / data source, time range, what is fetched (patrols, events, subjects …), filters |
-| **Data model** | does the change need data the packaged mock fixtures don't carry — new event types, patrol types, detail keys, geometry, a grouper key? If yes: the sample `/ecoscope:plan` pulled into gitignored `.scratch/` (its PRD names it), or pull one now (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Pulling a sample), then build a synthetic fixture from that model (`testing.md` § Generating mock data). If no: the packaged mock data. |
+| **Data model** | does the change need data the packaged mock fixtures don't carry — new event types, patrol types, detail keys, geometry, a grouper key? If yes: the sample `/ecoscope:plan` pulled into gitignored `.scratch/` (its PRD names it), or pull one now (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Pulling a sample), then build a synthetic fixture from that model (`testing.md` § Generating mock data). If no: the packaged mock data. No credentials: say so, and model the synthetic fixture on the packaged one. |
 | **Config form** | the cards the user sees and their order; the fields in each, titles and defaults; what is fixed and hidden (`partial:`); dropdowns fed from the connection; conditional fields |
 | **Dashboard** | widgets (map / chart / table / text) and what each shows; groupers → how many views and keyed how — the fan-out the *mock fixture* will actually produce, not the theoretical set; `layout.json` placement and sizes |
 | Tests | mock cases to add or change (`base`, per-grouper, toggles, empty fixture); a live case only if asked |
@@ -134,7 +138,10 @@ and a plain `--clobber` deletes the inner `pixi.lock`:
 |---|---|---|
 | first compile (no inner lock), or switching to/from editable | `--install` | commit the lock with the tree |
 | spec edit, `requirements:` untouched | none | `git checkout HEAD -- <WF>/pixi.lock` puts the committed lock back |
-| `requirements:` changed, or no lock in git | `--update` | carries the lock and re-solves it; churn is expected |
+| `requirements:` changed, lock committed | `--update` | carries the lock and re-solves it; churn is expected |
+
+`--update` needs the committed `pixi.lock`, `VERSION.yaml` and `README.md`; a tree without them
+(greenfield, or a lock never committed) takes `--install`.
 
 Any compile without `--update` resets `VERSION.yaml` to 0.0.0 and drops the gcp variant —
 expected in the improve loop even on a previously published tree; `/ecoscope:publish` restores

@@ -173,3 +173,38 @@ the "only select-widget is the Data Source" rule was wrong for forms with oneOf 
 for step 7: no GREEN run with the app on CDP (the scaffold-then-fill loop and the run itself are
 untested), and the review-feedback changes (data source and window as the user's decision, base
 case green before any other) postdate this run.
+
+## Step 7 — with-suite eval (scenarios 1–4, 2026-08-26 / 2026-08-31)
+
+Same four scenarios re-run with the built skills (`develop` for 1, 2, 4; `publish` for 3), same
+harness, prompt = the baseline prompt with the skill embedded verbatim (`${CLAUDE_PLUGIN_ROOT}`
+resolved to the plugin path). Graded against assertions fixed before the runs
+(`.scratch/evals/assertions.md`: C1–C10 common, D1–D8 develop, P1–P8 publish) from each
+subagent's own report — commands verbatim, reasoning, final `git status`/`git log` — not from a
+re-run. Per-scenario result files with evidence per assertion: `.scratch/evals/results/`.
+
+| # | Scenario | Skill | Assertions | Result | Bound from the baseline | Residual |
+|---|---|---|---|---|---|---|
+| 1 | Greenfield: patrol effort by month for MMNR | develop | 16/16 PASS (D2, D8 n/a) | 3 tiles + 3 monthly charts + table, 4/4 mock cases, 2 commits on `develop/patrol-effort-by-month`; accuracy check caught a real task bug (`apply_sql_query(sanitize=True)` duplicates rows on a non-unique index, table 3 % high) | six guessed design questions → one batched table at a stop; `tail`/`grep -v` → files + exit codes; lock wipe → `--install` first, lock kept; feat commit before tests → after 4/4; source-scan discovery → registry + signatures; inline README → `/ecoscope:guide` offered | `scaffold init` writes no `dev/` — harness hand-rolled (3 bugs) because the skill assumed it exists; `id: split_groups` copied from patterns.md and rejected by the compiler; both fixed |
+| 2 | Small change: spatial grouper on patrol-chart | develop | 15/15 PASS (D3, D7, D8 n/a) | found the spec already had it, added one mock case, 8/8, 1 commit | `_recompile.yml` unopened → n/a (no compile either way, and said why); piping → files; unrun case committed → after `--all`; `feat/*` → `develop/*`; other checkout read → stayed inside | ambiguous "add X to the spec" (form default vs coverage) asked, not guessed |
+| 4 | Polish: duplicate heading on event-sum-map | develop | 16/16 PASS (D2, D4 n/a) | `rjsf-overrides` title `" "` per rjsf.md, 4/4 mock cases, minimal 1 commit | hand-assembled CI compile without `--update` → dev compile per the flag table with the lock restored; `dot -c` skipped → n/a; `--case base` only → four cases; lock churn + VERSION bump in a `fix:` → one-line diff | worktree cut at `main` (dev state) not the publish tip the RED run used — not same-state; `--all` skipped (live cases, no credentials) |
+| 3 | Publish: patrol-track-density-map | publish | 18/18 PASS | continued `publish/<repo>`, `bash dev/recompile.sh --update` exit 0 first try, 6/6, VERSION 1.2.0, guide gate, 1 commit, stopped before `/pr` | three compile attempts / hand-assembled / `--clobber` emptied the tree → script verbatim, whole-tree restore first; unasked ext-custom rc→final bump → proposed line by line, declined; `tail -40` → files; suffixed branch → existing one continued | first test loop launched in the background and the turn ended (P8 pass after a nudge) |
+
+Aggregate: 65/65 graded assertions PASS across the four scenarios (0 FAIL, 7 n/a). Every
+baseline failure class (piped output, lock trap, red commits, invented branches, unasked pin
+bumps, hand-assembled CI compiles, guessed designs) was absent in the with-suite arm.
+
+Wording gaps the runs reported were fixed in the same commits as the grades (c2030a8 for 2–4,
+this commit for 1): `--frozen` for editable `path:` deps; live cases without credentials → mock
+only, report live as CI's; map-widget accuracy via view keys/legend titles/feature counts;
+`create_func_magicmock` only for io tasks; publish's "already on the branch" pins, `pytest-cli.sh`
+repos re-solving the inner lock, `[tool.wt] published` if present; greenfield's missing `dev/`,
+the `id: split_groups` example, the lock-table `--update` row, `{"All": "True"}` view key, and two
+task pitfalls (`extra__` trajectory columns — hit by both S1 runs — and `sanitize` row duplication).
+
+Harness notes for the next eval: subagents launch long compiles/tests in the background and end
+their turn waiting — write "run compiles and tests synchronously" into the prompt; verify the
+worktree's start SHA against the branch tip before launching (S4 started at `main`); the shared
+`$TMPDIR` fills with compiler temp envs from parallel jobs (S1 hit ENOSPC twice, `pixi clean` on
+the inner manifest recovered it); S1 was cut twice by the API session limit and resumed from its
+transcript.

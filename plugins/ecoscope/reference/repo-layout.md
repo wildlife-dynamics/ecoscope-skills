@@ -40,7 +40,9 @@ customization belongs in files outside the template tree. The hub also carries b
 rulesets for the staging QA flow and the shared dev-workspace definition.
 
 Not every repo is synced (the target list is maintained by hand), so the repo's checked-in copy is
-still what CI runs — read it, don't assume ([ci.md](ci.md)).
+still what CI runs — read it, don't assume ([ci.md](ci.md)). A repo made by `wt-compiler scaffold
+init` has none of these (no `dev/`, no outer `pixi.toml`, no `layout.json`): copy them from the hub
+template or a synced sibling repo before the first test run.
 
 ## `.scratch/` planning artifacts
 
