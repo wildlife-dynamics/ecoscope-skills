@@ -46,7 +46,7 @@ Repo-specific variation). Read, and write down what each says:
 | `dev/recompile.sh` (when CI calls it) | every flag it passes — `--variant=gcp` or not, `pixi update` on the outer manifest or not, `dot -c`. This is the record of this workflow's deployment target (`${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § `--variant=gcp`). |
 | `test.yml` | the version gate (compares to `origin/main`), the OS matrix, the test command (`dev/run-test-cases.sh --all` in most repos; `dev/pytest-cli.sh <id> --all` in some — the same harness shape, but it runs `pixi update` on the inner manifest first unless `--skip-setup`), and the `env:` block naming the secrets the live cases need. |
 | outer `pixi.toml` + `pixi.lock` | compiler pin; `platforms` must list `win-64` when the matrix has Windows; `[tool.wt] published`, if present. |
-| `spec.yaml` `requirements:` | every pin; any `path:` / `editable:` / `channel: file://` / `version: "*"` (`validate-spec` rejects them). |
+| `spec.yaml` `requirements:` | every pin; any `path:` / `editable:` / `channel: file://` / `version: "*"` (`validate-spec` rejects the `file://` and wildcard forms; a `path:`/`editable:` slips past it and dies in the recompile job — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § The wt-family gates). |
 | repo-state signals (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Repo-state signals) | branch and lane; `VERSION.yaml` here vs `git show origin/main:<WF>/VERSION.yaml`; whether the inner `pixi.lock` exists; `wt-task-gcp` in the inner `pixi.toml`; `git status` clean. |
 | `git tag --list 'v*'`, `gh pr list --state open`, root `README.md` | highest existing tag; an open publish PR to update instead of a new one; whether the user guide describes the options this release ships. |
 
@@ -246,7 +246,7 @@ Watch `gh pr checks --watch` and read each failing job's log to its gate:
 |---|---|
 | `recompile-workflows` "Generated files differ" | the committed tree was not produced the way CI produces it: compiler version (global vs pinned), variant, or a hand edit under `<WF>/`. Re-run § 3 from the top. |
 | `validate-spec` VERSION | § 5 — `origin/main` moved, or the bump did not clear a legacy tag. |
-| `validate-spec` requirements | a `path:` / `file://` / `"*"` survived § 2. |
+| `validate-spec` requirements | a `file://` / `"*"` survived § 2 (a surviving `path:`/`editable:` shows up as a `recompile-workflows` compile error instead). |
 | `test-workflows` on one OS only | a platform-specific solve or path issue; read that leg's log — it is the one you could not run. |
 | `test-workflows` auth / connection errors | secrets missing in the repo — name them for the user (`connections.md` § CI secrets). |
 

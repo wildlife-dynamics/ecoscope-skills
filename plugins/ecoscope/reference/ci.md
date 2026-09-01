@@ -38,8 +38,10 @@ carry **both** families.
   followed by a step asserting those four excluded files still exist. **`_recompile.yml` does NOT
   compare VERSION** (it explicitly excludes `VERSION.yaml` from its diff) — the version gate lives
   in `test.yml`.
-- **`test.yml` → validate-spec**: rejects wildcard `version: "*"`, `channel: file://`, and
-  `path:`/`editable:` requirements; requires `test-cases.yaml` with ≥1 case; and
+- **`test.yml` → validate-spec**: rejects wildcard `version: "*"` and `channel: file://` —
+  those are its only requirement greps; **`path:`/`editable:` requirements slip past it** and
+  fail later, confusingly, in `_recompile.yml`'s compile step (the runner has no local path)
+  and the 3-OS solve. It also requires `test-cases.yaml` with ≥1 case, and
   enforces the **version gate** — numeric compare of the inner `VERSION.yaml` against
   `git show origin/main:<version-path>`: **must be strictly greater than `origin/main`, even when
   the PR targets `staging`**.
@@ -74,8 +76,9 @@ release. Consequences:
 - **Validate that every task library the workflow depends on is a published package** before
   tagging a release: each one must resolve from the conda channel (check the version exists in
   `https://repo.prefix.dev/ecoscope-workflows/noarch/repodata.json`), with no `path:`/`editable:`
-  requirements or `channel: file://` left in spec.yaml. `validate-spec` rejects the local forms,
-  but only a channel lookup proves the pinned version was actually published.
+  requirements or `channel: file://` left in spec.yaml. `validate-spec` rejects the wildcard and
+  `file://` forms (`path:`/`editable:` die later, in the recompile step), and only a channel
+  lookup proves the pinned version was actually published.
 - Verify an upstream task-library release before depending on it: the symbol exists at the
   task-library tag (`git grep -l <fn> v<X.Y.Z>`) AND the conda build exists in the same repodata.
 

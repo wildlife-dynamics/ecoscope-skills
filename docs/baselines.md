@@ -208,3 +208,22 @@ worktree's start SHA against the branch tip before launching (S4 started at `mai
 `$TMPDIR` fills with compiler temp envs from parallel jobs (S1 hit ENOSPC twice, `pixi clean` on
 the inner manifest recovered it); S1 was cut twice by the API session limit and resumed from its
 transcript.
+
+## Review baselines (step 5) — cross-cutting
+
+Full notes and answer keys: `.scratch/baselines/{7,8}-answer-key.md`, `7-review-readiness.md`,
+`8-review-diff.md` (gitignored). Both runs were strong finders — the RED failures are method and
+frame, not recall: a "read-only" probe that wrote (the never-edit rule needs `git status` before/
+after every probe as mechanism, not intention); a two-artifact check (variant vs the repo's own
+recompile flags) skipped although both sides had been read — checklist lines beat inference;
+dev-state resets (VERSION 0.0.0, gcp dropped) escalated as branch defects instead of routed to
+publish; exit codes still masked by `tail` in the long tail of commands; and no run named what it
+could not verify in a fixed structure (tier, clean-list, human checklist) — each invented its own.
+Harness caveat, recorded honestly: the baseline prompts themselves demanded per-finding
+"earned by running or by reading?", so part of the skill's method was already in the prompt; the
+skill text must own that instruction, and the GREEN arm must not weaken it. Two reference errors
+surfaced and were fixed: `ci.md` claimed validate-spec rejects `path:`/`editable:` (it greps only
+wildcards and `file://` — verified in both repos and the hub template; publish § 1/§ 6 tables
+adjusted), and the plan's "recompute `Spec.sha256` in milliseconds" is impossible —
+`Spec.model_validate` needs the discovery registry, so the fast tier uses git-history staleness
+plus the fingerprint's `installed_requirements` instead.
