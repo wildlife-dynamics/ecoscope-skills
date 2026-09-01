@@ -174,6 +174,72 @@ for step 7: no GREEN run with the app on CDP (the scaffold-then-fill loop and th
 untested), and the review-feedback changes (data source and window as the user's decision, base
 case green before any other) postdate this run.
 
+## GREEN micro-test 9 — task (2026-08-31)
+
+Scenario 9 re-run on the same detached worktree reset to `wt-release-candidate` (6729a67) with
+the `task` SKILL.md as the procedure, `/pr` and `/ecoscope:develop` declared unavailable. Every
+RED failure point bound: the contract written as a design table and put to the user before any
+code, with the one real design question batched (per ranger = `patrol_subject` or
+`groupby_col`? — answered from `io/earthranger.py`, where `groupby_col` is the patrol id, not
+the ranger); the base branch found from `git branch -r --contains v0.1.0rc25` → only
+`wt-release-candidate`, its pyproject checked for the `wt_registry` entry point; the registry
+proof run as the filtered, file-redirected command with the pass condition checked (one entry,
+`public_module_path` = `…tasks.analysis`, `registry.err` empty), `--format pretty` never used;
+9 new flat-function tests plus the 428-test suite and mypy green through the inner manifest
+with `--frozen` and exit codes recorded; "usable from a spec" answered by the registry entry
+and the spec line `task: calculate_patrol_effort` handed back — no scratch workflow inside the
+library, no compiler internals driven; one commit after everything was green; stopped at
+push/PR with the commands written down and the return-to-develop block (editable `path:` +
+`editable: true` requirement, first compile `--clobber --install`, `postcompile-editable.sh`,
+return columns, release condition on the next tag). One slip: a single `tail -n 3 test.log`
+after the exit code, self-corrected by reading the whole file. Five wording gaps fixed: the
+base-branch rule now names the newest tag when no workflow is given; the design table's
+"category the nearest task lives in" maps across libraries; § 4 runs the suite and mypy through
+the inner manifest (the root `pixi run mypy` / `pixi run pytest` tasks need a root env that is
+usually not installed, and ext-custom's root pytest first installs Playwright) with the exact
+commands; flat functions stated against the repo's older class/fixture tests; "read each log
+whole with `cat`, not `tail`" moved into § 4's acting text beside the commands. Residual for
+step 7: no GREEN run for an io task (fixture + mock-io check) or for a task in `ecoscope`
+(shared dev workspace, full pin stack); the disk constraint added to this run's prompt
+(no new envs) is not part of the scenario.
+
+## GREEN micro-test 10 — plan (2026-08-31)
+
+Scenario 10 re-run in a fresh empty directory with the `plan` SKILL.md as the procedure,
+`/ecoscope:develop` declared unavailable and no credentials usable. Every RED failure point
+bound: the empty directory adopted as the repo directory with `.scratch/` inside (its name
+flagged against the proposed `mt-subject-speed`) — no hardcoded workflows path; research
+first, with four reference workflows proposed from the user's repos (`wt-download-subjects`
+for the fetch and Filter Data card, `subject-tracking` for speed bins and stat tiles,
+`patrol-chart` for the chart tail, `mt-rhino` for the mmnr conventions and the synthetic
+fixture builder); 49 task names found with `search-tasks.py`, signatures read with `-s`, then
+confirmed in a compiled sibling's inner `wt-registry` (ecoscope-platform 2.19.0 + ext-custom
+0.1.0rc25 — the pins the PRD proposes), the four cross-library collisions written fully
+qualified, only one io task in the chain; the sample pull written as the fleet-pattern
+`.scratch/pull_sample.py` (API calls checked against source) but not run, the packaged
+fixture inspected instead (8 928 obs, 2 subjects, Jan 2017) and the PRD saying so plainly;
+one batch of 11 questions with defaults (Outcome … Size), the four build-changing unknowns
+marked **(confirm)** in the Decisions table; a PRD of decisions with a Tasks section per
+widget and no spec draft (22 KB against RED's 1 450-line spec-inlined document); no
+histogram or scalar-median task exists, recorded as near-misses instead of contracts; stopped
+at approval with the develop handoff written, including the scaffold `--clobber` trap.
+One miss, from the skill not the run: it wrote `progress.yaml` because § 5's "a new workflow
+with more than one widget chain" makes almost any dashboard multi-session — the run said so.
+Six wording gaps fixed: Size now defaults to one session for a new workflow whose widgets are
+all carried by registered tasks (however many), "several" only for a task contract that must
+be released first, a swap or migration, or the user saying so, with a pending sample pull
+named as `develop`'s first step rather than a session boundary; the registry env with no repo
+is a compiled sibling's inner env before the `pixi exec` throwaway; the pull rule covers
+"credentials present but the pull may not run" (leave the script, plan on packaged, say so);
+the self-check's "fixtures are synthetic" now reads packaged-or-synthetic, never a real
+pull; an empty directory is adopted whatever it is called; and — factual, in
+`task-pitfalls.md` — the `extra__` strip is the fleet's `drop_column_prefix`
+(`prefix: extra__`, `duplicate_strategy: suffix`, 11 specs), not
+`strip_prefix_from_column_names` (1 spec). Residual for step 7: no GREEN run of the
+improvement path (`git check-ignore` gate, existing inner env) or of a run where the pull
+actually executes; the run's own zsh slips (unsplit `$ARGS`, `echo =====`) are tooling, not
+the skill.
+
 ## Step 7 — with-suite eval (scenarios 1–4, 2026-08-26 / 2026-08-31)
 
 Same four scenarios re-run with the built skills (`develop` for 1, 2, 4; `publish` for 3), same

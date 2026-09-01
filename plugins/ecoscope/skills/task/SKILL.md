@@ -54,7 +54,8 @@ config lists the packages that ship, and the pixi section — when it has one �
 (§ 4). A `CLAUDE.md` in the library may still describe the legacy `@task` decorator and an
 `ecoscope_workflows` entry point; the pyproject on the branch you are on wins. **Base the work
 on the branch the fleet's pins are released from, not necessarily the default branch:** find
-it from the release tag a workflow pins (`git branch -r --contains v<version>`) and confirm
+it from the release tag a workflow pins — the newest tag when no workflow is named
+(`git branch -r --contains v<version>`) — and confirm
 that branch's `pyproject.toml` declares the `wt_registry` entry point. Cut a topic branch from
 it.
 
@@ -75,7 +76,7 @@ Then propose, concretely:
 
 | Item | Proposal |
 |---|---|
-| Location | `<tasks-dir>/<category>/_<module>.py` — the category the nearest task lives in (`analysis`, `transformation`, `io`, `results`, `config`, …); a new module, private (`_` prefix), one concern |
+| Location | `<tasks-dir>/<category>/_<module>.py` — the category the nearest task lives in, mapped onto this library's categories when the nearest task is in the other library (`analysis`, `transformation`, `io`, `results`, `config`, …); a new module, private (`_` prefix), one concern |
 | Signature | the function as it will be written: every parameter `Annotated[T, Field(description=…)]`, DataFrame parameters typed with the platform aliases, the return type; which inputs are wire-only (`Field(exclude=True)`), which are advanced (`AdvancedField`, needs a default), which are optional without a null option (`SkipJsonSchema[None]`) — `${CLAUDE_PLUGIN_ROOT}/reference/tasks.md` § Annotations that drive the form |
 | io or not | `tags=["io"]` only for a task that fetches from a connection or the network; then also the packaged fixture it returns under mock-io (§ 2) |
 | Behaviour | the computation in a sentence, the output columns and units, what happens on an empty input and on a missing column |
@@ -148,19 +149,23 @@ dump is hundreds of kilobytes (`task-discovery.md` § Ask the registry).
 
 ## 4. Test in the library env
 
-**Environment: the library's own pixi env, through its test task.** Tests are flat functions
-in the library's `tests/` tree next to the existing ones, with the synthetic frame built in the
-test and the expected numbers computed by hand in the test body, not by calling the code under
-test. Run the file, then the suite, with the exit code recorded:
+**Environment: the library's own pixi env, through its manifest.** Tests are flat functions
+in the library's `tests/` tree next to the existing ones (older tests there may use classes or
+fixtures — write flat functions anyway), with the synthetic frame built in the test and the
+expected numbers computed by hand in the test body, not by calling the code under test. Run
+the file, then the suite, then mypy, each with the exit code recorded:
 
 ```bash
 pixi run --manifest-path <manifest> --frozen pytest <tests-dir>/test_<name>.py > test.log 2>&1; echo exit=$?
-pixi run mypy > mypy.log 2>&1; echo exit=$?          # the root task, where the repo has one
+pixi run --manifest-path <manifest> --frozen pytest <tests-dir> > suite.log 2>&1; echo exit=$?
+pixi run --manifest-path <manifest> --frozen mypy <package> <tests-dir> > mypy.log 2>&1; echo exit=$?
 ```
 
-(ext-custom's root `pixi run pytest` runs the whole suite after a Playwright install; the
-manifest-level invocation above runs one file without it. The `/pr` skill runs the mypy gate
-again before pushing.) Read the whole log. An io task's fixture is loaded the way the mock
+(The repo's root tasks — ext-custom's `pixi run pytest`, which first installs Playwright, and
+`pixi run mypy` — need the root env, which is often not installed; the same invocations through
+the inner manifest use the env that already exists — read the root task's command for the
+exact mypy arguments. The `/pr` skill runs the mypy gate again before pushing.) Read each log
+whole with `cat` — not `tail`, even after the exit code is known. An io task's fixture is loaded the way the mock
 runner loads it — `wt_task.testing.create_func_magicmock(anchor, func_name)()` — and its
 columns compared with the real return's.
 

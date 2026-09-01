@@ -97,8 +97,9 @@ list of `(CompositeFilter, value)` tuples, i.e. `split_groups`/`groupbykey` outp
   Verify titles from a live run's output before setting defaults.
 - **`convert_values_to_timezone`** — `columns: [...]` or `auto_detect: true`, mutually exclusive.
 - **`relocations_to_trajectory`** carries extra relocation columns onto the segments prefixed
-  `extra__` (`patrol_id` → `extra__patrol_id`); strip once with `strip_prefix_from_column_names`
-  (`prefix: extra__`) before SQL, grouping or charts.
+  `extra__` (`patrol_id` → `extra__patrol_id`); strip once before SQL, grouping or charts with
+  `drop_column_prefix` (`prefix: extra__`, `duplicate_strategy: suffix`) — the fleet's choice
+  in 11 specs; `strip_prefix_from_column_names` is also registered but used by one.
 - **`with_unit` / quantity fields** — unit suffixes auto-append on CustomMetric-style outputs on
   current platform releases; don't hand-append in labels.
 - A task importable in Python but unknown to the compiler is a discovery problem —

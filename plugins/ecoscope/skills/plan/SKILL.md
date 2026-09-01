@@ -31,9 +31,10 @@ artifacts). Before writing there:
   missing, add `.scratch` to `.gitignore` first (a third of fleet repos lack the entry) and
   commit that line on its own; then `mkdir -p .scratch`.
 - **New workflow** — there is no repo yet. Propose the repo name in § 2 and create only its
-  directory with `.scratch/` inside: the directory the user is running from if it is empty or
-  already the new repo, otherwise a sibling of their existing workflow repos — ask once where
-  those live; never assume a layout. Nothing is under git yet, so nothing can leak; the
+  directory with `.scratch/` inside: the directory the user is running from if it is empty
+  (whatever it is called — the PRD's **Name** is the repo name; renaming the directory is the
+  user's call, noted in the handoff) or already the new repo, otherwise a sibling of their
+  existing workflow repos — ask once where those live; never assume a layout. Nothing is under git yet, so nothing can leak; the
   scaffold's `.gitignore` carries `.scratch` (`repo-layout.md` § Repo anatomy) and `develop`
   checks it before its first commit. One trap to write into the PRD's handoff:
   `wt-compiler scaffold init` creates `<output-dir>/<id>/` and its `--clobber` **overwrites**
@@ -62,8 +63,9 @@ proposed default.
   dashboard assembly).
 - **Tasks**: for each thing the workflow must do, find the task and read its signature
   (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md` § Finding an existing task — quick
-  path), and confirm every name in the registry: the inner env of the repo for an improvement,
-  the `pixi exec` throwaway env when nothing is compiled yet (same file, § Ask the registry).
+  path), and confirm every name in the registry: the inner env of the repo for an improvement; with
+  no repo, a compiled sibling's inner env whose pins match the ones the PRD proposes, and the
+  `pixi exec` throwaway env only when no sibling has one (same file, § Ask the registry).
   A name the registry lists twice goes into the PRD fully qualified. What no task does becomes
   a **task contract** (§ 3).
 - **Data**: what the connection provides and needs (`${CLAUDE_PLUGIN_ROOT}/reference/connections.md`),
@@ -73,8 +75,9 @@ proposed default.
   keys, counts per month → the range), then the parquets, all under gitignored `.scratch/`
   and nowhere else (`testing.md` § Pulling a sample; `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md`).
   The connection name and its credentials are the user's: ask for them once if the
-  `ECOSCOPE_WORKFLOWS__CONNECTIONS__…` variables are not in the shell, and plan on the
-  packaged fixtures when they cannot be had — say which in the PRD.
+  `ECOSCOPE_WORKFLOWS__CONNECTIONS__…` variables are not in the shell. When they cannot be
+  had, or the pull may not run in this session, leave the pull script under `.scratch/`, plan
+  on the packaged fixtures and say so in the PRD — `develop` runs the pull first.
 
 ## 2. Ask — one batch, a default per question
 
@@ -95,7 +98,7 @@ Never one question at a time.
 | Test cases | `base` plus per-grouper, toggles and the empty fixture (`testing.md` § Recommended case set); a live case only if asked |
 | Task contracts | for each gap: name, library, inputs and types, output, io or not — the seam `/ecoscope:task` builds to |
 | Deployment | Ecoscope Desktop only, or Web (decides `--variant=gcp` — `${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § `--variant=gcp`); catalog workflow or not (base branch `staging` vs `main` — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md`) |
-| Size | one session, or several — decides § 5 |
+| Size | one session (the default for a new workflow whose widgets are all carried by registered tasks, however many), or several — decides § 5 |
 
 ## 3. Write the PRD
 
@@ -138,7 +141,8 @@ Before presenting, check the PRD against itself:
 - every card lists its fields with defaults; nothing relies on in-card `ui:order` (`rjsf.md`
   § Use `ui:order` only for card order);
 - the fan-out is stated against the fixture the mock run will use, not the theoretical set;
-- the io tasks' fixtures are named and are synthetic; the sample and the discovery output
+- the io tasks' fixtures are named — packaged, or synthetic built from the sample, never a
+  real pull; the sample and the discovery output
   are under `.scratch/` and referenced from **Data model** by path (`process-rules.md`);
 - each task contract has all five fields.
 
@@ -154,9 +158,11 @@ written to `spec.yaml`, or compiled here.
 
 ## 5. `progress.yaml` — only when the work spans sessions
 
-Write `.scratch/progress.yaml` when the answer to **Size** was "several": a new workflow with
-more than one widget chain, a task contract whose release the workflow will wait on, a data
-source swap or migration. Skip it otherwise — a one-session job carries its plan in the PRD.
+Write `.scratch/progress.yaml` when the answer to **Size** was "several": a task contract that
+must be built and released before the workflow can finish, a data source swap or migration, or
+the user saying so. Skip it otherwise — a new workflow whose widgets are all carried by
+registered tasks is one session however many widgets it has, and carries its plan in the PRD;
+a sample pull still to run is `develop`'s first step, not a session boundary.
 
 It is a **milestone plan `develop` reads when it starts and updates when a milestone is
 reached** — not a state machine serviced per step (`repo-layout.md` § `.scratch/`). Shape:
