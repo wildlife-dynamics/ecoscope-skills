@@ -2,3 +2,6 @@
 .scratch/
 *.pyc
 __pycache__/
+
+
+.claude

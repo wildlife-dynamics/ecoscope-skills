@@ -96,7 +96,7 @@ the compiled `rjsf.json` / `dags/*.py` on both sides (`git show <base>:<path>` f
 These are the failure modes that look fine in source — each is convicted in an artifact, not in
 the diff text:
 
-- **Real patrol data — stop everything.** GPS tracks, ranger names, patrol details anywhere in
+- **Real data — stop everything.** GPS tracks, ranger names, patrol details anywhere in
   the commit (`resources/`, `dev/fixtures/`, cases). Not ranked with the rest: report it alone,
   immediately, with the remediation path
   (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data). Synthetic fixtures
