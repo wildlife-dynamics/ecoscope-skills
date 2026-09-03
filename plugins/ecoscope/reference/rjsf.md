@@ -171,5 +171,14 @@ rjsf-overrides:
 ```
 
 `depends_on` points at the connection-name field; options refresh when the data source changes.
+
+The target may be a **scalar string field**, not only a grouper array. In ecoscope-server's
+`er_enum_resolver.py`, `_get_insertion_fn` routes `spatial_feature_group` to the grouper-specific
+inserter only when the path ends in `groupers`; every other path — and every other type — goes
+through `_insert_standard_enum_def`, which sets `items` on `type: array` targets and merges a
+`$ref` straight into a scalar. The field becomes a `oneOf` of names per connection inside an
+`allOf/if/then` keyed on the connection, defaulted and disabled when exactly one value exists,
+and left as free text with a "failed to fetch" description when the fetch fails. No spec-side
+difference from the array form.
 On **Desktop** these fields render as an array text input with an "Add" button, not a dropdown —
 matters for E2E tests ([desktop-e2e.md](desktop-e2e.md)).

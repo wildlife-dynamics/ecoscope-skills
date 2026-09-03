@@ -12,6 +12,7 @@ Upstream docs are reliable for concepts but not syntax — see [upstream-docs.md
 - Task groups
 - `requirements:` (conda and PyPI forms; channels)
 - Editable / path requirements (dev mode) and the pin stacks
+- Bumping library pins
 - Variable references
 - `map` / `mapvalues`
 - `skipif`
@@ -141,6 +142,28 @@ ecoscope stays editable — its recipe hard-deps a released ecoscope-platform, w
 editable checkout.
 
 The post-install warning `These conda-packages will be overridden by pypi: …` is benign.
+
+## Bumping library pins
+
+A `requirements:` bump is a change in its own right, verified before and after the compile:
+
+1. **Check the coupling first.** `pixi search -c <channel> "<lib>==<ver>"` prints the recipe's
+   run deps; ext-custom hard-pins a platform range, so a lone ext-custom bump can fail the
+   discovery solve. Bump both, matching the newest sibling specs' range (`grep -h -A1 "name:
+   ecoscope-platform" ~/MEP/wt-workflows/*/spec.yaml`).
+2. **Every task the spec names must exist at the target version.** From the library checkout:
+   `git grep -l "^def <task>(" <tag> -- '*.py'` for each `task:` in the spec. Tasks migrate
+   between libraries and get renamed (`set_base_maps_pydeck` in ext-custom → the platform's
+   `set_base_maps` at 2.18; `create_polygon_layer_pydeck` moved to the platform under the same
+   name). A bare name that exists in either library still resolves.
+3. **Compare signatures with the spec's `partial:` keys** (`git show <tag>:<file>`); a removed
+   parameter is a compile error, an added one is a form leak.
+4. Carry the fleet's `pydeck 0.9.2` conda-forge re-statement when moving onto 2.18+.
+5. Compile with `--clobber --update` and expect inner-lock churn; `--update` keeps `VERSION.yaml`.
+6. **Re-check the card list** (`yq -p json '.properties | keys' <WF>/…/rjsf.json`). New
+   user-facing params surface as extra cards named after the task id (2.18/2.19 added
+   `create_polygon_layer_pydeck.tooltip_columns` and `draw_map.output_type`); bind them in
+   `partial:` to the old behaviour. Then the mock cases and the § 4 accuracy check as usual.
 
 ## Variable references
 

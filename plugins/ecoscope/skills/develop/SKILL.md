@@ -26,9 +26,12 @@ nothing is restated here.
 scaffold exists, before the first compile. Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. It reports — never repairs — the
 global compiler (runs, imports `jsonschema`, version), graphviz, go-yq, pixi, and this repo's
 compiler pin and task-library pins from `spec.yaml`; each `FAIL` carries its repair command.
-Run the repairs before compiling; a WARN that the repo's compiler pin differs from the global
-compiler is informational here (the dev compile uses the global one; matching the pin is
-`/ecoscope:publish`'s job). Environments and standing rules:
+Run the repairs before compiling. A WARN that the repo's compiler pin differs from the global
+compiler is a routing decision, not noise: on that repo run every compile through the outer pixi
+env (`pixi run --manifest-path pixi.toml --locked wt-compiler compile …`, the pinned compiler CI
+uses) instead of the global one. A newer global compiler validates artifacts an older platform
+pin cannot produce cleanly (`compile.md` § Common compile errors, the empty-`oneOf` row), and the
+failure surfaces only after the discovery-env solve. Environments and standing rules:
 `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
 
 ## 1. Design — always, then approval
@@ -52,8 +55,10 @@ of the job, and route two of the three:
 **Research before proposing.** Read `spec.yaml`, `test-cases.yaml`, `layout.json`, the
 compiled `rjsf.json`, and run the existing `base` mock case (§ 3 test command — on a fresh tree
 this installs the inner env first, and an editable tree needs `--frozen`) so you have the
-current form and dashboard in front of you. Any fixture inspection for the fan-out or the data
-model runs in the inner pixi env, as in § 4. The proposal then names real cards, fields, widget
+current form and dashboard in front of you. When the change adds or removes a data source, also
+run `python -m <pkg>.cli get data-connection-property-names` in the inner env — Desktop prompts
+for exactly the connections that list names, so it is part of the before/after. Any fixture
+inspection for the fan-out or the data model runs in the inner pixi env, as in § 4. The proposal then names real cards, fields, widget
 ids and what changes. If what was asked for is already in the spec, say so and propose what is
 actually missing (a case, an override, a fixture). Ask for the user's opinion up front only
 where the request leaves a real choice.
@@ -130,8 +135,12 @@ wt-compiler compile \
     --clobber --no-progress [--install | --update]
 ```
 
-Compile only when `spec.yaml` changed; a `test-cases.yaml` / `layout.json` / fixture edit goes
-straight to the test step. The trailing flag, because the test harness runs `pixi run --locked`
+When preflight WARNed on the compiler pin, prefix the same command with
+`pixi run --manifest-path pixi.toml --locked` (§ 0). Compile only when `spec.yaml` changed; a
+`test-cases.yaml` / `layout.json` / fixture edit goes straight to the test step. A
+`requirements:` bump is its own change with its own checklist (`spec.md` § Bumping library
+pins): confirm every task the spec names still exists at the target version, then after the
+compile re-check the card list — new task params leak as extra cards until bound with `partial:`. The trailing flag, because the test harness runs `pixi run --locked`
 and a plain `--clobber` deletes the inner `pixi.lock`:
 
 | Situation | Flag | Then |

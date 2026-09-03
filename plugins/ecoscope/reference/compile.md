@@ -17,7 +17,11 @@ modes. Which environment to run in — and the standing rules that aren't compil
 
 ## Canonical commands
 
-**Dev compile** — global `wt-compiler`, from the workflow repo root:
+**Dev compile** — global `wt-compiler`, from the workflow repo root. If preflight WARNs that the
+repo pins an older compiler, run the same command through the outer pixi env instead
+(`pixi run --manifest-path pixi.toml --locked wt-compiler compile …`): a newer global compiler
+can reject what an older platform pin emits (the empty-`oneOf` row below), and CI compiles with
+the pinned one anyway.
 
 ```bash
 wt-compiler compile \
@@ -163,6 +167,8 @@ just retry, each attempt progresses via the cache; 2–3 attempts usually suffic
 | `ModuleNotFoundError: No module named 'jsonschema'` | Broken compiler tool env — repair recipe in [environments.md](environments.md). |
 | `Error launching 'wt-compiler': No such file or directory` | Renamed repo dir; `pixi clean && pixi install` both envs ([environments.md](environments.md)). |
 | Solve failure hoisting python/conda-forge | An explicit channel-less `python` requirement in a publish spec — remove it ([spec.md](spec.md)). |
+| `Compiled artifact 'params.json' is not a valid JSON Schema: [] should be non-empty` at `$defs.ValueGrouper.properties.index_name.oneOf` | Compiler ≥0.8 runs a Draft 2020-12 `check_schema` on params.json (no opt-out flag) and ecoscope-platform <2.11.18 natively emits `"oneOf": []` on that field. Not caused by a `$defs` relabel override. Fix: bump the platform pin to ≥2.11.18 (fleet pins are ≥2.18), or compile with the repo's pinned older compiler through the outer pixi env until the bump lands. |
+| `<lib> ==X cannot be installed … would require ecoscope-platform >=Y, for which no candidates were found` | The task library's conda recipe hard-depends on a newer platform than the spec pins (ext-custom 0.1.0 → platform ≥2.18.4). Bump both together ([spec.md](spec.md) § Bumping library pins). |
 
 ## Generated artifact layout
 
