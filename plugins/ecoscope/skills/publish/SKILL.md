@@ -63,7 +63,7 @@ publish", route the fix to `/ecoscope:develop` first. Settle:
 | Recompile | the command copied from the repo (§ 3), with the flags it passes and no others. |
 | Version | the intended `MAJ.MIN.0`: +1 on MIN, or +1 on MAJ (MIN reset) when the form's parameters changed — `--update` decides this from `params_sha256` (§ 5), and a MAJ bump means saved Desktop configurations must be redone, which goes in the PR body. |
 | Tests | `--all` locally; live cases need the connection env vars in your shell or they are CI's job; the secrets `test.yml` names must exist in the repo (the user sets them). |
-| Review and E2E | propose `/ecoscope:review` (verified passes plus the human checklist) and, when the workflow runs in Ecoscope Desktop, `/ecoscope:e2e` — both on the develop branch, **before** the release is cut; a red finding goes back to `/ecoscope:develop` first. |
+| Review and E2E | **review is a gate, not an offer**: after approval, `/ecoscope:review` runs on the develop branch before § 2 cuts the release branch — its fast tier; § 3's recompile stays the authoritative tier it defers to. A red finding goes back to `/ecoscope:develop` first. The user can waive the gate by saying so here; silence does not. `/ecoscope:e2e` stays an offer, for workflows that run in Ecoscope Desktop. |
 | User guide | **a gate, not an offer**: the root `README.md` must describe this release — every config-form card and field (compiled `rjsf.json`) and every dashboard widget, at this release's defaults. Name what is missing or stale; `/ecoscope:guide` brings it current before § 6, and no PR opens without it. |
 | Preview deploy | catalog workflows only (base `staging`, vendored into the compose repo): after CI is green, propose the preview-environment deploy — a manual step the user performs (§ 6). |
 | Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and publishes the template"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". Stated now, repeated at the PR. |
@@ -292,7 +292,7 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | The request bundles a fix or feature with the release, or a case is red | `/ecoscope:develop` — first; come back here after its human verification |
 | A task-library pin is not released yet | `/ecoscope:task` — release it, then § 2 again |
 | The README does not describe this release (§ 6 gate) | `/ecoscope:guide` — no PR without it |
-| Before the release is cut | `/ecoscope:review`, and `/ecoscope:e2e` for Desktop workflows |
+| Before the release is cut | `/ecoscope:review` — the § 1 gate: started as part of the flow unless the user waived it there, the one exception to "never start one unasked"; `/ecoscope:e2e` stays an offer for Desktop workflows |
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
 | CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` |
 

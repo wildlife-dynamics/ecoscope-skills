@@ -1,6 +1,6 @@
 ---
 name: review
-description: Use only when the user explicitly asks for a review of ecoscope workflow work — "review this workflow / my changes / this branch", "check X before we publish", "is this ready for CI / for release?" — or when they have just accepted a review offered by develop or publish. Never fires on its own — not after ordinary edits, not as a routine post-compile step, not because a develop or publish job finished. Covers what only ecoscope knowledge catches: publish readiness against this repo's own CI, the fleet's spec/form/dashboard failure modes in a diff, and what a run actually produced. For generic correctness or security of arbitrary code, use the built-in /code-review or /security-review instead.
+description: Use when the user explicitly asks for a review of ecoscope workflow work — "review this workflow / my changes / this branch", "check X before we publish", "is this ready for CI / for release?" — when /ecoscope:publish reaches its pre-release review gate, or when they accept a review offered by develop. Never fires on its own otherwise — not after ordinary edits, not as a routine post-compile step, not because a develop job finished; the publish gate is the one standing invocation. Covers what only ecoscope knowledge catches: publish readiness against this repo's own CI, the fleet's spec/form/dashboard failure modes in a diff, and what a run actually produced. For generic correctness or security of arbitrary code, use the built-in /code-review or /security-review instead.
 ---
 
 # Review an ecoscope workflow
@@ -49,8 +49,8 @@ Every fact lives in `${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the poin
 merged PR. Read the tree the way `${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md`
 § Repo-state signals reads it, and open the report with one line stating the scope: which
 commit and branch are under review, what state the tree is in, and which passes apply —
-"before we publish" runs all three; "review my changes" runs Passes 2–3; "check this run"
-runs Pass 3.
+"before we publish" and the publish pre-release gate run all three; "review my changes" runs
+Passes 2–3; "check this run" runs Pass 3.
 
 Two framing rules, before any finding is written:
 
@@ -120,8 +120,17 @@ the diff text:
   list (`rjsf.md` § Use `ui:order` only for card order). **Override paths** must match group
   titles exactly — mismatches are silently ignored (`rjsf.md`). **`ecoscope:task_group`
   flips** break submit, and mock tests cannot catch it (`rjsf.md` § Never flip).
-- **Conditional fields** — exactly one working shape; the four failing alternatives each die in
-  a different layer (`${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`).
+- **Conditional fields** — convict against the full rule set in
+  `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`, in the compiled `rjsf.json` on both
+  diff sides, never in the spec text. Greppable there: `"dependencies"` / `"dependentSchemas"`
+  present at all (never valid — the form renders, then 422 on every submit; the one working
+  shape is whole-object `allOf/if/then`, § Reveal-on-check); a `default` on the conditional
+  field; `additionalProperties` / `unevaluatedProperties` inside a restated object; a `then`
+  overriding `items.oneOf` (silently ignored). A root-level `allOf` in `rjsf-overrides` is
+  dropped on serialization, so its symptom is the conditional *missing* from `rjsf.json`.
+  Match the JSON key, not the bare word — spec comments mention pydantic "dependencies". A
+  shape suspect but not grep-convictable goes to "could not check here", with § Headless
+  contract testing as the proving path.
 - **Details chains that widen the main path** — `normalize_json_column` on JSON strings loses
   data silently; `sanitize: true` re-joins on a non-unique index and inflates every downstream
   sum (`${CLAUDE_PLUGIN_ROOT}/reference/task-pitfalls.md`).
@@ -225,5 +234,8 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | A finding lives inside a task implementation | `/ecoscope:task` |
 | Desktop rendering claims need proving end to end | `/ecoscope:e2e` |
 | Generic code health beyond the fleet's failure modes | the built-in `/code-review` |
+
+When this review ran as `/ecoscope:publish`'s pre-release gate, a clean report hands straight
+back to the publish flow that invoked it — no fresh yes needed for that return.
 
 Close by naming what comes next — usually "fix via develop, or hand to publish". Do not start it.
