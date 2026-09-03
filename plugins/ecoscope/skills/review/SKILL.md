@@ -119,17 +119,15 @@ the diff text:
   list (`rjsf.md` § Use `ui:order` only for card order). **Override paths** must match group
   titles exactly — mismatches are silently ignored (`rjsf.md`). **`ecoscope:task_group`
   flips** break submit, and mock tests cannot catch it (`rjsf.md` § Never flip).
-- **Conditional fields** — convict against the full rule set in
+- **Conditional fields** — convict against the rule set in
   `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`, in the compiled `rjsf.json` on both
   diff sides, never in the spec text. Greppable there: `"dependencies"` / `"dependentSchemas"`
-  present at all (never valid — the form renders, then 422 on every submit; the one working
-  shape is whole-object `allOf/if/then`, § Reveal-on-check); a `default` on the conditional
-  field; `additionalProperties` / `unevaluatedProperties` inside a restated object; a `then`
-  overriding `items.oneOf` (silently ignored). A root-level `allOf` in `rjsf-overrides` is
-  dropped on serialization, so its symptom is the conditional *missing* from `rjsf.json`.
-  Match the JSON key, not the bare word — spec comments mention pydantic "dependencies". A
-  shape suspect but not grep-convictable goes to "could not check here", with § Headless
-  contract testing as the proving path.
+  present at all (never valid); a `default` on the conditional field; `additionalProperties` /
+  `unevaluatedProperties` inside a restated object; a `then` overriding `items.oneOf`. A
+  root-level `allOf` in `rjsf-overrides` is dropped on serialization — its symptom is the
+  conditional *missing* from `rjsf.json`. Match the JSON key, not the bare word. A shape
+  suspect but not grep-convictable goes to "could not check here", with § Headless contract
+  testing as the proving path.
 - **Details chains that widen the main path** — `normalize_json_column` on JSON strings loses
   data silently; `sanitize: true` re-joins on a non-unique index and inflates every downstream
   sum (`${CLAUDE_PLUGIN_ROOT}/reference/task-pitfalls.md`).

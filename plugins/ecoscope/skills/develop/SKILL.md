@@ -21,16 +21,12 @@ are the product — requirements to agree on up front and to have a human sign o
 ## 0. Preflight
 
 **Environment: any shell, from the workflow repo.** For a new workflow run it once the
-scaffold exists, before the first compile. Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`. It reports — never repairs — the
-global compiler (runs, imports `jsonschema`, version), graphviz, go-yq, pixi, and this repo's
-compiler pin and task-library pins from `spec.yaml`; each `FAIL` carries its repair command.
-Run the repairs before compiling. A WARN that the repo's compiler pin differs from the global
-compiler is a routing decision, not noise: on that repo run every compile through the outer pixi
-env (`pixi run --manifest-path pixi.toml --locked wt-compiler compile …`, the pinned compiler CI
-uses) instead of the global one. A newer global compiler validates artifacts an older platform
-pin cannot produce cleanly (`compile.md` § Common compile errors, the empty-`oneOf` row), and the
-failure surfaces only after the discovery-env solve. Environments and standing rules:
-`${CLAUDE_PLUGIN_ROOT}/reference/environments.md`.
+scaffold exists, before the first compile. Run `${CLAUDE_PLUGIN_ROOT}/scripts/preflight.sh`
+(what it probes: `${CLAUDE_PLUGIN_ROOT}/reference/environments.md` § Preflight) and run the
+repair command each `FAIL` carries before compiling. A WARN that the repo's compiler pin
+differs from the global compiler is a routing decision, not noise: on that repo, compile
+through the outer pixi env — the pixi-prefixed dev form in `compile.md` § Canonical commands,
+which also carries the why. Environments and standing rules: `environments.md`.
 
 ## 1. Design — always, then approval
 
@@ -61,14 +57,16 @@ ids and what changes. If what was asked for is already in the spec, say so and p
 actually missing (a case, an override, a fixture). Ask for the user's opinion up front only
 where the request leaves a real choice.
 
-Settle these, in one batch of questions with a proposed default for each:
+Settle these, in one batch of questions with a proposed default for each. With an approved
+PRD from `/ecoscope:plan`, they are already answered — confirm the deltas instead of
+re-asking:
 
 | Requirement | What to settle |
 |---|---|
 | Outcome | the question the dashboard answers; who reads it |
 | Reference workflows | which existing workflows to model on — the nearest by data kind (patrols, events, subjects) and output kind; propose them from the user's repos and ask; their `spec.yaml`, cases and `layout.json` are the shapes you copy |
 | Data | connection / data source, time range, what is fetched (patrols, events, subjects …), filters |
-| **Data model** | does the change need data the packaged mock fixtures don't carry — new event types, patrol types, detail keys, geometry, a grouper key? If yes: the sample `/ecoscope:plan` pulled into gitignored `.scratch/` (its PRD names it), or pull one now (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Pulling a sample), then build a synthetic fixture from that model (`testing.md` § Generating mock data). If no: the packaged mock data. No credentials: say so, and model the synthetic fixture on the packaged one. |
+| **Data model** | does the change need data the packaged mock fixtures don't carry (new event/patrol types, detail keys, geometry, a grouper key)? If yes: the sample `/ecoscope:plan` pulled into `.scratch/`, or pull one now, then a synthetic fixture from that model (`${CLAUDE_PLUGIN_ROOT}/reference/testing.md` § Pulling a sample, § Generating mock data). If no: the packaged mock data. No credentials: model the synthetic fixture on the packaged one and say so. |
 | **Config form** | the cards the user sees and their order; the fields in each, titles and defaults; what is fixed and hidden (`partial:`); dropdowns fed from the connection; conditional fields |
 | **Dashboard** | widgets (map / chart / table / text) and what each shows; groupers → how many views and keyed how — the fan-out the *mock fixture* will actually produce, not the theoretical set; `layout.json` placement and sizes |
 | Tests | mock cases to add or change (`base`, per-grouper, toggles, empty fixture); a live case only if asked |
@@ -90,13 +88,11 @@ user's global workflow; come back only for a task hand-off (§ 2), the human ver
 
 **Tasks first.** If the approved design carries a task contract, hand off to `/ecoscope:task`
 with that contract and stop; it authors, registers, re-exports and tests the task in the
-library repo. When it returns, resume here: point the spec's requirement for that library at
-the local checkout with `path:` + `editable: true` (`${CLAUDE_PLUGIN_ROOT}/reference/spec.md`
-§ Editable — the full pin stack when the library is `ecoscope` itself), then first compile with
-`--clobber --install` and run `./dev/postcompile-editable.sh` after every compile — its
-`pixi install` re-solves the editable entry in the inner lock; that lock is the one you test
-with (`--frozen`) and commit while the tree is editable. Reverting to
-released pins when the library ships is `/ecoscope:publish`'s job; CI rejects `path:`.
+library repo, and hands back the editable requirement to wire, with its rules (`/ecoscope:task`
+§ 6; `${CLAUDE_PLUGIN_ROOT}/reference/spec.md` § Editable): first compile `--clobber
+--install`, `./dev/postcompile-editable.sh` after every compile, test with `--frozen`, commit
+the inner lock while the tree is editable. Reverting to released pins when the library ships
+is `/ecoscope:publish`'s job; CI rejects `path:`.
 
 - **Spec** — syntax, validation rules, `requirements:`, `skipif`:
   `${CLAUDE_PLUGIN_ROOT}/reference/spec.md`. Shapes to copy — pipeline skeleton, grouping and
@@ -123,41 +119,23 @@ released pins when the library ships is `/ecoscope:publish`'s job; CI rejects `p
 ## 3. Compile→test loop
 
 **Compile — environment: the global `wt-compiler`, from the repo root.** This is the dev
-compile; the CI-matching publish compile belongs to `/ecoscope:publish`. Command and flags are
-copied from `${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § Canonical commands (that file wins
-if they ever differ):
+compile; the CI-matching publish compile belongs to `/ecoscope:publish`. The command, the
+append rule for the trailing flag (`--install` / `--update` / none — and which restores the
+committed inner lock), and the pinned-compiler prefix are in
+`${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § Canonical commands; when preflight WARNed on
+the compiler pin (§ 0), the pixi-prefixed form is the one to run. Compile only when
+`spec.yaml` changed; a `test-cases.yaml` / `layout.json` / fixture edit goes straight to the
+test step. A `requirements:` bump is its own change with its own checklist (`spec.md`
+§ Bumping library pins): confirm every task the spec names still exists at the target
+version, then after the compile re-check the card list — new task params leak as extra cards
+until bound with `partial:`.
 
-```bash
-wt-compiler compile \
-    --spec spec.yaml \
-    --pkg-name-prefix=ecoscope-workflows \
-    --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS \
-    --clobber --no-progress [--install | --update]
-```
-
-When preflight WARNed on the compiler pin, prefix the same command with
-`pixi run --manifest-path pixi.toml --locked` (§ 0). Compile only when `spec.yaml` changed; a
-`test-cases.yaml` / `layout.json` / fixture edit goes straight to the test step. A
-`requirements:` bump is its own change with its own checklist (`spec.md` § Bumping library
-pins): confirm every task the spec names still exists at the target version, then after the
-compile re-check the card list — new task params leak as extra cards until bound with `partial:`. The trailing flag, because the test harness runs `pixi run --locked`
-and a plain `--clobber` deletes the inner `pixi.lock`:
-
-| Situation | Flag | Then |
-|---|---|---|
-| first compile (no inner lock), or switching to/from editable | `--install` | commit the lock with the tree |
-| spec edit, `requirements:` untouched | none | `git checkout HEAD -- <WF>/pixi.lock` puts the committed lock back |
-| `requirements:` changed, lock committed | `--update` | carries the lock and re-solves it; churn is expected |
-
-`--update` needs the committed `pixi.lock`, `VERSION.yaml` and `README.md`; a tree without them
-(greenfield, or a lock never committed) takes `--install`.
-
-Any compile without `--update` resets `VERSION.yaml` to 0.0.0 and drops the gcp variant —
-expected in the improve loop even on a previously published tree; `/ecoscope:publish` restores
-VERSION and lock from base and recompiles the CI way (compile.md § `--update` semantics). Never
-`--variant=gcp` here. Before running `--clobber` know the restore path: `git checkout <base> --
-<WF>/` (compile.md § Restore playbook). Run the compile bare or `> compile.log 2>&1` and read
-the whole file; on failure match compile.md § Common compile errors, fix, recompile.
+A compile without `--update` resets `VERSION.yaml` to 0.0.0 and drops the gcp variant —
+expected in the improve loop; `/ecoscope:publish` restores both and recompiles the CI way
+(compile.md § `--update` semantics). Never `--variant=gcp` here. Before running `--clobber`
+know the restore path: `git checkout <base> -- <WF>/` (compile.md § Restore playbook). Run
+the compile bare or `> compile.log 2>&1` and read the whole file; on failure match
+compile.md § Common compile errors, fix, recompile.
 
 **Test — environment: the inner pixi env, only through the harness.** Mock cases first; the
 full run comes after § 4's checks pass.
@@ -167,8 +145,8 @@ full run comes after § 4's checks pass.
 ./dev/run-test-cases.sh --all             # the full set incl. live cases — after § 4, before the commit
 ```
 
-`--frozen` when git-tag or editable `path:` requirements are present (`--locked` reports the
-lock stale for both). Live cases need the connection env vars in your shell
+`--frozen` when git-tag or editable `path:` requirements are present (compile.md
+§ Compile-time standing rules). Live cases need the connection env vars in your shell
 (`${CLAUDE_PLUGIN_ROOT}/reference/connections.md`); when they are not set, run every mock case
 and report the live ones as CI's. Pass = `result.json` present, `.error == null`, exit 0 —
 necessary, not sufficient (§ 4). Failure classes:

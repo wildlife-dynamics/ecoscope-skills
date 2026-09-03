@@ -123,33 +123,24 @@ wording, which readers know from the other workflows — in the voice, formattin
 terminology of `${CLAUDE_PLUGIN_ROOT}/skills/guide/style-guide.md`. What keeps the text honest:
 
 - **Field names are the inventory's titles, verbatim and bold** — `**Patrol Status**`, not
-  "Status"; `Default:` and `Options:` by label. `(required)` means the form will not submit
-  without a value: a scalar the inventory flags `required`. An array or object in the schema's
-  `required` list still submits empty, so it follows its own description ("leave empty to …" is
-  `(optional)`); a defaulted field the workflow cannot run without (the metrics, the interval)
-  may say `(required)` with its default stated. A description that contradicts what the schema
-  enforces is a `/ecoscope:develop` finding — note it, do not resolve it in the README.
+  "Status"; `Default:` and `Options:` by label; `(required)` / `(optional)` per the rule in
+  section-templates.md § 4. A description that contradicts what the schema enforces is a
+  `/ecoscope:develop` finding — note it, do not resolve it in the README.
 - **Prerequisites and Installation follow § 0's platform.** A catalog workflow needs no
   Desktop install and gets no Installation steps; a Desktop workflow gets the four fixed steps.
   The data-source item names the product the spec connects to — EarthRanger is not assumed.
 - **One example, and it is a case.** The `base` case, "submitted as-is", with its values from
-  `test-cases.yaml`. Never invent a value and never quote a real data pull
-  (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data — connection names and
-  patrol-type slugs are org constants and fine).
+  `test-cases.yaml` (section-templates.md § 7). Never invent a value and never quote a real
+  data pull (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data — connection
+  names and patrol-type slugs are org constants and fine).
 - **Results describe the run; the algorithms get their own subsection.** One `####` per widget
-  the base run produced, in `layout.json` order; then *How the Results Are Calculated* — a
-  dedicated subsection with one `####` per critical algorithm the workflow applies (BBMM or
-  another home-range estimator, a kernel or time-weighted density, an encounter rate's
-  denominator, any aggregation that changes what a number means), each explained in plain
-  sentences with the form fields that tune it — from the task and its parameters in
-  `spec.yaml`, confirmed in the task's description in the pinned library
-  (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md`). Omitted only when every output is a
-  plain count, list or table. A *Data Outputs* subsection only when the spec persists files,
-  with columns read from the run's output or the fixture. Groupers → the view-selector sentence.
-- **Troubleshooting is only what is specific to this workflow** — the form's own constraints (a
-  combination the schema forbids, a required field blank by default), a name that must match the
-  server, the run that succeeds with nothing to show. No fixed count, no generic connection
-  boilerplate; the list is the one the user pruned in § 2.
+  the base run produced, in `layout.json` order; then *How the Results Are Calculated* per
+  section-templates.md § 6 — the methods come from the tasks and parameters in `spec.yaml`,
+  confirmed in the pinned library (`${CLAUDE_PLUGIN_ROOT}/reference/task-discovery.md`). A
+  *Data Outputs* subsection only when the spec persists files, with columns read from the
+  run's output or the fixture. Groupers → the view-selector sentence.
+- **Troubleshooting is only what is specific to this workflow** (section-templates.md § 8) —
+  the list is the one the user pruned in § 2.
 - **Gate mode edits only the listed sections.** No rewording, reordering or restyling elsewhere;
   the reviewer reads the diff as "what changed in this release".
 
