@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ecoscope-skills",
+  "description": "Skills for developing, publishing and reviewing Ecoscope workflows",
+  "owner": {
+    "name": "wildlife-dynamics"
+  },
+  "plugins": [
+    {
+      "name": "ecoscope",
+      "description": "Develop, test, document, review and publish Ecoscope workflows: spec.yaml authoring, the wt-compiler compile/test loop, task-library work, config-form and dashboard design, user guides, Desktop E2E tests, and the CI-mirroring release procedure.",
+      "author": {
+        "name": "wildlife-dynamics"
+      },
+      "category": "development",
+      "source": "./plugins/ecoscope"
+    },
+    {
+      "name": "ecoscope-guards",
+      "description": "Optional hard guards for Ecoscope workflow repos: blocks commits that would put real patrol data into git, and flags a stale generated tree after a spec.yaml edit. Installing it is the opt-in.",
+      "author": {
+        "name": "wildlife-dynamics"
+      },
+      "category": "development",
+      "source": "./plugins/ecoscope-guards"
+    }
+  ]
+}

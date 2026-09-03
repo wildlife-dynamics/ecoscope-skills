@@ -1,0 +1,15 @@
+{
+  "name": "ecoscope-guards",
+  "version": "0.1.0",
+  "description": "Optional hard guards for Ecoscope workflow repos: a PreToolUse guard that stops commits carrying real patrol data, and a PostToolUse notice that the generated tree is stale after a spec.yaml edit. Installing this plugin is the opt-in; it carries no skills.",
+  "author": {
+    "name": "wildlife-dynamics"
+  },
+  "homepage": "https://github.com/wildlife-dynamics/ecoscope-skills",
+  "keywords": [
+    "ecoscope",
+    "hooks",
+    "guardrails",
+    "sensitive-data"
+  ]
+}

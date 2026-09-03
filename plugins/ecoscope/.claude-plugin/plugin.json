@@ -1,0 +1,17 @@
+{
+  "name": "ecoscope",
+  "version": "0.1.0",
+  "description": "Develop, test, document, review and publish Ecoscope workflows — spec.yaml authoring, the wt-compiler compile/test loop, task-library work, config-form and dashboard design, user guides, Desktop E2E tests, and the CI-mirroring release procedure.",
+  "author": {
+    "name": "wildlife-dynamics"
+  },
+  "homepage": "https://github.com/wildlife-dynamics/ecoscope-skills",
+  "keywords": [
+    "ecoscope",
+    "workflows",
+    "wt-compiler",
+    "conservation",
+    "earthranger",
+    "geospatial"
+  ]
+}
