@@ -74,13 +74,14 @@ Two supported styles — know which one a machine uses, because the graphviz sto
 ## Preflight
 
 This plugin ships `scripts/preflight.sh [<workflow-repo-dir>]`, which discovers and *reports*
-(never silently repairs) the global tooling: whether `wt-compiler` runs and its env can import
-`jsonschema` (printing the repair command built from the discovered install — interpreter from
-the launcher, editable root from where `wt_compiler` imports), its version, whether graphviz
-`dot` actually renders PNG (the plugin-cache check), whether `yq` is go-yq, and the pixi
-version. Run inside a workflow repo it also lists the outer `pixi.toml` compiler pin against the
-global version and every `spec.yaml` requirement with its pin. Exit 1 on any `FAIL`. It does not
-read CI files or probe the pixi envs — the renamed-dir breakage above shows up as
-`Error launching …` on the first `pixi run`, and the CI recompile flags are read from the repo by
-the publish procedure. Skills open with "run preflight, fix any FAIL" — a few seconds that avoid
-the class of failure that otherwise costs a whole debugging detour.
+(never silently repairs; exit 1 on any `FAIL`, each `FAIL` printing its repair command):
+
+- `wt-compiler` runs, its env imports `jsonschema`, and its version;
+- graphviz `dot` actually renders PNG (the plugin-cache check);
+- `yq` is go-yq; the pixi version;
+- inside a workflow repo: the outer `pixi.toml` compiler pin vs the global version, and every
+  `spec.yaml` requirement with its pin.
+
+It does not read CI files or probe the pixi envs — the renamed-dir breakage above shows up as
+`Error launching …` on the first `pixi run`, and the CI recompile flags are read from the repo
+by the publish procedure. Skills open with "run preflight, fix any FAIL".

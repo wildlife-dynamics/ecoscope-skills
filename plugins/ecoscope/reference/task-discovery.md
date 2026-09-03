@@ -59,10 +59,9 @@ TASKS=$(pixi run --manifest-path "$M" --frozen -e default \
 python3 $S --lib "$TASKS" <keyword>
 ```
 
-(`--frozen` skips pixi's lock check, so these commands also work when git-tag requirements make
-`--locked` report the lock stale; on a plain env `--locked`, which the test harness uses, is
-equivalent.) `__path__[0]` resolves to site-packages for a conda install and to the source tree for an editable
-one.
+(`--frozen`: [compile.md](compile.md) § Compile-time standing rules; on a plain env `--locked`
+is equivalent.) `__path__[0]` resolves to site-packages for a conda install and to the source
+tree for an editable one.
 
 **The scan errs in one direction only:** it can show you a task that your pinned registry doesn't
 have, but it will never hide one that it does. That makes it safe for exploring and unsafe as the
@@ -188,9 +187,8 @@ aligning the pin with what the library branch actually imports.
 
 **The task lists in the registry but the compile still fails on it** → signature validation.
 Validation and schema generation are lazy (on schema access), so a task can appear in the listing
-yet fail when its schema is first built. The validator rejects async functions, classes, any
-untyped parameter, and a missing return annotation. Every parameter and the return must be
-annotated ([tasks.md](tasks.md)).
+yet fail when its schema is first built — against the annotation rules in
+[tasks.md](tasks.md).
 
 ## The discovery chain (mechanism)
 

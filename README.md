@@ -77,10 +77,10 @@ reads the staged tree and decides by path:
 | `dev/fixtures/**`, `resources/mock-data/**`, `src/**/tasks/**` | silent when the repo commits a `build_*_fixture.py` generator; **ask** when it does not |
 | any other `.parquet .feather .geojson .gpkg .shp .kml .kmz .csv` | **deny** |
 
-Why a hard stop: real GPS tracks, ranger names and patrol-information details are operationally
-sensitive, several workflow repos are public, and the remediation is a history rewrite plus — on
-a public repo — a GitHub support request. Why the fixture exemption: a guard that fires on the
-fleet's own synthetic fixtures trains people to switch it off. `.json` is never flagged;
+Why a hard stop: the sensitive-data rule in
+`plugins/ecoscope/reference/process-rules.md` — remediation after a leak is a history rewrite,
+and on a public repo a GitHub support request. Why the fixture exemption: a guard that fires on
+the fleet's own synthetic fixtures trains people to switch it off. `.json` is never flagged;
 `layout.json`, `rjsf.json` and `params.json` are generated artefacts that belong in the tree. A
 denied commit is not a veto — you can still run it yourself.
 

@@ -29,7 +29,7 @@ from the spec's existing `path:` requirement or asks once.
 | ecoscope-workflow-task-library | `wildlife-dynamics/ecoscope-workflow-task-library` | Custom/extension tasks (`ecoscope_workflows_ext_custom/tasks/`) |
 | ecoscope-server | `wildlife-dynamics/ecoscope-server` | The backend: workflow templates, runs, results, layout, rjsf handling, named connections (`ecoscope_server/services/`, `ecoscope_server/utils/rjsf.py`, `utils/er_enum_resolver.py`) |
 | ecoscope-web | `wildlife-dynamics/ecoscope-web` | The UI: rjsf form rendering, results grid, desktop server contract (`src/utils/actions/workflow-*`) |
-| compose | `wildlife-dynamics/compose` | Deployment: `docker-compose.yaml`, per-environment build-deploy pipelines, and the submodule pins under `ecoscope-platform-workflows-releases/<template>` that decide which catalog workflow version reaches dev/stage/prod ([web-deployment.md](web-deployment.md)) |
+| compose | `wildlife-dynamics/compose` | Deployment: `docker-compose.yaml`, per-environment build-deploy pipelines, and the submodule pins under `ecoscope-platform-workflows-releases/<template>` that decide which catalog workflow version reaches dev/stage/prod ([ci.md](ci.md) § Web deployment) |
 
 Practical rule: for spec syntax read `wt_compiler.spec`; for a task's parameters read the task's
 signature in the task library; for how a form or dashboard renders read ecoscope-web; for what
@@ -89,7 +89,7 @@ history, not as templates.
 **Production catalog workflows** (`patrols`, `events`, `event-details`, `subject-tracking`,
 under `github.com/ecoscope-platform-workflows-releases/`): the templates shipped in the ecoscope
 web/desktop catalog, tagged on `main` (`v9.x` / `v3.x`), vendored into compose for deployment
-([web-deployment.md](web-deployment.md)). Richest examples of complete dashboards — groupers,
+([ci.md](ci.md) § Web deployment). Richest examples of complete dashboards — groupers,
 time-density maps, event/patrol tables and charts, `layout.json`. They are on the legacy
 `ecoscope-workflows` framework and layout (no `dev/`, no outer `pixi.toml`, committed
 `__results_snapshots__/`), so copy their task chains and output shapes, not their repo scaffold.

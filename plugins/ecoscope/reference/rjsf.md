@@ -65,7 +65,8 @@ duplicate-title clobber below, not something to fix with `ui:order`.
 **Inside a task-group card, `ui:order` is ignored** — the custom template iterates schema property
 entries, so in-card field order = task order in the spec. Don't add a per-card `ui:order`; it does
 nothing and breaks whenever tasks change. To move field A above field B when B's task consumes A's
-return, split A into its own tiny task declared first ([spec.md](spec.md)).
+return, use the **split-a-task move**: split A into its own tiny task declared first — a single
+task that takes those params and returns them for the consuming tasks.
 
 ## Match group titles exactly in override paths — mismatches are silently ignored
 
@@ -110,10 +111,9 @@ Renderer logic, not compiler logic. The renderer branches on `schema["ecoscope:t
   child properties are split by `ecoscope:advanced`, and all advanced ones share exactly one
   accordion.
 
-To put params from several tasks into **one** accordion, give them a dedicated task: a single
-task that takes all of those params (flagged `ecoscope:advanced`) and returns them for the
-consuming tasks — one task's leaf fields = one accordion. Same split-a-task move as for field
-order ([spec.md](spec.md)).
+To put params from several tasks into **one** accordion, give them a dedicated task with all of
+those params flagged `ecoscope:advanced` — one task's leaf fields = one accordion. The same
+split-a-task move as for field order (§ Use `ui:order` only for card order).
 
 Within the constraint you can still tidy: `title: ""` drops a task header; `partial` hides fields.
 `ecoscope:advanced` is honored only on a card's direct task args — ignored inside nested objects

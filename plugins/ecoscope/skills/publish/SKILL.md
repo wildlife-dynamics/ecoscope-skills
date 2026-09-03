@@ -255,7 +255,7 @@ Green CI ends this skill. Report the PR URL, the version, and the merge conseque
 preview-environment deploy — the user performs it by hand, there is no skill for it yet: a
 WIP tag `v<X.Y.0>.0` on the release branch and the compose repo's "Create PR to deploy dev"
 dispatch with **Deploy Preview Environment** ticked
-(`${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` § WIP-tag flow). You cut no tag and
+(`${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § WIP-tag flow). You cut no tag and
 dispatch nothing. Then stop.
 If the cycle waits on something (a secret, a library release, a review), offer to record it in
 `.scratch/progress.yaml` (check `.scratch` is gitignored first — `repo-layout.md`).
@@ -292,7 +292,7 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | The README does not describe this release (§ 6 gate) | `/ecoscope:guide` — no PR without it |
 | Before the release is cut | `/ecoscope:review` — the § 1 gate: started as part of the flow unless the user waived it there, the one exception to "never start one unasked"; `/ecoscope:e2e` stays an offer for Desktop workflows |
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
-| CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` |
+| CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § Web deployment (compose) |
 
 Close every session by naming what comes next — usually "CI is green; merging is yours" —
 without starting it.

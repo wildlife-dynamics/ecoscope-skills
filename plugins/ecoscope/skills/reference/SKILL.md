@@ -26,7 +26,7 @@ with a table of contents.
 | Previewing a dashboard in Ecoscope Desktop — on-disk run contract, from a test-case run or hand-stubbed for layout.json | `reference/preview-dashboard.md` |
 | Desktop Playwright E2E authoring and its footguns | `reference/desktop-e2e.md` |
 | CI gates (recompile diff, version gate), release tagging | `reference/ci.md` |
-| Web deployment via compose (catalog workflows only, manual web QA) | `reference/web-deployment.md` |
+| Web deployment via compose (catalog workflows only, manual web QA) | `reference/ci.md` § Web deployment (compose) |
 | Repo anatomy, vendored files, repo-state signals, branch/commit conventions | `reference/repo-layout.md` |
 | Output styling defaults (colormaps, layers, chart/table config), `layout.json` sizing/placement | `reference/output-style.md` |
 | Reference sources — code is truth; wt + Platform SDK docs (local paths, URLs); example workflow repos | `reference/upstream-docs.md` |

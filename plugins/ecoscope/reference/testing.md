@@ -115,7 +115,8 @@ values drive the widgets. Resolution order: the per-task env override (below), e
 - Find a workflow's mocked tasks in `IO_TASKS_IMPORTABLE_REFERENCES` in the generated
   `tests/conftest.py`.
 - Inspect a canned fixture from the inner env:
-  `wt_task.testing.create_func_magicmock(anchor, func_name)()`.
+  `wt_task.testing.create_func_magicmock(anchor, func_name)()` — io-tagged tasks only (the ones
+  conftest lists); a non-io task has no fixture and raises `FileNotFoundError`.
 - `.json` fixtures load via a built-in loader; only `.parquet` goes through the ecoscope
   `mock_loaders` entry point — so schema/choices overrides are plain JSON, data is parquet.
 
@@ -142,9 +143,6 @@ Reach for overrides to test multiple data shapes per task or reproduce a bug fro
 parquet; if you're overriding the same task in most cases, improve the packaged fixture instead
 (as its own deliberate change — it's shared).
 
-Inspecting a packaged fixture: `wt_task.testing.create_func_magicmock(anchor, func_name)()`
-works only for tasks tagged `io` (the ones listed in the generated `tests/conftest.py`
-`IO_TASKS_IMPORTABLE_REFERENCES`); a non-io task has no fixture and raises `FileNotFoundError`.
 And `pixi lock --check` rewrites the lock despite its name — restore it from git afterwards.
 
 ## Generating mock data
@@ -160,15 +158,13 @@ workflow env (needs geopandas + pyarrow):
 `cd ecoscope-workflows-*-workflow && pixi run python ../dev/fixtures/build_x.py`. Wire the
 outputs in with repo-relative `mock_io_overrides` paths.
 
-**Synthetic only.** Real org data (GPS tracks, ranger names, individual animals) is sensitive
-and never committed. Generate everything: seeded `np.random.default_rng(<seed>)`, `uuid5`-derived
-ids, random-walk/jittered coordinates inside a bounding box, made-up names. Real org *config*
-(patrol-type slugs, event-type names, detail-key titles) is fine — it's already public in
-`spec.yaml`.
+**Synthetic only** ([process-rules.md](process-rules.md) § Sensitive data). Generate
+everything: seeded `np.random.default_rng(<seed>)`, `uuid5`-derived ids, random-walk/jittered
+coordinates inside a bounding box, made-up names. Real org *config* (patrol-type slugs,
+event-type names, detail-key titles) is fine — it's already public in `spec.yaml`.
 
-**Schema.** Mirror the packaged fixture exactly; inspect it with
-`wt_task.testing.create_func_magicmock(anchor, func_name)()` (or `gpd.read_parquet` on the
-packaged file). Write with `GeoDataFrame.to_parquet(index=False)`, `crs="EPSG:4326"`; the
+**Schema.** Mirror the packaged fixture exactly; inspect it as in [How mock-io
+works](#how-mock-io-works) (or `gpd.read_parquet` on the packaged file). Write with `GeoDataFrame.to_parquet(index=False)`, `crs="EPSG:4326"`; the
 loader tries geopandas then falls back to pandas. Nested dicts (`reported_by`,
 `event_details`) survive as struct columns; id-list columns (`patrols`) must be native arrow
 lists or `explode` breaks after the round-trip. Timestamps tz-aware UTC, inside the case's
@@ -252,7 +248,6 @@ matters post-merge).
 ## Live cases
 
 Live (`mock_io: false`) cases use connection names that CI injects as secrets
-([connections.md](connections.md)). Live-only failure classes: server-side config drift (a pruned
-patrol type raises `ValueError: Failed to find IDs for values: {...}` — re-list types and update
-defaults), data gaps in the seeded window (the empty-run trap), and VPN routing (402/502 → switch
-VPN server before debugging).
+([connections.md](connections.md)). Live-only failure classes — server-side config drift, data
+gaps in the seeded window, VPN routing — are worked through in [connections.md](connections.md)
+§ Troubleshooting.

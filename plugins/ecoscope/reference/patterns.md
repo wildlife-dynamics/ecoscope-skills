@@ -109,20 +109,19 @@ create_map_widget_single_view → merge_widget_views` (styling defaults in
 Note the `mapvalues`→`map` transition at the widget step (the persisted keyed iterable yields
 `[view, data]` tuples that `map` destructures), and `skipif: never` on the widget.
 `persist_text(text, root_path, filename=None, filename_suffix=None) -> str` hashes the text into
-a filename when none is given. Polyline layers use `get_color_column`/`get_width` (NOT
-`fill_color_column`/`get_radius`, which are point-layer params).
+a filename when none is given. Layer-style param names differ per layer kind — polyline vs
+point: [output-style.md](output-style.md).
 
 **Chart:** `draw_{line|bar|time_series_bar|pie}_chart → persist_text →
 create_plot_widget_single_view → merge_widget_views` — same persist/widget/merge tail as maps.
 
 ## Data export and DOCX reports
 
-**Export:** `persist_grouped_dfs_for_results_download` (not `persist_df_wrapper` — the FE needs
-the group-key hash it embeds in each filename to match downloads to dashboard views). Feed it
+**Export:** `persist_grouped_dfs_for_results_download` — why it and not `persist_df_wrapper`,
+plus `sanitize:` and empty-group behaviour: [task-pitfalls.md](task-pitfalls.md). Feed it
 `split_groups` output as `grouped_dfs` (works ungrouped too), with
 `root_path: ${{ env.ECOSCOPE_WORKFLOWS_RESULTS }}`, `filetypes: [csv|geoparquet|gpkg]`, optional
-`filename_prefix`, and `sanitize: true` if data has nested JSON/lists (serializes complex columns
-to JSON strings). Groups with an empty df are skipped.
+`filename_prefix`.
 
 **DOCX:** context items typed `timerange` / `table` / `image` (direct path or grouped
 `(filter, path)` list) / `text`; template is a user-authored `.docx` with Jinja2 placeholders

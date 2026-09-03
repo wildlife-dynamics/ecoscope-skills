@@ -52,9 +52,9 @@ pixi run --manifest-path pixi.toml wt-compiler compile \
 ```
 
 If CI runs `pixi update` on the outer manifest, commit the re-solved outer `pixi.lock` — a
-floating compiler pin plus `pixi update` means CI silently picks a newer compiler, and codegen
-drift (e.g. `Optional[X]` → `X | None`) makes CI's output differ from a compile against a stale
-outer lock.
+floating compiler pin plus `pixi update` means CI silently picks a newer compiler, whose codegen
+drift makes CI's output differ from a compile against a stale outer lock
+([environments.md](environments.md) § Why publish compiles go through pixi).
 
 `--pkg-name-prefix=ecoscope-workflows` and `--results-env-var=ECOSCOPE_WORKFLOWS_RESULTS` are
 fleet-invariant — always pass them, or the generated package defaults to the upstream `wt` /
@@ -66,11 +66,9 @@ fleet-invariant — always pass them, or the generated package defaults to the u
   gutted, and `--update` then refuses to run because `pixi.lock` / `VERSION.yaml` / `README.md`
   are missing. Know the restore path before running it — see the restore playbook below.
 - **After any outer-env re-solve, run `pixi run --manifest-path pixi.toml dot -c` before
-  compiling.** conda's graphviz ships an unregistered plugin cache; without this the compile dies
-  at the graph.png step with `Format: "png" not recognized` — after `--clobber` already emptied
-  the dir. Declaring `graphviz` in `pixi.toml` is not sufficient: the cache file is generated,
-  not shipped, and the package delegates generating it to a post-link script that pixi skips
-  unless `--run-post-link-scripts` is passed. That is why a re-solve keeps re-breaking it.
+  compiling.** Without it the compile dies at the graph.png step with `Format: "png" not
+  recognized` — after `--clobber` already emptied the dir. Why a re-solve keeps re-breaking
+  it: the post-link mechanism in [environments.md](environments.md) § Installing wt-compiler.
 - **Use `--frozen`, not `--locked`, when git-tag or editable `path:` deps are present.** pixi
   resolves a git-tag dep to a SHA in the lockfile but compares it symbolically, so `--locked`
   reports the lock stale forever, even immediately after `pixi lock`; an editable checkout's
@@ -133,13 +131,12 @@ in the opposite direction from the usual gotcha. Do not pass `--variant=gcp` on 
   lockfile if a dev compile clobbered it (`git checkout HEAD -- <WF>/pixi.lock`).
 
 **A dev compile on a publish-state tree is expected in the develop loop — never publish from
-one.** Publish state = committed inner `pixi.lock`, VERSION > 0.0.0, and
-`wt-task-gcp`/`wt-runner-gcp` in the inner `pixi.toml`. A global-dev compile strips the gcp
-variant, resets VERSION, deletes the lockfile, and churns README/graph.png/tests; that is fine
-while improving the workflow (the develop skill), and it is why the publish procedure restores
-`pixi.lock` and `VERSION.yaml` from the base branch and re-runs the pinned, CI-matching compile
-before anything is committed to a publish branch. Committing a dev-compiled tree to a publish
-branch fails CI's recompile diff and version gate.
+one.** (Publish state: the signals table in [repo-layout.md](repo-layout.md) § Repo-state
+signals.) A global-dev compile strips the gcp variant, resets VERSION, deletes the lockfile,
+and churns README/graph.png/tests — fine while improving the workflow, and why the publish
+procedure restores `pixi.lock` and `VERSION.yaml` from the base branch and re-runs the pinned,
+CI-matching compile. Committing a dev-compiled tree to a publish branch fails CI's recompile
+diff and version gate.
 
 ## Restore playbook (when `--clobber` fails mid-way)
 

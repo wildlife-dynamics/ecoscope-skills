@@ -86,9 +86,8 @@ Per-source secrets, wired as env vars in the repo's `test.yml` test step (the sc
 | Earth Engine | `EE_SERVICE_ACCOUNT`, `EE_PRIVATE_KEY` (base64 JSON) | service_account + decoded key file |
 
 Changing the connection name means updating all three places: `test-cases.yaml`, the `test.yml`
-env segment, and (checking) the repo secrets. **Setting secrets is a user action** — `gh secret
-set` is permission-blocked for the agent; surface the need instead
-([process-rules.md](process-rules.md)).
+env segment, and (checking) the repo secrets. Setting secrets is a user action
+([process-rules.md](process-rules.md) § GitHub conventions).
 
 **GEE key recipe** — always base64-encode the ORIGINAL `.json` key file (env-var copies mangle
 newlines / URL-encode quotes):
