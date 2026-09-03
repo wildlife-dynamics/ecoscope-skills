@@ -1,6 +1,6 @@
 ---
 name: review
-description: Use when the user explicitly asks for a review of ecoscope workflow work — "review this workflow / my changes / this branch", "check X before we publish", "is this ready for CI / for release?" — when /ecoscope:publish reaches its pre-release review gate, or when they accept a review offered by develop. Never fires on its own otherwise — not after ordinary edits, not as a routine post-compile step, not because a develop job finished; the publish gate is the one standing invocation. Covers what only ecoscope knowledge catches: publish readiness against this repo's own CI, the fleet's spec/form/dashboard failure modes in a diff, and what a run actually produced. For generic correctness or security of arbitrary code, use the built-in /code-review or /security-review instead.
+description: Use when the user explicitly asks for a review of ecoscope workflow work — "review this workflow / my changes / this branch", "is this ready for CI / for release?" — when /ecoscope:publish reaches its pre-release review gate, or when a review offered by develop is accepted; never fires unasked. Covers publish readiness against this repo's own CI, the fleet's spec/form/dashboard failure modes in a diff, and what a run actually produced. For generic correctness or security, use the built-in /code-review or /security-review.
 ---
 
 # Review an ecoscope workflow

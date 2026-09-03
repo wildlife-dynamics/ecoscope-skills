@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: Use when the user asks for a Desktop end-to-end or Playwright test of an ecoscope workflow, or to prove the workflow in the real app — "add an E2E test for X", "does it run in Ecoscope Desktop", "check the form submits and the dashboard renders", "the Desktop run says Success but shows nothing" — and when develop or publish proposes proving Desktop behaviour before a release. Covers the org's Playwright suite for Ecoscope Desktop (a CDP-attached Electron app) and the on-disk run contract it asserts against. Does not fire for the workflow's own mock or live test cases (develop) or for the web-app suite.
+description: Use when the user asks for a Desktop end-to-end or Playwright test of an ecoscope workflow or to prove it in the real app — "add an E2E test for X", "does it run in Ecoscope Desktop", "Desktop says Success but shows nothing" — or when develop or publish proposes proving Desktop behaviour. Covers the org's Playwright suite for Ecoscope Desktop (a CDP-attached Electron app) and its on-disk run contract. Not for the workflow's own mock or live test cases (develop) or the web-app suite.
 ---
 
 # Prove an ecoscope workflow in Ecoscope Desktop

@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Use before designing when the user wants a new ecoscope workflow — "plan / spec out / write a PRD for a workflow that …", "I want a dashboard that shows …" with no repo yet — or a big improvement to an existing one that will span sessions: a new data source, a new widget chain, a rename or migration, "rework the X workflow", or when develop has offered planning and the user said yes. Produces the PRD (.scratch/prd.md) that develop's design builds from and, only for multi-session work, a milestone plan (.scratch/progress.yaml). Does not fire for a small change to an existing workflow (develop), for building, scaffolding or compiling anything, or for questions about mechanism (reference).
+description: Use before designing when the user wants a new ecoscope workflow ("plan / spec out / write a PRD for a workflow that …") or a big multi-session improvement — a new data source, a new widget chain, a rename or migration, "rework the X workflow" — or when develop's planning offer is accepted. Produces the PRD (.scratch/prd.md) develop builds from and, for multi-session work only, .scratch/progress.yaml. Not for small changes (develop), for building or compiling anything, or for mechanism questions (reference).
 ---
 
 # Plan an ecoscope workflow (PRD)

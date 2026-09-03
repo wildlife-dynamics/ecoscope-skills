@@ -1,6 +1,6 @@
 ---
 name: guide
-description: Use when the user asks for a user guide, README, or end-user documentation for an ecoscope workflow, wants its config form or dashboard explained for the people who run it in Ecoscope Desktop, or asks whether the README still matches the workflow — "write the README for X", "update the user guide", "document the new option", "is the README current for this release". Also fires when publish's guide gate or develop hands off a README refresh after a user-visible change. Does not fire for developer documentation (the generated package's README, CLAUDE.md, reference notes) or for changing the workflow itself.
+description: Use when the user asks for a user guide, README, or end-user documentation for an ecoscope workflow, wants its form or dashboard explained for the people who run it, or asks whether the README still matches the workflow. Also fires from publish's guide gate or a develop handoff after a user-visible change. Not for developer documentation (the generated package's README, CLAUDE.md) or for changing the workflow itself.
 ---
 
 # Write or refresh the user guide of an ecoscope workflow

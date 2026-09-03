@@ -1,6 +1,6 @@
 ---
 name: publish
-description: Use when the user asks to publish, release, ship, or cut a version of an ecoscope workflow, to open or fix its publish PR, or to get a finished develop branch through CI — "publish X", "release X", "get X ready for the catalog / Desktop", "bump the version and recompile for CI", "CI says generated files differ / VERSION.yaml must be greater than main". Also fires when a repo needs its editable or path requirements reverted to released pins, a pixi.lock or VERSION.yaml restored, or a compile that matches the repo's own CI. Does not fire for building or fixing the workflow itself (develop), and never merges or tags.
+description: Use when the user asks to publish, release, or cut a version of an ecoscope workflow, to open or fix its publish PR, or to get a finished develop branch through CI — "publish X", "bump the version and recompile for CI", "CI says generated files differ / VERSION.yaml must be greater than main". Also for reverting editable/path requirements to released pins, restoring a pixi.lock or VERSION.yaml, or a compile that matches the repo's own CI. Not for building or fixing the workflow itself (develop); never merges or tags.
 ---
 
 # Publish an ecoscope workflow

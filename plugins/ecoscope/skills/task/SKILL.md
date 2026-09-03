@@ -1,6 +1,6 @@
 ---
 name: task
-description: Use when an ecoscope workflow needs a task the task libraries lack or an existing task needs to be updated — a task contract handed over by develop (name, library, typed inputs, output, io or not), "write / add a task that …", "add X to ext-custom / the task library / ecoscope-platform", a task that raises inside a run or returns the wrong shape, a task the compiler cannot find although its source exists, or a library change that needs a PR and a release. Covers both libraries — ecoscope (conda ecoscope-platform) and ecoscope-workflows-ext-custom — and returns the editable pin develop wires. Does not fire for wiring a task that already exists into spec.yaml (develop), for "which task does X" questions (reference), or for releasing a workflow (publish).
+description: Use when an ecoscope workflow needs a task the task libraries lack or an existing task updated — a task contract handed over by develop, "write / add a task that …", a task that raises inside a run or returns the wrong shape, a task the compiler cannot find, or a library change needing a release. Covers both libraries — ecoscope (conda ecoscope-platform) and ecoscope-workflows-ext-custom — and returns the editable pin develop wires. Not for wiring an existing task into spec.yaml (develop), "which task does X" (reference), or releasing a workflow (publish).
 ---
 
 # Add or fix a task in an ecoscope task library

@@ -1,6 +1,6 @@
 ---
 name: develop
-description: Use when the user asks to develop, build, create, implement, add to, change, extend, or fix an ecoscope workflow — a new workflow from a description, a spec.yaml edit (new task, widget, grouper, filter, column, default, card), a config-form or dashboard-layout change, a failing or missing test case, "recompile and re-run the tests" — or whenever the work happens inside a workflow repo (spec.yaml + test-cases.yaml + layout.json + a generated *-workflow/ package). Triggers on both "make me a workflow that …" and "I edited spec.yaml, can you compile and test". Does not fire for pure questions about syntax or mechanism with no edit in play (the reference skill) or for "publish/release the workflow" (publish).
+description: Use when the user asks to build, change, extend, or fix an ecoscope workflow — a new workflow from a description, a spec.yaml / config-form / dashboard-layout / test-case edit, "recompile and re-run the tests" — or whenever the work happens inside a workflow repo (spec.yaml + test-cases.yaml + layout.json + a generated *-workflow/ package). Not for pure syntax or mechanism questions with no edit in play (reference) or for releasing (publish).
 ---
 
 # Develop an ecoscope workflow
