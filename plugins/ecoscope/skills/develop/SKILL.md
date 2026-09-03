@@ -110,7 +110,9 @@ released pins when the library ships is `/ecoscope:publish`'s job; CI rejects `p
 - **Form** — top-level `rjsf-overrides`, flat dotted paths from the exact card title, title
   hiding, field rendering rules, connection-fed dropdowns:
   `${CLAUDE_PLUGIN_ROOT}/reference/rjsf.md`. Reveal-on-check fields have exactly one working
-  shape: `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`.
+  shape: `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`. The words themselves — one
+  string per card stack, short titles, descriptions that add something, shared compiler cards
+  untouched: `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-style.md`.
 - **Dashboard** — widget styling defaults and `layout.json` sizing/placement:
   `${CLAUDE_PLUGIN_ROOT}/reference/output-style.md`; the "Edit Layout" predicate and grouped
   views: `${CLAUDE_PLUGIN_ROOT}/reference/patterns.md` § Dashboard assembly.
@@ -193,7 +195,8 @@ repo for files; the inner pixi env for any recomputation):
   references the widget ids the run produced.
 - **Form** — the compiled `rjsf.json` shows the agreed cards, in order, with the agreed field
   titles and defaults, and the `partial:`-bound params are gone (`yq -p json '.properties |
-  keys'`).
+  keys'`); `skills/guide/scripts/form-inventory.py rjsf.json` shows no string twice in any
+  card's stack and the copy passes the `rjsf-style.md` checklist.
 - **Accuracy** — recompute the expected numbers independently from the same fixture the mock
   returns (load it in the inner env with pandas/geopandas: counts per bucket, totals, group
   keys, feature counts and bounds for maps, row counts for tables) and compare with what the

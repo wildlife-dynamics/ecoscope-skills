@@ -19,6 +19,7 @@ with a table of contents.
 | Pipeline skeleton, groupbykey, spatial-grouper chain, widget pipelines, dashboard | `reference/patterns.md` |
 | rjsf override paths, task-group traps, title hiding, field rendering rules | `reference/rjsf.md` |
 | Conditional form fields — the one working shape and the four failing ones | `reference/rjsf-conditionals.md` |
+| Form copy style — card/field titles, descriptions, help text; one string per card stack, shared compiler cards untouched, fleet vocabulary | `reference/rjsf-style.md` |
 | test-cases.yaml, mock-io, overrides, run-test-cases.sh, live cases | `reference/testing.md` |
 | Per-task gotchas (apply_sql_query, normalize_json_column, load_df, create_docx, …) | `reference/task-pitfalls.md` |
 | Data connections, env-var format, CI secrets, GEE key recipe | `reference/connections.md` |
