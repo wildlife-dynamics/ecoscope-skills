@@ -7,7 +7,7 @@ description: Use when the user asks to publish, release, or cut a version of an 
 
 Mirror this repo's CI exactly, prove it locally, hand the branch to the PR. This is a narrow
 bridge: the commands below are copied, not composed — substitute `<base>` and `<WF>` and nothing
-else. Every fact lives in `${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the point of use.
+else.
 
 ## Contents
 
@@ -262,9 +262,11 @@ If the cycle waits on something (a secret, a library release, a review), offer t
 
 ## 7. Hard rules
 
-Each has its mechanism in the linked file; they are prohibitions here because they get broken
-under pressure ("it's only lock churn", "the old procedure had an update-deps step", "CI will
-catch it", "they clearly want it merged").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (no real
+organisational data anywhere in the tree) and `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`
+(never pipe the compile, `pixi` or the harness through `tail`/`head`/`grep -v` — file + exit
+code). Restated here because a publish is where they get broken ("it's only lock churn", "CI
+will catch it", "they clearly want it merged"):
 
 - Never merge, tag, delete a tag, or push to `main` / `staging` / a default branch without an
   explicit go-ahead in this conversation. "Can we merge?" and "is it ready?" are questions —
@@ -276,12 +278,8 @@ catch it", "they clearly want it merged").
 - Never compile for a publish branch with the global `wt-compiler`, and never change the flags
   the repo's CI passes — not `--local`, not dropping `pixi update`, not adding or removing
   `--variant=gcp` (`environments.md`, `compile.md`).
-- Never pipe `wt-compiler`, `pixi`, `dev/recompile.sh` or `dev/run-test-cases.sh` through
-  `tail`, `head`, or `grep -v`; redirect to a file, record the exit code, read the file
-  (`environments.md`).
 - Never `--clobber` without the restore path in hand (`git checkout <base> -- <WF>/`), and
   never hand-edit anything under `<WF>/` except `VERSION.yaml` (`compile.md`).
-- Never publish with real organisational data anywhere in the tree (`process-rules.md`).
 
 ## 8. Handoffs
 
@@ -296,5 +294,5 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
 | CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/web-deployment.md` |
 
-Close every session by naming what comes next — usually "CI is green; merging is yours". Do not
-start it.
+Close every session by naming what comes next — usually "CI is green; merging is yours" —
+without starting it.

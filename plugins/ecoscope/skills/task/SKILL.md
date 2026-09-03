@@ -6,9 +6,7 @@ description: Use when an ecoscope workflow needs a task the task libraries lack 
 # Add or fix a task in an ecoscope task library
 
 Build to the contract `develop` handed over, prove the discovery chain with the registry —
-never by reading source — and hand back the pin that puts the task in a spec. Every fact lives
-in `${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the point of use; nothing is restated
-here.
+never by reading source — and hand back the pin that puts the task in a spec.
 
 ## Contents
 
@@ -218,9 +216,11 @@ Report back in the shape `develop` § 2 consumes:
 
 ## 7. Hard rules
 
-Each has its mechanism in the linked file; here they are prohibitions because they get broken
-under pressure ("the re-export is right there", "it's just a local path", "the PR is green
-anyway").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (synthetic frames
+only, never real data; merging, tagging, `rattler-build` and channel uploads wait for an
+explicit go-ahead — opening the PR is fine) and
+`${CLAUDE_PLUGIN_ROOT}/reference/environments.md` (never `conda activate`; output to a file +
+exit code, never through `tail`/`head`/`grep -v`). Specific to this skill:
 
 - Never claim a task is registered because its source, entry point or `__init__.py` look right
   — only § 3's `wt-registry` entry, in the library env, with an empty stderr, is proof
@@ -232,13 +232,6 @@ anyway").
 - Never prove "usable from a spec" with a scratch workflow inside the library or a compile
   that bypasses the compiler's own discovery env — the proof is `develop`'s compile in the
   workflow repo (§ 4, `task-discovery.md` § The discovery chain).
-- Never merge, tag, `rattler-build`, or upload to a conda channel without an explicit
-  go-ahead; opening the PR is fine (`process-rules.md`).
-- Never put real organisational data in a fixture or a test — synthetic frames only
-  (`process-rules.md`, `testing.md`).
-- Never pipe `pixi`, `pytest` or `wt-registry` output through `tail`, `head` or `grep -v`;
-  redirect to a file, record the exit code, read the file. Never `conda activate`
-  (`environments.md`).
 
 ## 8. Handoffs
 
@@ -251,4 +244,4 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | The workflow is ready to release but the library is not | the maintainer's tag + channel build (not a skill); `/ecoscope:publish` § 2 checks the channel |
 | An existing task turns out to be the answer | `/ecoscope:develop` — no library change |
 
-Close every session by naming what comes next. Do not start it.
+Close every session by naming what comes next, without starting it.

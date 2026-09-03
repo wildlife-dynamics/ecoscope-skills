@@ -7,8 +7,6 @@ description: Use when the user asks to build, change, extend, or fix an ecoscope
 
 Design it with the user, build it, prove it, hand it over. The config form and the dashboard
 are the product — requirements to agree on up front and to have a human sign off at the end.
-Every fact lives in `${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the point of use;
-nothing is restated here.
 
 ## Contents
 
@@ -222,19 +220,14 @@ Fix what comes back through § 3, re-verify, re-ask. Only a "looks good" closes 
 
 ## 5. Hard rules
 
-Each has its mechanism in the linked file; here they are prohibitions because they get broken
-under pressure ("just a quick recompile", "the top is only pixi noise").
+The standing prohibitions live in `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (real
+data never committed — a pulled sample stays in `.scratch/`, fixtures are synthetic from a
+committed script; merge/tag/push and `gh secret set` need an explicit go-ahead) and
+`${CLAUDE_PLUGIN_ROOT}/reference/environments.md` (never `conda activate` or bare `python`;
+never pipe `wt-compiler`, `pixi` or the harness through `tail`/`head`/`grep -v` — redirect to
+a file, record the exit code, read the file). Specific to this skill:
 
-- Never pipe `wt-compiler`, `pixi`, or `dev/run-test-cases.sh` output through `tail`, `head`,
-  or `grep -v` — it masks the exit code (`environments.md`). Redirect to a file, record the exit
-  code, then read the file (grepping the saved file is fine).
 - Never `--clobber` without knowing the restore path (`compile.md` § Restore playbook).
-- Never merge, tag, or push a default branch, and never `gh secret set`, without an explicit
-  go-ahead — "can we merge?" is a question (`process-rules.md`).
-- Never commit real organisational data; a sample pulled for the data model stays in
-  `.scratch/`, fixtures are synthetic from a committed script (`process-rules.md`, `testing.md`).
-- Never `conda activate`, never bare `python` for a workflow run; every command names its
-  environment (`environments.md`).
 
 ## 6. Handoffs
 
@@ -249,4 +242,4 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | Human verification passed and the change is complete | `/ecoscope:review` — verified passes plus the human checklist, **before** publish |
 | The user wants it released | `/ecoscope:publish` |
 
-Close every session by naming what comes next. Do not start it.
+Close every session by naming what comes next, without starting it.

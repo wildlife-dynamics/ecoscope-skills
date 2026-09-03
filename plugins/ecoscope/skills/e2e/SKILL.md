@@ -119,12 +119,12 @@ to whichever skill called you.
 
 ## 6. Hard rules
 
-Each has its mechanism in the linked file; they are prohibitions here because they get broken
-under pressure ("the other tests do it", "it only needs the path on this Mac").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (no real credentials
+or data committed — passwords come from `ER_PASSWORD` / `SMART_PASSWORD` in the environment,
+screenshots and fixtures of real patrols stay out) and
+`${CLAUDE_PLUGIN_ROOT}/reference/environments.md` (the Playwright run goes to a file + exit
+code, never through `tail`/`head`). Specific to this skill:
 
-- Never commit a real credential or real data: passwords come from `ER_PASSWORD` /
-  `SMART_PASSWORD` in the environment (`desktop-e2e.md` § The suite); screenshots and fixtures of
-  real patrols stay out (`${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` § Sensitive data).
 - Never write a literal app-data path — not `Library/Application Support/…`, not `%APPDATA%` —
   the dir is resolved per platform at runtime (`desktop-e2e.md` § App data dir); the older tests
   in the suite that hardcode the macOS path are not the model.
@@ -134,13 +134,11 @@ under pressure ("the other tests do it", "it only needs the path on this Mac").
   (the suite's create-if-missing page object, fed from `ER_PASSWORD`, is the one sanctioned
   way to add one).
 - Never assert `Success` alone: a run with zero outputs reads as a pass
-  (`preview-dashboard.md`, `${CLAUDE_PLUGIN_ROOT}/reference/testing.md`).
+  (`preview-dashboard.md`).
 - Never choose the data source or the time range yourself — proposed in § 1, decided by the
   user; real data decides whether a case can run at all.
 - Never pick the timezone or a select by "first option", never index selects by position, never
   swallow a hang with `.catch()` — each mechanism is in `desktop-e2e.md` § Field-driving rules.
-- Never pipe the Playwright run through `tail` or `head`; file plus exit code
-  (`${CLAUDE_PLUGIN_ROOT}/reference/environments.md`).
 
 ## 7. Handoffs
 
@@ -153,4 +151,4 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | Called from develop's verification | back to `/ecoscope:develop` |
 | The test is committed on its branch | `/pr` in the e2e repo |
 
-Close every session by naming what comes next. Do not start it.
+Close every session by naming what comes next, without starting it.

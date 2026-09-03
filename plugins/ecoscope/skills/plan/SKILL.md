@@ -7,8 +7,7 @@ description: Use before designing when the user wants a new ecoscope workflow ("
 
 Answer, before anything is built, the questions `develop`'s design will ask — and write the
 answers down where `develop` reads them. The PRD is a set of decisions, not a spec draft;
-`develop` turns it into `spec.yaml`, cases and `layout.json`. Every fact lives in
-`${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the point of use; nothing is restated here.
+`develop` turns it into `spec.yaml`, cases and `layout.json`.
 
 ## Contents
 
@@ -186,8 +185,9 @@ Older fleet files split the list into `setup:` / `tasks:` / `wrapup:`; read them
 
 ## 6. Hard rules
 
-Each has its mechanism in the linked file; here they are prohibitions because they get broken
-under pressure ("I'll just scaffold it while I'm here", "the spec draft makes the PRD concrete").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (real data pulls go
+under gitignored `.scratch/` and nowhere else; fixtures are synthetic). Specific to this skill,
+because they get broken under pressure ("I'll just scaffold it while I'm here"):
 
 - Never start building — no scaffold, no `spec.yaml`, no compile, no test case. The PRD ends
   with approval and a handoff (§ 4).
@@ -195,8 +195,6 @@ under pressure ("I'll just scaffold it while I'm here", "the spec draft makes th
   gitignored (§ 0, `repo-layout.md`).
 - Never put a task name in the PRD that the registry has not confirmed, and never a bare
   name the registry lists twice (`task-discovery.md`).
-- Never pull real data anywhere but `.scratch/`, and never let a test read the sample;
-  fixtures are synthetic (`process-rules.md`, `testing.md`).
 - Never ask one question at a time, and never ask what § 1's research answers.
 
 ## 7. Handoffs
@@ -209,4 +207,4 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | A task contract is in the PRD | `/ecoscope:task` — reached through `develop`'s tasks-first path, not directly from here |
 | The request was really a small change | `/ecoscope:develop` — no PRD needed; say why |
 
-Close every session by naming what comes next. Do not start it.
+Close every session by naming what comes next, without starting it.

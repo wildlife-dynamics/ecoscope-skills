@@ -7,7 +7,6 @@ description: Use when the user explicitly asks for a review of ecoscope workflow
 
 The gate between building and publishing. A review **reports and never edits** — its findings
 are **earned** by running something or inspecting a primary artifact, never by reading intent.
-Every fact lives in `${CLAUDE_PLUGIN_ROOT}/reference/` and is linked at the point of use.
 
 ## Contents
 
@@ -204,23 +203,21 @@ One fixed structure, every time:
 
 ## 6. Hard rules
 
-Each has its mechanism in the linked file; they are prohibitions here because reviews break
-them under momentum ("it's just a lock check", "obviously a dev-compile artifact", "the top of
-the log is only pixi noise").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (a review never
+merges, tags, pushes or touches secrets) and `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`
+(output to a file + exit code, never through `tail`/`head`/`grep -v`). Restated here because
+reviews break them under momentum ("it's just a lock check", "obviously a dev-compile
+artifact"):
 
 - Never edit, commit, compile, or "fix" anything during a review — including probes that
   write: `git status --short` after every probe; a diff means restore and disclose (§ 0,
   `compile.md` § Restore playbook).
 - Never rank real patrol data with other findings — stop everything and report it alone
   (`process-rules.md` § Sensitive data).
-- Never pipe `wt-compiler`, `pixi`, or `dev/run-test-cases.sh` through `tail`, `head`, or
-  `grep -v` — redirect to a file, record the exit code, read the file (`environments.md`).
 - Never claim freshness from the fast tier, and never use `params_sha256` as a drift signal
   (`compile.md` § Fingerprints).
 - Never present a reading-based guess as a finding — earn it, or file it under "could not
   check here" (§ 0).
-- Never merge, tag, push, or `gh secret set` — a review has no reason to touch any of them
-  (`process-rules.md`).
 
 ## 7. Handoffs
 
@@ -238,4 +235,5 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 When this review ran as `/ecoscope:publish`'s pre-release gate, a clean report hands straight
 back to the publish flow that invoked it — no fresh yes needed for that return.
 
-Close by naming what comes next — usually "fix via develop, or hand to publish". Do not start it.
+Close by naming what comes next — usually "fix via develop, or hand to publish" — without
+starting it.

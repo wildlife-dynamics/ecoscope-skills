@@ -10,8 +10,7 @@ workflow in Ecoscope Desktop. Every sentence in it is derived from an artefact �
 form, a real run, the cases — never from what the spec looks like it should do. Two modes, one
 procedure: **write** (no README, or one without the eight sections) and **gate** (an existing
 README checked against this release — the check `/ecoscope:publish` applies before it opens a
-PR). Every fact lives in `${CLAUDE_PLUGIN_ROOT}/reference/` or in this skill's own files and is
-linked at the point of use.
+PR).
 
 ## Contents
 
@@ -174,18 +173,15 @@ changed>` (gate) — or, inside a publish run, leave it for the release commit
 
 ## 5. Hard rules
 
-Each has its mechanism in the linked file; they are prohibitions here because they get broken
-under pressure ("the spec says what the field is", "the old README was close enough").
+Standing prohibitions: `${CLAUDE_PLUGIN_ROOT}/reference/process-rules.md` (no real
+organisational data in an example) and `${CLAUDE_PLUGIN_ROOT}/reference/environments.md`
+(exit codes to a file, never through a pipe). Specific to this skill:
 
 - Never document a card, field, default, option or widget the inventory or the run does not show;
   the spec's task names and other workflows' READMEs are not sources — `rjsf-overrides` rename
   and hide things, and widget titles come from the run (`rjsf.md`).
 - Never edit `spec.yaml`, `test-cases.yaml`, `layout.json` or anything under `<WF>/` from here —
   a form or dashboard that reads badly is a `/ecoscope:develop` job, and the README follows it.
-- Never write real organisational data into an example (`process-rules.md`).
-- Never pipe `dev/run-test-cases.sh` or the check script through `tail`, `head`, `sed` or
-  `grep -v` when its exit code is what you are recording; redirect to a file, then read it
-  (`${CLAUDE_PLUGIN_ROOT}/reference/environments.md`).
 - In gate mode, never touch a section the report did not list.
 
 ## 6. Handoffs
@@ -198,4 +194,4 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | Invoked from the publish gate and the README is current | back to `/ecoscope:publish` § 6 — the README rides in the release commit |
 | A documented change is ready to ship | `/ecoscope:publish` |
 
-Close every session by naming what comes next. Do not start it.
+Close every session by naming what comes next, without starting it.
