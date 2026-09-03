@@ -18,11 +18,19 @@ path = (payload.get("tool_input") or {}).get("file_path") or ""
 if path.split("/")[-1] != "spec.yaml":
     sys.exit(0)
 
+NOTICE = (
+    "spec.yaml changed — the generated *-workflow/ package, rjsf.json and the test results are "
+    "now stale. Recompile before trusting any of them, and re-run the cases after."
+)
+
+# additionalContext is what reaches the model on PostToolUse; systemMessage is what the human sees.
 json.dump(
     {
-        "systemMessage": "spec.yaml changed — the generated *-workflow/ package, rjsf.json and "
-        "the test results are now stale. Recompile before trusting any of them, and re-run the "
-        "cases after."
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "additionalContext": NOTICE,
+        },
+        "systemMessage": NOTICE,
     },
     sys.stdout,
 )

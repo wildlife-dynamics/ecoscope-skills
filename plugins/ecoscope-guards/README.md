@@ -50,9 +50,17 @@ when `python3` is absent — failing open, because a hook that errors on every t
 than no hook. The same is true of anything unexpected: unparseable hook input, a cwd outside a git
 repo, or a missing `git` all pass through untouched.
 
-To see what the guard would say without committing anything:
+`spec_edited_notice.py` reaches the model through `hookSpecificOutput.additionalContext` and the
+human through `systemMessage` — PostToolUse output is not symmetric, and only the former is read
+back into the conversation.
+
+To see what the guard would say about your current staging area, without committing anything:
 
 ```
 printf '{"tool_name":"Bash","cwd":"%s","tool_input":{"command":"git commit -m x"}}' "$PWD" \
   | bash hooks/hook.sh sensitive_commit_guard.py
 ```
+
+`bash test-hooks.sh` runs both hooks against a throwaway repo — 15 cases covering every row of the
+table above, `commit -am`, chained commands and a cwd outside any repo. Run it after any change to
+the guards.

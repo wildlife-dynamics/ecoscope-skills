@@ -26,6 +26,7 @@ Fails open on anything unexpected — unparseable input, no git repo, git not in
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -35,7 +36,28 @@ PACKAGED = re.compile(r"(^|/)src/.+/tasks/")  # data a task library ships and lo
 GENERATOR = re.compile(r"(^|/)build_[A-Za-z0-9_]*fixture[A-Za-z0-9_]*\.py$")
 # `git … commit` within one shell segment: `git commit`, `git -C x commit`, `a && git commit -m x`.
 COMMIT = re.compile(r"(?:^|[;&|\n])[^;&|\n]*\bgit\b[^;&|\n]*\bcommit\b")
-COMMIT_ALL = re.compile(r"\bcommit\b[^;&|\n]*(?:--all\b|-[A-Za-z]*a)")
+
+
+def commits_all(command):
+    """True for `git commit -a` / `-am` / `--all`, which sweep tracked modifications in.
+
+    Tokenized rather than pattern-matched, and only the flags after `commit` are read, so neither
+    an earlier `ls -la` nor a commit message containing something like "-beta" counts as `-a`.
+    """
+    try:
+        tokens = shlex.split(command, comments=True)
+    except ValueError:  # unbalanced quotes, a heredoc — assume the wider set
+        return True
+    if "commit" not in tokens:
+        return False
+    for token in tokens[tokens.index("commit") + 1 :]:
+        if token.startswith("<<") or token in ("&&", "||", ";", "|"):
+            break  # a heredoc body or the next command; its words are not commit flags
+        if token == "--all":
+            return True
+        if re.fullmatch(r"-[A-Za-z]+", token) and "a" in token:
+            return True
+    return False
 
 
 def git(root, *args):
@@ -81,7 +103,7 @@ def main():
     root = root[0]
 
     staged = git(root, "diff", "--cached", "--name-only")
-    if COMMIT_ALL.search(command):  # `commit -a` / `-am` sweeps tracked modifications in as well
+    if commits_all(command):
         staged += git(root, "diff", "--name-only")
     if not staged:
         return
