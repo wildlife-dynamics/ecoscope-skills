@@ -49,6 +49,7 @@ Repo-specific variation). Read, and write down what each says:
 | `spec.yaml` `requirements:` | every pin; any `path:` / `editable:` / `channel: file://` / `version: "*"` (`validate-spec` rejects the `file://` and wildcard forms; a `path:`/`editable:` slips past it and dies in the recompile job — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § The wt-family gates). |
 | repo-state signals (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Repo-state signals) | branch and lane; `VERSION.yaml` here vs `git show origin/main:<WF>/VERSION.yaml`; whether the inner `pixi.lock` exists; `wt-task-gcp` in the inner `pixi.toml`; `git status` clean. |
 | `git tag --list 'v*'`, `gh pr list --state open`, root `README.md` | highest existing tag; an open publish PR to update instead of a new one; whether the user guide describes the options this release ships. |
+| `spec.yaml` `metadata:`; for a catalog workflow, its entry in the Desktop catalog JSON (`${CLAUDE_PLUGIN_ROOT}/reference/catalog.md`) | whether the block exists (compiler ≥0.9.0 — proposed, never required); whether its `name` / `description` match the catalog entry; whether the entry's `version_file_path` still names the `<WF>/VERSION.yaml` this compile will produce — a spec `id` or `--pkg-name-prefix` change moves it, and nothing in CI notices. |
 
 Then propose the release, concretely, opening with one line stating your reading — "Publishing
 `<repo>`: `develop/<topic>` is N commits over `<base>`, VERSION 1.1.0 → 1.2.0, gcp variant per
@@ -65,8 +66,9 @@ publish", route the fix to `/ecoscope:develop` first. Settle:
 | Tests | `--all` locally; live cases need the connection env vars in your shell or they are CI's job; the secrets `test.yml` names must exist in the repo (the user sets them). |
 | Review and E2E | **review is a gate, not an offer**: after approval, `/ecoscope:review` runs on the develop branch before § 2 cuts the release branch — its fast tier; § 3's recompile stays the authoritative tier it defers to. A red finding goes back to `/ecoscope:develop` first. The user can waive the gate by saying so here; silence does not. `/ecoscope:e2e` stays an offer, for workflows that run in Ecoscope Desktop. |
 | User guide | **a gate, not an offer**: the root `README.md` must describe this release — every config-form card and field (compiled `rjsf.json`) and every dashboard widget, at this release's defaults. Name what is missing or stale; `/ecoscope:guide` brings it current before § 6, and no PR opens without it. |
+| Catalog metadata | propose adding or refreshing the spec `metadata:` block (name, description, maintainers with `role`, license, `thumbnail` — `catalog.md` § Spec `metadata:`); it compiles to no diff and is a legitimate MIN bump on its own. For a catalog workflow, state whether the Desktop catalog entry needs an update (§ 6's catalog gate). |
 | Preview deploy | catalog workflows only (base `staging`, vendored into the compose repo): after CI is green, propose the preview-environment deploy — a manual step the user performs (§ 6). |
-| Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and publishes the template"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". Stated now, repeated at the PR. |
+| Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and publishes the template"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". For a custom (v2 sandboxed) workflow add: "the web catalog shows the GitHub repo's About text as the description and no image — set About on GitHub, not in `spec.yaml`" (`catalog.md` § Web catalog). Stated now, repeated at the PR. |
 
 **Stop and wait for approval.** After approval §§ 2–6 run without check-ins, per the user's
 global workflow; come back for a red compile that the restore path cannot fix, a pin that fails
@@ -158,7 +160,9 @@ the base branch from § 1.
       line per file: what changed and which cause it traces to (the develop fix, a pin from § 2,
       a **compiler bump** whose codegen change touches files the spec never mentioned — expected,
       and CI will reproduce it at the same pin). Nothing listed and a spec that did change means
-      the change had no compiled effect — say so. The same list goes into the PR body.
+      the change had no compiled effect — say so. A `metadata:`-only change is the expected
+      case of this: it is excluded from the spec hash, the tree is byte-identical, and § 5 still
+      bumps MIN — that is correct, not "nothing to release". The same list goes into the PR body.
 
 - [ ] **Variant check.** `grep -c 'wt-task-gcp' <WF>/pixi.toml` matches what § 1 said CI does
       (1+ for gcp, 0 for Desktop-only). Committing the wrong variant fails CI's diff in the
@@ -209,7 +213,8 @@ generated tree or the case to make it pass.
 
 1. What § 3 produced: `--update` bumped the restored base VERSION once — MIN+1, or MAJ+1 with
    MIN reset when `params_sha256` changed (`compile.md` § `--update` semantics). If you ran the
-   checklist more than once it bumped more than once.
+   checklist more than once it bumped more than once. It bumps even when the only spec change
+   is `metadata:` (hash-neutral, empty § 3 diff) — keep that bump.
 2. What it must clear: the larger of `git show origin/main:<WF>/VERSION.yaml` and the highest
    `git tag --list 'v*'` — renamed repos carry legacy tags from their old identity, and the tag
    job is monotonic over *all* of them (`ci.md` § Release tagging and legacy tags).
@@ -229,6 +234,16 @@ this release: the cards and fields in `<WF>/…/rjsf.json`, the widgets the `bas
 the defaults. If any option, default or widget this release ships is missing or described
 differently, stop here and hand to `/ecoscope:guide`; resume when the README is current. The
 guide is part of the release, so it goes into the same PR.
+
+**Catalog gate** — catalog workflows only (the ones listed in the Desktop catalog JSON;
+`${CLAUDE_PLUGIN_ROOT}/reference/catalog.md`). Stop if this release changes the spec `id`,
+the `--pkg-name-prefix`, or the generated `<WF>/` directory name without a matching
+`version_file_path` change in the catalog entry — Desktop's version detection for every user
+breaks silently on merge. The fix is the user's, by hand: edit the backup file in the
+ecoscope-desktop repo, PR it, and upload it to GCS with the `gsutil cp … Cache-Control:no-cache`
+command from that repo's README; name the step and its ordering (before or with the merge) in
+the PR body. A `name` / `description` drift between `metadata:` and the catalog entry is
+reported, not gated.
 
 One commit carrying the whole release: `spec.yaml` (if pins
 changed), the outer `pixi.lock` (if re-solved), the regenerated `<WF>/` including its
@@ -297,6 +312,8 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | Before the release is cut | `/ecoscope:review` — the § 1 gate: started as part of the flow unless the user waived it there, the one exception to "never start one unasked"; `/ecoscope:e2e` stays an offer for Desktop workflows |
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
 | CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § Web deployment (compose) |
+| The release renames the package dir, or the catalog entry is stale (§ 6 catalog gate) | the Desktop catalog JSON update and GCS upload, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/catalog.md` § Desktop catalog |
+| A new catalog workflow, or one that should carry an image on the web | set `image_url` through the server's template update endpoint per environment, or add a case to the web logo map — both by hand, no skill — `catalog.md` § Web catalog |
 
 Close every session by naming what comes next — usually "CI is green; merging is yours" —
 without starting it.

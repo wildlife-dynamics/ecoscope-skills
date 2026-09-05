@@ -34,10 +34,13 @@ Upstream docs are reliable for concepts but not syntax — see [upstream-docs.md
 
 ## `metadata:` (compiler ≥0.9.0)
 
-Optional: `name`, `description`, `maintainers` (list, must be
-non-empty if present), `license`, optional `repository` / `documentation` / `readme` / `keywords`.
-Extra keys allowed. Excluded from `Spec.sha256`, so adding it doesn't change an existing
-workflow's hash.
+The block is optional; when present, `name`, `description`, `maintainers` (non-empty list of
+`{name, email}`) and `license` are required, and `repository` / `documentation` / `readme` /
+`keywords` are optional (`Metadata`, `Maintainer` in `wt_compiler.spec`). Both models allow and
+retain extra keys. Excluded from `Spec.sha256`, so adding or editing it doesn't change an existing
+workflow's hash, and the compiler templates never read it. Fleet convention for the extras —
+`role` on each maintainer (`owner` / `reviewer`) and a repo-relative `thumbnail` on the block —
+and what the catalogs actually display: [catalog.md](catalog.md).
 
 ## Task instances
 

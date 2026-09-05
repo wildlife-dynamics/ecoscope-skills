@@ -46,14 +46,14 @@ the cycle anywhere.
 
 ## The knowledge base
 
-`plugins/ecoscope/reference/` — 19 topic files the skills link at the point of use, addressed as
+`plugins/ecoscope/reference/` — 20 topic files the skills link at the point of use, addressed as
 `${CLAUDE_PLUGIN_ROOT}/reference/<file>.md`. It lives at the plugin root rather than inside a
 skill because skills cannot read each other's files.
 
 Environments and the standing rules · the compile command, flags and error table · `spec.yaml`
 schema · task discovery and task anatomy · pipeline and widget patterns · rjsf overrides and
 conditionals · `test-cases.yaml` and mock-io · per-task pitfalls · data connections · dashboard
-preview and Desktop E2E · CI gates and release tagging · web deployment · repo layout · output
+preview and Desktop E2E · CI gates and release tagging · web deployment · catalog metadata · repo layout · output
 styling · which upstream docs to trust · sensitive data and merge authorization.
 
 Three rules run through all of it: **code is the source of truth** — upstream docs are for

@@ -27,6 +27,7 @@ with a table of contents.
 | Desktop Playwright E2E authoring and its footguns | `reference/desktop-e2e.md` |
 | CI gates (recompile diff, version gate), release tagging | `reference/ci.md` |
 | Web deployment via compose (catalog workflows only, manual web QA) | `reference/ci.md` § Web deployment (compose) |
+| Catalog metadata — spec `metadata:` block and extras convention, the Desktop catalog JSON on GCS, the server template row and `image_url`, the web logo fallback, the rename trap | `reference/catalog.md` |
 | Repo anatomy, vendored files, repo-state signals, branch/commit conventions | `reference/repo-layout.md` |
 | Output styling defaults (colormaps, layers, chart/table config), `layout.json` sizing/placement | `reference/output-style.md` |
 | Reference sources — code is truth; wt + Platform SDK docs (local paths, URLs); example workflow repos | `reference/upstream-docs.md` |
