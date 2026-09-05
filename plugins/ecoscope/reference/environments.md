@@ -79,9 +79,12 @@ This plugin ships `scripts/preflight.sh [<workflow-repo-dir>]`, which discovers 
 - `wt-compiler` runs, its env imports `jsonschema`, and its version;
 - graphviz `dot` actually renders PNG (the plugin-cache check);
 - `yq` is go-yq; the pixi version;
-- inside a workflow repo: the outer `pixi.toml` compiler pin vs the global version, and every
-  `spec.yaml` requirement with its pin.
+- inside a workflow repo: the outer `pixi.toml` compiler pin vs the global version, CI's
+  `setup-pixi` `pixi-version` pin (`.github/workflows/_recompile.yml`, then `test.yml`) vs the
+  local pixi — a WARN there means every `--update` compile must be followed by re-solving the
+  inner lock with CI's pixi binary, or CI fails `pixi run --locked` with "lock file not
+  up-to-date with the workspace" — and every `spec.yaml` requirement with its pin.
 
-It does not read CI files or probe the pixi envs — the renamed-dir breakage above shows up as
-`Error launching …` on the first `pixi run`, and the CI recompile flags are read from the repo
-by the publish procedure. Skills open with "run preflight, fix any FAIL".
+Beyond that pin it does not read CI files or probe the pixi envs — the renamed-dir breakage
+above shows up as `Error launching …` on the first `pixi run`, and the CI recompile flags are
+read from the repo by the publish procedure. Skills open with "run preflight, fix any FAIL".

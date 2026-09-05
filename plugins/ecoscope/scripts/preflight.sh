@@ -6,8 +6,10 @@
 #
 # Checks: wt-compiler runs and its env imports jsonschema (the classic uv-tool gap); graphviz dot
 # actually renders png (plugin cache registered); yq is go-yq (mikefarah); pixi is present.
-# When run inside a workflow repo it also lists the compiler pin and the task-library pins from
-# spec.yaml. CI recompile flags and env health are read from the repo by the skill that needs them.
+# When run inside a workflow repo it also compares the compiler pin (pixi.toml) and CI's pixi pin
+# (setup-pixi pixi-version in .github/workflows) against the global tools, and lists the
+# task-library pins from spec.yaml. CI recompile flags and env health are read from the repo by
+# the skill that needs them.
 
 set -u
 fails=0
@@ -81,7 +83,8 @@ else
   fail "yq not on PATH — install go-yq (mikefarah)"
 fi
 
-if have pixi; then ok "pixi $(pixi --version 2>/dev/null | awk '{print $2}')"; else fail "pixi not on PATH — https://pixi.sh"; fi
+pixi_ver=""
+if have pixi; then pixi_ver="$(pixi --version 2>/dev/null | awk '{print $2}')"; ok "pixi ${pixi_ver:-unknown}"; else fail "pixi not on PATH — https://pixi.sh"; fi
 
 # ---- versions this repo asks for (only when run inside a workflow repo; a new workflow has none)
 repo="${1:-.}"
@@ -95,6 +98,23 @@ if [ -f "$repo/spec.yaml" ]; then
     esac
   else
     warn "no wt-compiler pin found in $repo/pixi.toml"
+  fi
+  # CI's pixi (setup-pixi pixi-version) must be able to read the inner lock. A newer local pixi
+  # writes a lock format the pinned one rejects ("lock file not up-to-date with the workspace"),
+  # and a --update compile re-solves the inner lock with the PATH pixi even through the outer env.
+  ci_pixi=""
+  for wf in "$repo/.github/workflows/_recompile.yml" "$repo/.github/workflows/test.yml"; do
+    ci_pixi="$(sed -n 's/^[[:space:]]*pixi-version:[[:space:]]*v\{0,1\}\([0-9][0-9.]*\).*/\1/p' "$wf" 2>/dev/null | head -1)"
+    [ -n "$ci_pixi" ] && break
+  done
+  if [ -n "$ci_pixi" ] && [ -n "$pixi_ver" ]; then
+    if [ "$ci_pixi" = "$pixi_ver" ]; then
+      ok "pixi: CI pins v$ci_pixi (.github/workflows), local $pixi_ver — match"
+    else
+      warn "pixi: CI pins v$ci_pixi (.github/workflows), local $pixi_ver — differ; after any --update compile re-solve the inner lock with CI's pixi (download the v$ci_pixi release binary, then '<bin> lock --manifest-path <WF>/pixi.toml' and '<bin> install --locked --manifest-path <WF>/pixi.toml') or CI fails with 'lock file not up-to-date with the workspace'"
+    fi
+  elif [ -z "$ci_pixi" ]; then
+    warn "no setup-pixi pixi-version pin found in $repo/.github/workflows"
   fi
   if have yq; then
     yq '.requirements[] | "  " + .name + "  " + (.version // .tag // .rev // (.path | select(.) | "path: " + .) // "")' "$repo/spec.yaml" 2>/dev/null \
