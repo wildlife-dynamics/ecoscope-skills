@@ -7,6 +7,7 @@ merge without go-ahead, etc.) are in [process-rules.md](process-rules.md).
 ## Contents
 - The two CI families
 - The wt-family gates, one by one
+- Pixi locks (inner and outer)
 - Release tagging and legacy tags
 - Repo-specific variation
 - Web deployment (compose): scope, requirements, dev/preview deploys, WIP-tag flow, `stage` vs `staging`
@@ -50,13 +51,27 @@ carry **both** families.
   — `dev/run-test-cases.sh` in most repos, `dev/pytest-cli.sh <workflow_id>` in some (same
   harness shape driving the generated CLI, but it runs `pixi update` on the inner manifest
   first unless `--skip-setup`).
-  Windows in the matrix means the **outer `pixi.toml` platforms must include `win-64`** (the
-  scaffold emits only linux-64/osx-arm64 → setup-pixi fails `unsupported-platform`); after adding
-  it, re-lock and **commit the outer `pixi.lock`** — it is tracked in these repos.
+  Windows in the matrix is served by the **inner** lock (the generated `<WF>/pixi.toml` lists
+  all three platforms and `--update` solves for them); the **outer `pixi.toml` does not need
+  `win-64`** and preferably omits it — every extra platform grows the outer `pixi.lock`, which
+  is tracked in these repos. Locks and the pixi version they must satisfy: § Pixi locks.
 - **`guard-main-prs.yml`**: reads `tool.wt.published` from the **outer `pixi.toml`** (these repos
   have no root pyproject); if true, a PR to `main` must come from `staging` or `patch-*`.
 - **`promote-staging.yml`**: manual dispatch; builds the staging→main promotion PR from the
   commit log.
+
+## Pixi locks (inner and outer)
+
+Before pushing, re-solve both tracked locks with the pixi version CI pins (`pixi-version:` in
+`.github/workflows/`), never the local one — `scripts/preflight.sh` WARNs when they differ:
+
+```bash
+<ci-pixi> update --manifest-path pixi.toml          # outer
+<ci-pixi> lock   --manifest-path <WF>/pixi.toml     # inner
+```
+
+(`<ci-pixi>`: the pinned release binary from https://github.com/prefix-dev/pixi/releases.)
+Otherwise `test-workflows` fails on every OS with "lock file not up-to-date with the workspace".
 
 ## Release tagging and legacy tags
 

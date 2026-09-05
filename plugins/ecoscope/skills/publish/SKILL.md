@@ -45,7 +45,7 @@ Repo-specific variation). Read, and write down what each says:
 | `_recompile.yml` "Recompile workflow" step | the exact recompile invocation: `bash dev/recompile.sh --update`, or an inline `pixi run … wt-compiler compile …`. |
 | `dev/recompile.sh` (when CI calls it) | every flag it passes — `--variant=gcp` or not, `pixi update` on the outer manifest or not, `dot -c`. This is the record of this workflow's deployment target (`${CLAUDE_PLUGIN_ROOT}/reference/compile.md` § `--variant=gcp`). |
 | `test.yml` | the version gate (compares to `origin/main`), the OS matrix, the test command (`dev/run-test-cases.sh --all` in most repos; `dev/pytest-cli.sh <id> --all` in some — the same harness shape, but it runs `pixi update` on the inner manifest first unless `--skip-setup`), and the `env:` block naming the secrets the live cases need. |
-| outer `pixi.toml` + `pixi.lock` | compiler pin; `platforms` must list `win-64` when the matrix has Windows; `[tool.wt] published`, if present. |
+| outer `pixi.toml` + `pixi.lock` | compiler pin; `platforms` (no `win-64` needed — the inner lock serves the Windows leg, `ci.md` § test-workflows); `[tool.wt] published`, if present. |
 | `spec.yaml` `requirements:` | every pin; any `path:` / `editable:` / `channel: file://` / `version: "*"` (`validate-spec` rejects the `file://` and wildcard forms; a `path:`/`editable:` slips past it and dies in the recompile job — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § The wt-family gates). |
 | repo-state signals (`${CLAUDE_PLUGIN_ROOT}/reference/repo-layout.md` § Repo-state signals) | branch and lane; `VERSION.yaml` here vs `git show origin/main:<WF>/VERSION.yaml`; whether the inner `pixi.lock` exists; `wt-task-gcp` in the inner `pixi.toml`; `git status` clean. |
 | `git tag --list 'v*'`, `gh pr list --state open`, root `README.md` | highest existing tag; an open publish PR to update instead of a new one; whether the user guide describes the options this release ships. |
@@ -92,9 +92,9 @@ publish/<repo-name>` from the develop branch. Then, in `spec.yaml`:
   (channel `https://repo.prefix.dev/ecoscope-workflows/` or `…/ecoscope-workflows-custom/`;
   `ci.md` § Release tagging). For a library released *for* this workflow, also confirm the task
   symbol exists at the library's tag (`git grep -l <fn> v<X.Y.Z>` in the library checkout).
-- Outer `pixi.toml`: set the approved compiler pin (`wt-compiler = "==<version>"`); `platforms`
-  includes `win-64` when `test.yml` runs Windows. Either edit re-solves the outer lock in § 3,
-  and it is committed with the tree (`ci.md` § test-workflows).
+- Outer `pixi.toml`: set the approved compiler pin (`wt-compiler = "==<version>"`); leave
+  `platforms` without `win-64` (the inner lock serves the Windows leg). The edit re-solves the
+  outer lock in § 3, and it is committed with the tree (`ci.md` § Pixi locks).
 
 Nothing else in the repo is edited by hand from here on. The only file under `<WF>/` ever
 written by hand is `VERSION.yaml` (§ 5).
@@ -164,6 +164,9 @@ the base branch from § 1.
       (1+ for gcp, 0 for Desktop-only). Committing the wrong variant fails CI's diff in the
       direction you least expect (`compile.md` § `--variant=gcp`).
 
+- [ ] **Relock with CI's pixi.** Re-solve both locks with the pinned `pixi-version:` binary
+      (`ci.md` § Pixi locks); skip only when preflight said the local pixi matches.
+
 ## 4. Test as CI tests
 
 **Environment: the inner pixi env, only through the harness.** CI's `test-workflows` runs the
@@ -187,9 +190,9 @@ pipe. Then:
   (`${CLAUDE_PLUGIN_ROOT}/reference/connections.md`). If they cannot run here, report them as
   CI's to run — and confirm `test.yml`'s `env:` block wires the secrets those connection names
   need. A missing secret is surfaced to the user with its exact name; it is never set by you.
-- **The two OSes you are not on** are proven by the lock, not by you: the outer `pixi.toml`
-  lists all three platforms and the inner lock solved for them (`grep -c 'win-64'
-  <WF>/pixi.lock` > 0). Read the Windows leg's log in § 6 rather than assuming it.
+- **The two OSes you are not on** are proven by the inner lock, not by you: it is solved for
+  all three platforms (`grep -c 'win-64' <WF>/pixi.lock` > 0) and re-solved with CI's pixi
+  (§ 3's relock step). Read the Windows leg's log in § 6 rather than assuming it.
 - **Outputs, not just status.** Open the results of the `base` case: the widgets exist and carry
   data; the grouped views fan out as before. A green run with empty outputs is the silently-empty
   trap (`testing.md`).
