@@ -51,10 +51,11 @@ carry **both** families.
   — `dev/run-test-cases.sh` in most repos, `dev/pytest-cli.sh <workflow_id>` in some (same
   harness shape driving the generated CLI, but it runs `pixi update` on the inner manifest
   first unless `--skip-setup`).
-  Windows in the matrix is served by the **inner** lock (the generated `<WF>/pixi.toml` lists
-  all three platforms and `--update` solves for them); the **outer `pixi.toml` does not need
-  `win-64`** and preferably omits it — every extra platform grows the outer `pixi.lock`, which
-  is tracked in these repos. Locks and the pixi version they must satisfy: § Pixi locks.
+  Windows in the matrix means the **outer `pixi.toml` platforms must include `win-64`**:
+  `setup-pixi` installs the outer env at the repo root on every OS before the harness runs
+  (the scaffold emits only linux-64/osx-arm64 → setup-pixi fails `unsupported-platform`);
+  after adding it, re-lock (§ Pixi locks) and **commit the outer `pixi.lock`** — it is tracked
+  in these repos.
 - **`guard-main-prs.yml`**: reads `tool.wt.published` from the **outer `pixi.toml`** (these repos
   have no root pyproject); if true, a PR to `main` must come from `staging` or `patch-*`.
 - **`promote-staging.yml`**: manual dispatch; builds the staging→main promotion PR from the
