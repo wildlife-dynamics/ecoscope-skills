@@ -84,7 +84,9 @@ create_map_widget_single_view → merge_widget_views` (styling defaults in
 
 ```yaml
       - {name: Apply Colormap, id: colormap, task: apply_color_map,
-         partial: {input_column_name: category, colormap: tab20b},
+         partial: {input_column_name: category,
+                   colormap: ["#3e35a3", "#b62879", "#ff803e", "#ed3ea2", "#3089ff",
+                              "#8c1700", "#a100cb", "#004e26", "#002960", "#f23b0e"]},
          mapvalues: {argnames: df, argvalues: "${{ workflow.grouped.return }}"}}
       - {name: Create Polyline Layer, id: polyline_layer, task: create_polyline_layer,
          skipif: {conditions: [any_is_empty_df, any_dependency_skipped, all_geometry_are_none]},
