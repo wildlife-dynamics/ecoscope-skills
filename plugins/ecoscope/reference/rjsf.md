@@ -121,8 +121,7 @@ Renderer logic, not compiler logic. The renderer branches on `schema["ecoscope:t
   accordion.
 
 To put params from several tasks into **one** accordion, give them a dedicated task with all of
-those params flagged `ecoscope:advanced` — one task's leaf fields = one accordion. The same
-split-a-task move as for task order (§ `ui:order` cannot reorder tasks).
+those params flagged `ecoscope:advanced` — one task's leaf fields = one accordion.
 
 Within the constraint you can still tidy: `title: ""` drops a task header; `partial` hides fields.
 `ecoscope:advanced` is honored only on a card's direct task args — ignored inside nested objects

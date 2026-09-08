@@ -115,9 +115,6 @@ the diff text:
   wrong edge that sequential mock runs mask — resolution mutates the grouper objects in
   place — and a serializing executor breaks
   (`${CLAUDE_PLUGIN_ROOT}/reference/patterns.md` § Grouping and splitting).
-- **Override paths** must match group titles exactly — mismatches are silently ignored
-  (`rjsf.md`). **`ecoscope:task_group` flips** break submit, and mock tests cannot catch it
-  (`rjsf.md` § Never flip).
 - **Conditional fields** — convict against the rule set in
   `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`, in the compiled `rjsf.json` on both
   diff sides, never in the spec text. Greppable there: `"dependencies"` / `"dependentSchemas"`

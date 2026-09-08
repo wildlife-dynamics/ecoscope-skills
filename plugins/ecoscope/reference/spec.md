@@ -66,8 +66,7 @@ and what the catalogs actually display: [catalog.md](catalog.md).
 ```
 
 `title`, `description`, `tasks`, `type` — all required, extras forbidden. Groups are flattened for
-execution and cannot nest. Task order inside the card is task order in the spec, and nothing
-overrides it. **Never duplicate a group `title`** 
+execution and cannot nest.
 
 
 ## `requirements:`
