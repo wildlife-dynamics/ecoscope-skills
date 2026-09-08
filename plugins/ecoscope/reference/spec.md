@@ -66,8 +66,8 @@ and what the catalogs actually display: [catalog.md](catalog.md).
 ```
 
 `title`, `description`, `tasks`, `type` — all required, extras forbidden. Groups are flattened for
-execution and cannot nest. Card order = task order inside the group; in-card field order is task
-order too ([rjsf.md](rjsf.md): `ui:order` orders cards only, not fields inside a card). **Never duplicate a group `title`** 
+execution and cannot nest. Task order inside the card is spec order and nothing overrides it;
+field order *within* a task is overridable ([rjsf.md](rjsf.md): `ui:order` is honored). **Never duplicate a group `title`** 
 
 
 ## `requirements:`

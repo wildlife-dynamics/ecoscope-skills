@@ -14,7 +14,7 @@ and a live form; the config-form playground may render some fields differently f
 ## Contents
 - Write overrides as top-level flat dotted paths, starting with the exact card title
 - Use `$defs` overrides for display only — they never reach `params.json` (compiler ≥0.7.0)
-- Use `ui:order` only for card order, never inside a card
+- `ui:order` is honored except for task order inside a group card
 - Match group titles exactly in override paths — mismatches are silently ignored
 - No duplicate task-group titles
 - Never flip `ecoscope:task_group: false` to restyle a card
@@ -54,19 +54,33 @@ Since compiler 0.7.0, `$defs` overrides apply **only to `rjsf.json`, not `params
 for display (titles, labeled oneOf on `$ref`'d types); don't expect them to change the validation
 model.
 
-## Use `ui:order` only for card order, never inside a card
+## `ui:order` is honored except for task order inside a group card
 
-`ui:order` works at **one level only: the top level, to order task-group cards.** The compiler
-auto-emits a top-level `ui:order` from spec task order, so you rarely need it; override it only
-when card order must differ from spec order, and list every group title (rjsf errors on a partial
-list — see the path-mismatch note below). Scrambled card order is usually a symptom of the
-duplicate-title clobber below, not something to fix with `ui:order`.
+The compiler auto-emits `ui:order` from spec declaration order at **every** level that has more
+than one property — top level (cards), each section, each task card, and each task nested inside a
+group card (`compiler.py::_maybe_add_ui_order`). **A nested `ui:order` in `rjsf.json` is normal
+compiler output, not a defect.** `spec.yaml` has no `ui:order` key at all — `TaskInstance` forbids
+extras, so writing one there is a validation error, not a silent no-op. Never treat "in `rjsf.json`
+but not in `spec.yaml`" as a finding.
 
-**Inside a task-group card, `ui:order` is ignored** — the custom template iterates schema property
-entries, so in-card field order = task order in the spec. Don't add a per-card `ui:order`; it does
-nothing and breaks whenever tasks change. To move field A above field B when B's task consumes A's
-return, use the **split-a-task move**: split A into its own tiny task declared first — a single
-task that takes those params and returns them for the consuming tasks.
+**The one thing ignored: `<Card Title>.ui:order` on a task-group card.** The renderer builds such a
+card by iterating schema property entries itself
+(`CustomObjectFieldTemplate.processConfigurationSection`), so **task order inside a card is spec
+declaration order** and no override changes it. Every other level passes through rjsf's own
+`orderProperties` and is honored — including `<Card Title>.<task id>.ui:order`, which orders that
+task's own fields.
+
+So:
+
+- **Fields within one task** — override `<Card Title>.<task id>.ui:order` (or `<task id>.ui:order`
+  for an ungrouped task), listing **every** field of that task; rjsf errors
+  `order list does not contain properties` on a partial list.
+- **A field above one in a different task in the same card** — reorder the tasks in `spec.yaml`, or
+  use the **split-a-task move**: split A into its own tiny task declared first — a single task that
+  takes those params and returns them for the consuming tasks.
+- **Card order** — override the top-level `ui:order` only when card order must differ from spec
+  order, and list every group title. Scrambled card order is usually a symptom of the
+  duplicate-title clobber below, not something to fix with `ui:order`.
 
 ## Match group titles exactly in override paths — mismatches are silently ignored
 
@@ -113,7 +127,7 @@ Renderer logic, not compiler logic. The renderer branches on `schema["ecoscope:t
 
 To put params from several tasks into **one** accordion, give them a dedicated task with all of
 those params flagged `ecoscope:advanced` — one task's leaf fields = one accordion. The same
-split-a-task move as for field order (§ Use `ui:order` only for card order).
+split-a-task move as for field order (§ `ui:order` is honored).
 
 Within the constraint you can still tidy: `title: ""` drops a task header; `partial` hides fields.
 `ecoscope:advanced` is honored only on a card's direct task args — ignored inside nested objects
