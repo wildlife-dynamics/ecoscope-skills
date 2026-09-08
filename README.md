@@ -111,15 +111,3 @@ Nothing in the plugins carries a machine-specific path: paths resolve from the p
 (`${CLAUDE_PLUGIN_ROOT}`), from the repo being worked on (anchored on its `spec.yaml`), or by
 asking the installed tooling — so the suite works wherever it lands.
 
-## Working on the suite
-
-`.scratch/` (gitignored) holds the build plan, the baseline transcripts the skills were written
-against, and the eval prompts and assertions; `docs/baselines.md` summarises what the
-without-suite runs got wrong, which is what most of the skill text exists to counter.
-
-Two checks before shipping a change:
-
-```
-grep -rnE '/Users/|/home/|~/MEP|~/Library' plugins/     # must return nothing
-python3 -m json.tool <each manifest> >/dev/null         # manifests parse
-```
