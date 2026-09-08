@@ -12,11 +12,50 @@ Defaults for maps, charts, tables, and color mapping. Pipeline wiring is in
 
 ## Color mapping
 
-Applied via `apply_color_map` using **matplotlib colormap names**:
+Applied via `apply_color_map`, which takes either a **list of hex colors** or a **matplotlib
+colormap name**. Default to the EarthRanger design-system scales below — the Ai2 design system
+names Ecoscope as part of the EarthRanger platform, so these are the brand-correct defaults, and
+they are specified as identical in light and dark mode.
 
-- `"Dark2"` — categorical, up to 8 distinct colors (stations, species, patrol types)
-- `"tab20b"` — categorical with more groups (up to 20)
-- `"viridis"` — continuous/sequential
+**Categorical** — stations, species, patrol types, event types:
+
+```yaml
+colormap: ["#3e35a3", "#488a00", "#00958f", "#b62879", "#c6880c",
+           "#00d0c8", "#78d811", "#5c4fe7", "#f4db20", "#ed3ea2"]
+```
+
+**Tracks** — trajectory/polyline layers, where each subject gets its own line:
+
+```yaml
+colormap: ["#3e35a3", "#b62879", "#ff803e", "#ed3ea2", "#3089ff",
+           "#8c1700", "#a100cb", "#004e26", "#002960", "#f23b0e"]
+```
+
+**Sequential** — ordered or binned values (a classified column, a density bucket):
+
+```yaml
+colormap: ["#f4db20", "#ffb700", "#ed3ea2", "#a100cb",
+           "#5c4fe7", "#0056c7", "#00882e", "#78d811"]
+```
+
+Use each scale **in order** — the design system requires it, and the list form honors it
+(`apply_color_map` assigns `colors[i % len(colors)]` to the i-th distinct value). Don't skip
+entries or splice in brand colors; the scales are built to stay distinguishable and accessible
+as ordered sets. Note the i-th distinct value is ordered by **first appearance**, not sorted —
+sort the df before the colormap task if you need colors stable across runs.
+
+Pin scales with `partial`, never as a form field: the list form is `SkipJsonSchema` on the task,
+so it renders no config-form control.
+
+**Matplotlib names remain the fallback for two cases:**
+
+- **More than 10 categories** (8 for sequential) — `"tab20b"` gives 20 distinct colors where a
+  hex list would start repeating.
+- **Continuous numeric columns** — a string colormap over a numeric column interpolates across
+  the ramp, whereas a list is always discrete. `"viridis"` stays the default for a true gradient.
+
+Values copied from [allenai/design](https://github.com/allenai/design/blob/main/earthranger/DESIGN.md)
+@ `713d6cd`, 2026-08-21 (§ Data Visualization — Categorical / Tracks / Sequential).
 
 The output column contains RGBA tuples; downstream layers reference it via `color_column` /
 `fill_color_column`, and legends pair `label_column` (the category) with the same `color_column`.
