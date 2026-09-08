@@ -14,7 +14,7 @@ Two plugins:
 ## Install
 
 ```
-/plugin marketplace add /path/to/ecoscope-skills     # this checkout
+/plugin marketplace add wildlife-dynamics/ecoscope-skills     # this checkout
 /plugin install ecoscope@ecoscope-skills
 /plugin install ecoscope-guards@ecoscope-skills      # optional, see below
 ```
