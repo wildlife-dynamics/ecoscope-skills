@@ -115,12 +115,9 @@ the diff text:
   wrong edge that sequential mock runs mask — resolution mutates the grouper objects in
   place — and a serializing executor breaks
   (`${CLAUDE_PLUGIN_ROOT}/reference/patterns.md` § Grouping and splitting).
-- **`ui:order` used to order tasks inside a task-group card** — silently dropped by the renderer;
-  the tasks must be reordered in the spec instead. Nothing else about `ui:order` is a finding: the
-  compiler emits it at every level, and `spec.yaml` has no such key, so never flag one for being
-  absent there (`rjsf.md` § `ui:order` cannot reorder tasks). **Override paths** must match group
-  titles exactly — mismatches are silently ignored (`rjsf.md`). **`ecoscope:task_group`
-  flips** break submit, and mock tests cannot catch it (`rjsf.md` § Never flip).
+- **Override paths** must match group titles exactly — mismatches are silently ignored
+  (`rjsf.md`). **`ecoscope:task_group` flips** break submit, and mock tests cannot catch it
+  (`rjsf.md` § Never flip).
 - **Conditional fields** — convict against the rule set in
   `${CLAUDE_PLUGIN_ROOT}/reference/rjsf-conditionals.md`, in the compiled `rjsf.json` on both
   diff sides, never in the spec text. Greppable there: `"dependencies"` / `"dependentSchemas"`
