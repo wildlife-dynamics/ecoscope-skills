@@ -137,8 +137,8 @@ Before presenting, check the PRD against itself:
 - every widget has a layout slot, a case that renders it, and its tasks end in
   `gather_dashboard` (or `gather_output_files` for a download workflow — `tasks.md` § The
   tasks nearly every workflow uses);
-- every card lists its fields with defaults; nothing relies on `ui:order` to order the *tasks*
-  inside a card (`rjsf.md` § `ui:order` is honored);
+- every card lists its fields with defaults, and no card needs its *tasks* in an order other than
+  the spec's — `ui:order` cannot supply one (`rjsf.md` § `ui:order` cannot reorder tasks);
 - the fan-out is stated against the fixture the mock run will use, not the theoretical set;
 - the io tasks' fixtures are named — packaged, or synthetic built from the sample, never a
   real pull; the sample and the discovery output
