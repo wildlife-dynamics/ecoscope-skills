@@ -77,6 +77,14 @@ and long-lived `staging` in published repos; plus occasional `chore/*`, `fix/*`.
 **squash-merged** — main is one commit per PR while the topic branch carries many fine-grained
 commits. Conventional-commit prefixes (`feat:`, `fix:`, `chore:`, `docs:`, `test:`) throughout.
 
+Shared-catalog repos (home-range, ndvi) add a second long-lived release branch,
+**`ecoscope-web`**: same `spec.yaml`, compiled with `--variant=gcp`, carrying the `metadata:`
+block and its own higher VERSION sequence, with `tag.yml` cutting the catalog tags from PRs to
+it. `main` stays the Desktop lane; "Merge `main` into `ecoscope-web`" PRs carry work across —
+[catalog-publish.md](catalog-publish.md) § The `ecoscope-web` branch. A repo-state signal, then:
+`git branch -r | grep ecoscope-web` tells you the repo has the second lane, and the `<WF>/`
+tree you are looking at belongs to whichever branch is checked out.
+
 ## The observable dev loop
 
 The loop every recent repo shows, in order:

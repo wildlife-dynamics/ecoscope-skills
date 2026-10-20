@@ -1,7 +1,8 @@
 # Workflow repo CI and deployment
 
 What CI actually checks in a workflow repo, where each gate lives, how merges to `main` become
-release tags, and how a tagged catalog release reaches the web environments. Safety rules (never
+release tags, and how a tagged v1 release reaches the web environments (the v2 shared catalog
+has its own lane: [catalog-publish.md](catalog-publish.md)). Safety rules (never
 merge without go-ahead, etc.) are in [process-rules.md](process-rules.md).
 
 ## Contents
@@ -118,10 +119,17 @@ Workflow repos' own CI deploys nothing. The org's `compose` repo pins each deplo
 submodule (workflow repos under `ecoscope-platform-workflows-releases/<template>` — their
 **committed compiled package** is what gets built into an image), with one reusable build-deploy
 pipeline per environment (`main.yaml`/`stage.yaml`/`prod.yaml`). **This path exists only for
-workflows in the workflow template catalog** — i.e. the ones vendored as compose submodules; custom
-workflows are not deployed through compose. And it is **only needed for manual web QA** (a human
-exercising the workflow in the ecoscope-web app) — the desktop app imports a
-workflow from its release tag directly, no compose deploy needed.
+v1 (service-URL) templates** — the ones vendored as compose submodules. And it is **only needed
+for manual web QA** (a human exercising the workflow in the ecoscope-web app) — the desktop app
+imports a workflow from its release tag directly, no compose deploy needed.
+
+**The shared workflow catalog (v2, sandboxed templates) is not deployed through this path.**
+Since compose PR #2998 (2026-10) its lifecycle is separate from the platform deploys —
+`stage.yaml` / `prod.yaml` no longer carry a `sync-catalog` job. A catalog release is approved
+and published by three dedicated compose workflows (`catalog-gate.yml` on the PR,
+`catalog-approve.yml` on merge to `main`, `catalog-promote.yml` by dispatch for stage and prod),
+driven by a manifest edit, with no image build and no deploy train:
+[catalog-publish.md](catalog-publish.md).
 
 ### Requirements on the workflow repo
 

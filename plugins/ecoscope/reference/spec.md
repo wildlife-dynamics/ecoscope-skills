@@ -39,8 +39,10 @@ The block is optional; when present, `name`, `description`, `maintainers` (non-e
 `keywords` are optional (`Metadata`, `Maintainer` in `wt_compiler.spec`). Both models allow and
 retain extra keys. Excluded from `Spec.sha256`, so adding or editing it doesn't change an existing
 workflow's hash, and the compiler templates never read it. Fleet convention for the extras —
-`role` on each maintainer (`owner` / `reviewer`) and a repo-relative `thumbnail` on the block —
-and what the catalogs actually display: [catalog.md](catalog.md).
+`role` on each maintainer (`owner` / `reviewer`), an `outputs` list (one `{name, type,
+description, indicators}` entry per dashboard / map / plot / file a run produces) and a
+repo-relative `thumbnail` on the block — with a full example and what the catalogs actually
+display: [catalog.md](catalog.md) § Spec `metadata:`.
 
 ## Task instances
 
