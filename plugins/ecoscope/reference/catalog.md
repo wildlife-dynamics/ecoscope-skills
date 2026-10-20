@@ -30,23 +30,60 @@ Excluded from `Spec.sha256`, so a metadata-only change compiles to a byte-identi
 tree — and `--update` still bumps MIN (`compile.md` § `--update` semantics). The compiler
 templates never read it: it is not in the generated package, `README.md` or `rjsf.json`.
 
-The fleet convention for extras, so specs converge on the same keys:
+The fleet convention for extras, so specs converge on the same keys (as written on the
+`ecoscope-web` branch of `wildlife-dynamics/home-range` and `wildlife-dynamics/ndvi` — the
+branch the shared catalog releases from; key order as shown):
 
 ```yaml
 metadata:
-  name: NDVI Workflow                     # match the Desktop catalog entry
+  name: NDVI Workflow                     # "<Subject> Workflow"; match the catalog display_name
   description: >-
-    One paragraph, same text as the Desktop catalog entry.
+    One paragraph for maintainers: what it computes, which methods or sources, what it
+    produces. The catalog card uses the compose manifest's one-line description instead.
   maintainers:
     - {name: Yun Wu, email: yun@wildlifedynamics.com, role: owner}
     - {name: Alex Morling, email: alexm@earthranger.com, role: reviewer}
+  outputs:                                # what a run produces; see below
+    - name: NDVI Dashboard
+      type: dashboard
+      description: >-
+        A dashboard that visualizes NDVI trends and maps for the selected regions of interest.
+      indicators:
+        - name: NDVI
+    - name: NDVI Map
+      type: map
+      description: >-
+        An interactive map displaying NDVI values for the selected regions of interest.
+      indicators:
+        - name: NDVI
+    - name: NDVI Trend
+      type: plot
+      description: >-
+        A line plot that visualizes NDVI trends over time for the selected regions of interest.
+      indicators:
+        - name: NDVI
+    - name: NDVI Data
+      type: file
+      description: >-
+        A file containing the calculated NDVI data for the selected regions of interest.
+      indicators:
+        - name: NDVI
   license: BSD-3-Clause                   # SPDX id, not the LICENSE title
   repository: https://github.com/<org>/<repo>
   documentation: https://github.com/<org>/<repo>#readme
   readme: README.md
-  keywords: [ndvi, vegetation, gee]
+  keywords: [ndvi, vegetation, gee]       # three to five lowercase terms
   thumbnail: resources/thumbnail.png      # repo-relative, committed alongside
 ```
+
+**`outputs`** — one entry per thing a run produces, each with `name`, `type`, a one-sentence
+folded `description`, and `indicators` (a list of `{name}`; both fleet specs use a single
+indicator naming the workflow's subject — `NDVI`, `Home Range`). `type` is one of `dashboard`,
+`map`, `plot`, `file`. Both specs follow the same four-entry pattern: the dashboard as a whole,
+the map widget, the chart or table widget (`plot`), and the exported files with their formats —
+and a method-dependent caveat where one exists (home-range: the GeoTIFF is not produced for
+MCP). Like `role` and `thumbnail`, it is an extra key: validated by nothing, read by nothing
+downstream yet, kept for attribution and future tooling.
 
 ## Desktop catalog (a JSON on GCS)
 

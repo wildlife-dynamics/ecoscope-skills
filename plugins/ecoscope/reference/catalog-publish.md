@@ -9,6 +9,7 @@ re-read that file before relying on a detail here. Nothing in this topic is run 
 ## Contents
 
 - The shape of it
+- The `ecoscope-web` branch — where catalog releases come from
 - Before the tag — what the release must satisfy
 - `prepare` — attach the release artifacts
 - The security review
@@ -41,9 +42,55 @@ version in that environment's catalog). Both are needed before a user sees a new
 catalog lifecycle is also separate from the platform deploys — compose's `stage.yaml` /
 `prod.yaml` no longer sync the catalog (`ci.md` § Web deployment (compose)).
 
+## The `ecoscope-web` branch — where catalog releases come from
+
+The catalogued workflow repos (`wildlife-dynamics/home-range`, `wildlife-dynamics/ndvi`) carry
+**two release lanes on one `spec.yaml`**, and every ref in the compose manifest was tagged from
+the second:
+
+| | `main` (Desktop lane) | `ecoscope-web` (shared-catalog lane) |
+|---|---|---|
+| Compiled for | Ecoscope Desktop — `_recompile.yml` runs the compile **without** `--variant=gcp`; inner `pixi.toml` has no `wt-task-gcp` / `wt-runner-gcp` | the sandbox — `_recompile.yml` passes **`--variant=gcp`**; inner `pixi.toml` pins `wt-task-gcp` and `wt-runner-gcp` |
+| Spec `metadata:` | may be absent | present, with the fleet extras incl. `outputs` (`catalog.md` § Spec `metadata:`) |
+| `tag.yml` | ndvi: triggers on PRs to `main` / `patch-*`; home-range: none | triggers on PRs to **`ecoscope-web`** / `patch-*` — merging cuts `vMAJ.MIN.PATCH` and the GitHub release that `prepare` attaches to |
+| `staging` / `guard-main-prs` / `promote-staging` | where the repo has them (ndvi) | not on this lane — PRs go straight to `ecoscope-web` |
+| `VERSION.yaml` | its own sequence (home-range 0.6.0, ndvi 0.4.0 at the time of writing) | its own, **higher** sequence (home-range 1.1.0, ndvi 1.0.1) — the compiler decides each bump against *this* branch's previous build |
+
+Verify the lane before trusting it: `git show origin/ecoscope-web:.github/workflows/_recompile.yml`
+for the variant flag, `…:.github/workflows/tag.yml` for the trigger branches, and `grep -c
+wt-task-gcp <WF>/pixi.toml` on each branch (`compile.md` § `--variant=gcp`).
+
+**How work reaches it.** Feature work lands on `main` as usual (`/ecoscope:develop` →
+`/ecoscope:publish`). When the catalog should pick it up, open a **"Merge `main` into
+`ecoscope-web`"** PR (home-range #17 is the model), or a fix PR straight to `ecoscope-web` when
+the change is catalog-only (home-range #18, ndvi #29). For the merge PR:
+
+1. Merge `main` into a branch cut from `ecoscope-web`. Conflicts are **all in generated files**
+   — `<WF>/README.md`, `VERSION.yaml`, `graph.png`, both `pixi.lock`s. Do not hand-resolve them.
+2. Take `ecoscope-web`'s copies of the generated tree as the base
+   (`git checkout origin/ecoscope-web -- <WF>/ pixi.lock`), keep `main`'s `spec.yaml` (plus the
+   `metadata:` block, which only `ecoscope-web` has — keep it), then **recompile the merged spec
+   with `ecoscope-web`'s toolchain**: the outer-pin compiler, `--update --variant=gcp`, exactly
+   the flags its `_recompile.yml` passes (`/ecoscope:publish` § 3 with `<base>` =
+   `ecoscope-web`). `--update` bumps from `ecoscope-web`'s VERSION, not `main`'s; a MAJ bump
+   means the form schema changed and saved web configurations may stop validating — say so in
+   the PR body, and remember it strands catalogued workflows pinned to the old major (§ Traps).
+3. Confirm the compiled package still carries the GCP runtime (`grep -c wt-task-gcp
+   <WF>/pixi.toml` ≥ 1) — a compile with `main`'s flags silently drops it, and CI's diff fails.
+4. Run the mock cases; CI runs the full suite. The PR body lists what comes in from `main`, how
+   conflicts were resolved, and the version and its reason.
+5. Merging cuts the tag. Then this topic's lane: `prepare` → review → compose PR → promote.
+
+**Two gates to know about.** The version gate in `test.yml` on *both* branches compares against
+**`origin/main`**, so an `ecoscope-web` PR needs a VERSION above `main`'s as well as above
+`ecoscope-web`'s — true as long as `ecoscope-web` runs ahead, which the lane relies on. And
+`test.yml`'s `push` trigger lists `[main, ecoscope-web]` in home-range only; ndvi's runs on PRs
+alone.
+
 ## Before the tag — what the release must satisfy
 
-Checked in the workflow repo, before or during `/ecoscope:publish`:
+Checked in the workflow repo, before or during `/ecoscope:publish` (with `<base>` =
+`ecoscope-web` when the release is for the catalog — previous section):
 
 - **Config form is web-safe**: `ecoscope:transform` keys set where the web app needs them; no
   direct file inputs or arbitrary file downloads; no sensitive inputs such as API keys.
