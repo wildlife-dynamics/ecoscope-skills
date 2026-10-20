@@ -68,7 +68,7 @@ publish", route the fix to `/ecoscope:develop` first. Settle:
 | User guide | **a gate, not an offer**: the root `README.md` must describe this release — every config-form card and field (compiled `rjsf.json`) and every dashboard widget, at this release's defaults. Name what is missing or stale; `/ecoscope:guide` brings it current before § 6, and no PR opens without it. |
 | Catalog metadata | propose adding or refreshing the spec `metadata:` block (name, description, maintainers with `role`, license, `thumbnail` — `catalog.md` § Spec `metadata:`); it compiles to no diff and is a legitimate MIN bump on its own. For a catalog workflow, state whether the Desktop catalog entry needs an update (§ 6's catalog gate). |
 | Preview deploy | catalog workflows only (base `staging`, vendored into the compose repo): after CI is green, propose the preview-environment deploy — a manual step the user performs (§ 6). |
-| Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and publishes the template"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". For a custom (v2 sandboxed) workflow add: "the web catalog shows the GitHub repo's About text as the description and no image — set About on GitHub, not in `spec.yaml`" (`catalog.md` § Web catalog). Stated now, repeated at the PR. |
+| Merge consequence | where `tag.yml` exists: "merging cuts `v<X.Y.0>` and creates the GitHub release"; otherwise: "merging updates `<base>`, which is what the Desktop template URL installs — no tag". For a v2 (sandboxed) workflow headed for the **shared catalog**, the tag is step one, not the publish: add "the catalog sees nothing until `prepare` attaches the artifacts, the release is security-reviewed, and a compose manifest PR is merged (dev) and promoted (stage, prod)" — `${CLAUDE_PLUGIN_ROOT}/reference/catalog-publish.md`; the manifest's `display_name` / `description` are what the card shows (`catalog.md` § Web catalog). A MAJ bump strands every catalogued workflow pinned to the old major once it syncs — say so. Stated now, repeated at the PR. |
 
 **Stop and wait for approval.** After approval §§ 2–6 run without check-ins, per the user's
 global workflow; come back for a red compile that the restore path cannot fix, a pin that fails
@@ -269,13 +269,23 @@ Watch `gh pr checks --watch` and read each failing job's log to its gate:
 | `test-workflows` on one OS only | a platform-specific solve or path issue; read that leg's log — it is the one you could not run. |
 | `test-workflows` auth / connection errors | secrets missing in the repo — name them for the user (`connections.md` § CI secrets). |
 
-Green CI ends this skill. Report the PR URL, the version, and the merge consequence. For a
-**catalog workflow** (base `staging`, vendored into the compose repo), also propose the
-preview-environment deploy — the user performs it by hand, there is no skill for it yet: a
-WIP tag `v<X.Y.0>.0` on the release branch and the compose repo's "Create PR to deploy dev"
-dispatch with **Deploy Preview Environment** ticked
-(`${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § WIP-tag flow). You cut no tag and
-dispatch nothing. Then stop.
+Green CI ends this skill. Report the PR URL, the version, and the merge consequence. Then name
+what follows the merge, by hand, for the user — you cut no tag, run no `prepare`, open no compose
+PR and dispatch nothing:
+
+- **Shared-catalog (v2 sandboxed) workflow**: once the tag exists, the catalog induction in the
+  compose repo — `prepare` to attach `environment.tar` + `metadata.json` to the release, the
+  security review, a compose PR adding the tag to `scripts/security/catalog/workflows.yaml`
+  (merging it approves and publishes in dev), QA in dev, then the "Catalog promote" dispatch for
+  stage and prod (`${CLAUDE_PLUGIN_ROOT}/reference/catalog-publish.md`). Remind the user the
+  tag must be strictly numeric and the release compiled with `--variant=gcp`, both of which § 1
+  established.
+- **v1 (service-URL) catalog workflow** (base `staging`, vendored into the compose repo): the
+  preview-environment deploy — a WIP tag `v<X.Y.0>.0` on the release branch and the compose
+  repo's "Create PR to deploy dev" dispatch with **Deploy Preview Environment** ticked
+  (`${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § WIP-tag flow).
+
+Then stop.
 If the cycle waits on something (a secret, a library release, a review), offer to record it in
 `.scratch/progress.yaml` (check `.scratch` is gitignored first — `repo-layout.md`).
 
@@ -311,7 +321,8 @@ Offer each when it becomes relevant, and wait for a yes; never start one unasked
 | The README does not describe this release (§ 6 gate) | `/ecoscope:guide` — no PR without it |
 | Before the release is cut | `/ecoscope:review` — the § 1 gate: started as part of the flow unless the user waived it there, the one exception to "never start one unasked"; `/ecoscope:e2e` stays an offer for Desktop workflows |
 | The branch is committed and ready | `/pr` — or the manual push and `gh pr create` in § 6 |
-| CI is green on a catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § Web deployment (compose) |
+| CI is green on a v1 catalog workflow | the preview-environment deploy, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/ci.md` § Web deployment (compose) |
+| The tag exists on a shared-catalog (v2) workflow | the catalog induction in the compose repo, by hand — `prepare`, security review, manifest PR, promote — `${CLAUDE_PLUGIN_ROOT}/reference/catalog-publish.md` |
 | The release renames the package dir, or the catalog entry is stale (§ 6 catalog gate) | the Desktop catalog JSON update and GCS upload, by hand — `${CLAUDE_PLUGIN_ROOT}/reference/catalog.md` § Desktop catalog |
 | A new catalog workflow, or one that should carry an image on the web | set `image_url` through the server's template update endpoint per environment, or add a case to the web logo map — both by hand, no skill — `catalog.md` § Web catalog |
 

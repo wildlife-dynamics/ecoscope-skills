@@ -19,6 +19,7 @@ from three places that do not sync with each other. Verified against the code na
 | `spec.yaml` `metadata:` | nothing downstream yet — attribution and a convention for future tooling | name, description, maintainers, license, links, keywords, plus any extra key | the workflow repo |
 | Desktop catalog JSON | Ecoscope Desktop's template catalog | name, description, repo `url`, `version_file_path` | ecoscope-desktop repo backup file + a manual `gsutil cp` to GCS |
 | Server `workflow_template` row | ecoscope-web (web app, and Desktop for imported templates) | name, category, description, `image_url` | the server's template create/update endpoints, per environment |
+| Compose catalog manifest (v2 shared catalog) | `sync-catalog` on publish → the server row above | `display_name`, `description`, approved `refs` | compose `scripts/security/catalog/workflows.yaml`, by PR ([catalog-publish.md](catalog-publish.md)) |
 
 ## Spec `metadata:` (the workflow repo)
 
@@ -82,11 +83,19 @@ background colour. A name not in that switch gets the generic dashboard icon on 
 logo for a new catalog workflow is therefore a web-app change: SVG, name constant, switch case.
 
 **v2 (sandboxed / custom) templates** registered from a GitHub release
-(`services/workflow_templates.py`, `register_custom_workflow_template`): `name` is the repo
-slug, `description` is the GitHub repo "About" text, `category` is `custom`, `image_url` is
-forced to `None`. Display metadata is deliberately kept outside the digest-hashed
-`metadata.json`. To change what users see, edit the repo's About field on GitHub; re-registering
-at a new tag re-syncs it.
+(`services/workflow_templates.py`, `register_custom_workflow_template`): `category` is `custom`
+and `image_url` is forced to `None`. Display metadata is deliberately kept outside the
+digest-hashed `metadata.json`, so where it comes from depends on how the template is listed:
+
+- **Shared-catalog entries** take `display_name` and `description` from the compose manifest
+  `scripts/security/catalog/workflows.yaml`, hand-authored in the PR that approves the release
+  and sent by `sync-catalog` on publish. They only reach the server on a publish that is not a
+  409 — i.e. with a **new tag** — so editing them alone does not move a card that is already
+  catalogued. Omit either and the server falls back to the GitHub repo name and About text.
+  The whole lane: [catalog-publish.md](catalog-publish.md).
+- **Per-user registrations** (`templates.py register`) have no manifest row: `name` is the repo
+  slug and `description` is the GitHub repo "About" text. Edit About on GitHub; re-registering
+  at a new tag re-syncs it.
 
 ## The rename trap
 
@@ -110,3 +119,4 @@ Two exact-string couplings, neither guarded by CI:
 | Server template schema and v2 registration | ecoscope-server `schemas/workflow_template.py`; `services/workflow_templates.py`; `README.md` § v2 (sandboxed) workflow templates |
 | Web card fallback | ecoscope-web `WorkflowTemplateCard.tsx`; `utils/workflows.utils.ts` (`workflowTemplateGraphics`, `workflowType`) |
 | Compose deploy name match | compose `template-service-url-version-bump.py` (`get_template_name`) |
+| Catalog manifest fields, `display_name` / `description` semantics | compose `scripts/security/catalog/workflows.yaml` header; `add-a-catalog-workflow.md` |
